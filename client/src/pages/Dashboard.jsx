@@ -15,7 +15,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const PIE_COLORS = ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b", "#858796", "#2e59d9"];
+const PIE_COLORS = ["#2563eb", "#10b981", "#0ea5e9", "#f59e0b", "#ef4444", "#64748b", "#6366f1"];
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -157,7 +157,7 @@ export default function Dashboard() {
                   <XAxis dataKey="day" />
                   <YAxis allowDecimals={false} />
                   <Tooltip />
-                  <Bar dataKey="total" name="Qty" fill="#1b5e20" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="total" name="Qty" fill="#2563eb" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

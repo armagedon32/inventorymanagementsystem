@@ -16,7 +16,7 @@ import {
   Cell,
 } from "recharts";
 
-const PIE_COLORS = ["#1b5e20", "#f6c23e", "#e74a3b", "#36b9cc", "#858796"];
+const PIE_COLORS = ["#2563eb", "#f59e0b", "#ef4444", "#0ea5e9", "#64748b"];
 
 export default function Forecasting() {
   const [data, setData] = useState(null);
@@ -142,12 +142,12 @@ export default function Forecasting() {
         </div>
         <div className="card-body">
           <p className="text-muted" style={{ fontSize: "0.9rem", lineHeight: 1.6 }}>
-            Ang <strong>RNN-LSTM</strong> (Input Layer → Hidden LSTM Layer → Dense Layer → Forecast Output)
-            ay sinasanay sa kasaysayan ng <em>issuance</em> bawat supply gamit ang <strong>MSE loss</strong>.
-            Natututuhan nito ang <strong>seasonal demand</strong> — ang pagpalo ng konsumo tuwing enrollment
-            (Hunyo) at pangalawang termino (Enero) at ang baba nito tuwing summer — gamit ang input,
-            forget, at output gates ng LSTM cell. Ang <strong>Suggested Order</strong> ay forecasted demand
-            na minu-multiply sa lead time, babawasan ng kasalukuyang stock.
+            The <strong>RNN-LSTM</strong> (Input Layer → Hidden LSTM Layer → Dense Layer → Forecast Output)
+            is trained on each item's historical <em>issuance</em> using the <strong>MSE loss</strong>. It
+            learns the <strong>seasonal demand</strong> pattern — the consumption surge during enrollment
+            (June) and second term (January), and the drop during summer — through the input, forget, and
+            output gates of the LSTM cell. The <strong>Suggested Order</strong> is the forecasted demand
+            multiplied by the lead time, minus the current stock.
           </p>
 
           <div className="row mt-3">
@@ -176,7 +176,7 @@ export default function Forecasting() {
       <div className="row">
         <div className="col">
           <div className="chart-box">
-            <h5>Monthly Demand Timeline (24-month issuance history)</h5>
+            <h5>Monthly Demand Timeline (36-month issuance history)</h5>
             <div style={{ height: 280 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data.timeline}>
@@ -185,7 +185,7 @@ export default function Forecasting() {
                   <YAxis allowDecimals={false} />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="demand" name="Qty issued" stroke="#1b5e20" strokeWidth={2} />
+                  <Line type="monotone" dataKey="demand" name="Qty issued" stroke="#2563eb" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -223,9 +223,9 @@ export default function Forecasting() {
                     <YAxis allowDecimals={false} />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="Forecast / mo" fill="#5cb884" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Current Stock" fill="#2575fc" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Suggested Order" fill="#ef473a" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Forecast / mo" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Current Stock" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Suggested Order" fill="#ef4444" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -315,7 +315,7 @@ export default function Forecasting() {
                     <td><strong>{p.forecast_monthly}</strong></td>
                     <td>
                       {p.suggested_reorder > 0 ? (
-                        <strong style={{ color: "#cb2d3e" }}>{p.suggested_reorder}</strong>
+                        <strong style={{ color: "#dc2626" }}>{p.suggested_reorder}</strong>
                       ) : (
                         "—"
                       )}

@@ -1,14 +1,14 @@
 :root {
-  --primary: #1b5e20;
-  --primary-dark: #0d3d11;
-  --sidebar-bg: #80d384;
-  --sidebar-hover: #388e3c;
-  --bg: #f4f6f9;
-  --green: #5cb884;
-  --danger: #cb2d3e;
-  --orange: #f09819;
-  --blue: #2575fc;
-  --purple: #6a11cb;
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --sidebar-bg: #1e293b;
+  --sidebar-hover: #334155;
+  --bg: #f1f5f9;
+  --green: #10b981;
+  --danger: #dc2626;
+  --orange: #f59e0b;
+  --blue: #3b82f6;
+  --purple: #6366f1;
 }
 
 * {
@@ -87,18 +87,18 @@ a {
 }
 
 .user-panel .info span {
-  color: var(--primary);
+  color: #f8fafc;
   font-weight: 700;
   font-size: 0.95rem;
   display: block;
 }
 
 .user-panel .info small {
-  color: var(--primary);
+  color: #cbd5e1;
   text-transform: uppercase;
   font-size: 0.65rem;
   font-weight: 600;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 .nav-section {
@@ -107,7 +107,7 @@ a {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--primary);
+  color: #94a3b8;
 }
 
 .nav-links {
@@ -143,7 +143,7 @@ a {
 
 .nav-header {
   padding: 12px 18px;
-  color: var(--primary);
+  color: #94a3b8;
   font-weight: 800;
   font-size: 0.68rem;
   text-transform: uppercase;
@@ -265,19 +265,19 @@ a {
 }
 
 .blue {
-  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
 }
 .green {
-  background: linear-gradient(135deg, #11998e, #38ef7d);
+  background: linear-gradient(135deg, #059669, #10b981);
 }
 .orange {
-  background: linear-gradient(135deg, #f09819, #edde5d);
+  background: linear-gradient(135deg, #d97706, #f59e0b);
 }
 .red {
-  background: linear-gradient(135deg, #cb2d3e, #ef473a);
+  background: linear-gradient(135deg, #dc2626, #ef4444);
 }
 .gray {
-  background: linear-gradient(135deg, #3e5151, #decba4);
+  background: linear-gradient(135deg, #475569, #64748b);
 }
 
 .row {
@@ -316,7 +316,7 @@ td {
 }
 
 tbody tr:hover {
-  background: #f5fbf5;
+  background: #eef4ff;
 }
 
 tr.low-stock {
@@ -430,7 +430,7 @@ tr.low-stock {
 .form-select:focus {
   outline: none;
   border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(92, 184, 132, 0.2);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
 }
 
 textarea.form-control {
@@ -481,8 +481,8 @@ textarea.form-control {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
-    radial-gradient(circle at 20% 30%, #1b5e20, #000);
+  background: linear-gradient(rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.72)),
+    radial-gradient(circle at 20% 30%, #2563eb, #0f172a);
   background-size: cover;
   font-family: "Segoe UI", sans-serif;
 }
@@ -571,7 +571,7 @@ textarea.form-control {
 
 .btn-login {
   width: 100%;
-  background: linear-gradient(45deg, #7ed6a5, #5cb884);
+  background: linear-gradient(45deg, #2563eb, #3b82f6);
   border: none;
   border-radius: 10px;
   font-weight: 600;
@@ -580,12 +580,12 @@ textarea.form-control {
   letter-spacing: 1px;
   font-size: 1rem;
   cursor: pointer;
-  box-shadow: 0 5px 15px rgba(92, 184, 132, 0.3);
+  box-shadow: 0 5px 15px rgba(37, 99, 235, 0.35);
   transition: 0.3s;
 }
 
 .btn-login:hover {
-  background: linear-gradient(45deg, #66c493, #4ea376);
+  background: linear-gradient(45deg, #1d4ed8, #2563eb);
   transform: translateY(-2px);
 }
 
@@ -617,7 +617,7 @@ textarea.form-control {
 }
 
 .chart-box h5 {
-  color: #2e59d9;
+  color: var(--primary);
   font-weight: 700;
   margin-bottom: 16px;
   font-size: 1rem;
