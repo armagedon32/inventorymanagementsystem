@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS tbl_product (
   description     TEXT NOT NULL,
   stock           INTEGER DEFAULT 0,
   reorder_level   INTEGER DEFAULT 0,
+  unit_cost       REAL DEFAULT 0,
   date_added      TEXT,
   image           TEXT,
   is_archived     INTEGER DEFAULT 0
@@ -106,5 +107,12 @@ CREATE TABLE IF NOT EXISTS settings (
   oic_president TEXT
 );
 `);
+
+// Migrations for existing databases
+const productCols = db.prepare("PRAGMA table_info(tbl_product)").all().map((c) => c.name);
+if (!productCols.includes("unit_cost")) {
+  db.exec("ALTER TABLE tbl_product ADD COLUMN unit_cost REAL DEFAULT 0");
+  db.exec("UPDATE tbl_product SET unit_cost = 25 WHERE unit_cost = 0");
+}
 
 export default db;

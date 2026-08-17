@@ -16,6 +16,7 @@ export default function AddProduct() {
     description: "",
     stock: 0,
     reorder_level: 0,
+    unit_cost: 0,
   });
 
   useEffect(() => {
@@ -108,6 +109,17 @@ export default function AddProduct() {
                 className="form-control"
                 value={form.reorder_level}
                 onChange={(e) => set("reorder_level", Number(e.target.value))}
+              />
+            </div>
+            <div className="form-group">
+              <label>Unit Cost (₱)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className="form-control"
+                value={form.unit_cost}
+                onChange={(e) => set("unit_cost", Number(e.target.value))}
               />
             </div>
           </div>

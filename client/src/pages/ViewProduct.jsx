@@ -23,6 +23,7 @@ export default function ViewProduct() {
     ["Description", product.description],
     ["Current Stock", product.stock],
     ["Reorder Level", product.reorder_level],
+    ["Unit Cost", product.unit_cost != null ? "₱" + Number(product.unit_cost).toFixed(2) : "₱0.00"],
     ["Date Added", product.date_added],
   ];
 

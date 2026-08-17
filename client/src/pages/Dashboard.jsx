@@ -13,9 +13,14 @@ import {
   Tooltip,
   CartesianGrid,
   ResponsiveContainer,
+  LineChart,
+  Line,
 } from "recharts";
 
 const PIE_COLORS = ["#2563eb", "#10b981", "#0ea5e9", "#f59e0b", "#ef4444", "#64748b", "#6366f1"];
+
+const peso = (n) =>
+  "₱" + Number(n || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -91,6 +96,43 @@ export default function Dashboard() {
               <p>Stock Out (30 days)</p>
             </div>
           </Link>
+        </div>
+        <div className="col">
+          <Link to="/products">
+            <div className="card-box green">
+              <i className="bg-icon">₱</i>
+              <h3 style={{ fontSize: "1.5rem" }}>{peso(data.totalValue)}</h3>
+              <p>Inventory Value</p>
+            </div>
+          </Link>
+        </div>
+        <div className="col">
+          <Link to="/products">
+            <div className="card-box orange">
+              <i className="bg-icon">⚑</i>
+              <h3>{data.reorderAlerts}</h3>
+              <p>Reorder Alerts</p>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      <div className="row">
+        <div className="col">
+          <div className="chart-box">
+            <h5>Monthly Issuance Trend (12 months)</h5>
+            <div style={{ height: 260 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data.monthlyIssuance}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="total" name="Qty issued" stroke="#2563eb" strokeWidth={2} dot={{ r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -23,6 +23,7 @@ export default function EditProduct() {
           category: String(p.category),
           description: p.description,
           reorder_level: p.reorder_level,
+          unit_cost: p.unit_cost || 0,
         })
       )
       .catch((e) => setError(e.message));
@@ -97,6 +98,17 @@ export default function EditProduct() {
                 className="form-control"
                 value={form.reorder_level}
                 onChange={(e) => set("reorder_level", Number(e.target.value))}
+              />
+            </div>
+            <div className="form-group">
+              <label>Unit Cost (₱)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className="form-control"
+                value={form.unit_cost}
+                onChange={(e) => set("unit_cost", Number(e.target.value))}
               />
             </div>
           </div>

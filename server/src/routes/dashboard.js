@@ -10,11 +10,17 @@ router.get("/summary", (req, res) => {
   const totalStock = db
     .prepare("SELECT IFNULL(SUM(stock), 0) AS s FROM tbl_product WHERE is_archived = 0")
     .get().s;
+  const totalValue = db
+    .prepare("SELECT IFNULL(SUM(stock * unit_cost), 0) AS v FROM tbl_product WHERE is_archived = 0")
+    .get().v;
   const lowStock = db
     .prepare("SELECT COUNT(*) AS c FROM tbl_product WHERE is_archived = 0 AND stock > 0 AND stock <= reorder_level")
     .get().c;
   const outOfStock = db
     .prepare("SELECT COUNT(*) AS c FROM tbl_product WHERE is_archived = 0 AND stock = 0")
+    .get().c;
+  const reorderAlerts = db
+    .prepare("SELECT COUNT(*) AS c FROM tbl_product WHERE is_archived = 0 AND stock <= reorder_level")
     .get().c;
   const totalUsers = db
     .prepare("SELECT COUNT(*) AS c FROM tbl_user WHERE is_archived = 0")
@@ -46,6 +52,16 @@ router.get("/summary", (req, res) => {
     )
     .all();
 
+  const monthlyIssuance = db
+    .prepare(
+      `SELECT strftime('%Y-%m', stockout_date) AS month, SUM(quantity) AS total
+       FROM tbl_stockout
+       WHERE is_archived = 0
+         AND date(stockout_date) >= date('now','localtime','start of month','-11 months')
+       GROUP BY month ORDER BY month`
+    )
+    .all();
+
   const recentActivity = db
     .prepare(
       `SELECT a.*, u.fullname FROM activity_log a
@@ -57,13 +73,16 @@ router.get("/summary", (req, res) => {
   res.json({
     totalProducts,
     totalStock,
+    totalValue,
     lowStock,
     outOfStock,
+    reorderAlerts,
     totalUsers,
     totalStockout,
     acquisition: acqRows,
     categories: catRows,
     last7Stockout,
+    monthlyIssuance,
     recentActivity,
   });
 });

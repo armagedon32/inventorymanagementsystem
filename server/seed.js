@@ -95,21 +95,21 @@ const tx = db.transaction(() => {
 
   // ---- Products ----
   const insProduct = db.prepare(
-    `INSERT INTO tbl_product (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, date_added, image, is_archived)
-     VALUES (@barcode, @name, @brand, @acquisition_type, @category, @description, @stock, @reorder_level, @date_added, NULL, 0)`
+    `INSERT INTO tbl_product (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, date_added, image, is_archived)
+     VALUES (@barcode, @name, @brand, @acquisition_type, @category, @description, @stock, @reorder_level, @unit_cost, @date_added, NULL, 0)`
   );
   const products = [
-    { barcode: "72112204", name: "bondpaper", brand: "easy", acq: "Donated", cat: cats["Office Supply"], desc: "short", stock: 105, reorder: 30 },
-    { barcode: "71111504", name: "ballpen", brand: "hbw", acq: "Purchased", cat: cats["Office Supply"], desc: "red (pieces)", stock: 25, reorder: 20 },
-    { barcode: "4801981116072", name: "bondpaper", brand: "easy", acq: "Purchased", cat: cats["Office Supply"], desc: "long", stock: 9, reorder: 15 },
-    { barcode: "BC-20260330-0001", name: "stapler", brand: "HBW", acq: "Donated", cat: cats["Office Supply"], desc: "long", stock: 10, reorder: 5 },
-    { barcode: "BC-20260404-0001", name: "powder cleanser", brand: "calla", acq: "Purchased", cat: cats["Maintenance Supplies"], desc: "1.6kg pink", stock: 25, reorder: 12 },
-    { barcode: "BC-20260416-0001", name: "ballpen", brand: "panda", acq: "Purchased", cat: cats["Office Supply"], desc: "black (pieces)", stock: 21, reorder: 10 },
-    { barcode: "BC-20260422-0001", name: "ballpen", brand: "panda", acq: "Purchased", cat: cats["Office Supply"], desc: "blue (pieces)", stock: 24, reorder: 10 },
-    { barcode: "BC-20260422-0002", name: "stapler", brand: "hbw", acq: "Purchased", cat: cats["Office Supply"], desc: "small (pieces)", stock: 10, reorder: 6 },
-    { barcode: "BC-20260426-0001", name: "binder", brand: "", acq: "Purchased", cat: cats["Office Supply"], desc: "black", stock: 10, reorder: 4 },
-    { barcode: "BC-20260426-0002", name: "paper clips", brand: "", acq: "Purchased", cat: cats["Office Supply"], desc: "small (box)", stock: 5, reorder: 3 },
-    { barcode: "BC-20260427-0001", name: "index card", brand: "b&e", acq: "Purchased", cat: cats["Office Supply"], desc: "short (pack)", stock: 24, reorder: 8 },
+    { barcode: "72112204", name: "bondpaper", brand: "easy", acq: "Donated", cat: cats["Office Supply"], desc: "short", stock: 105, reorder: 30, cost: 0.5 },
+    { barcode: "71111504", name: "ballpen", brand: "hbw", acq: "Purchased", cat: cats["Office Supply"], desc: "red (pieces)", stock: 25, reorder: 20, cost: 8 },
+    { barcode: "4801981116072", name: "bondpaper", brand: "easy", acq: "Purchased", cat: cats["Office Supply"], desc: "long", stock: 9, reorder: 15, cost: 0.55 },
+    { barcode: "BC-20260330-0001", name: "stapler", brand: "HBW", acq: "Donated", cat: cats["Office Supply"], desc: "long", stock: 10, reorder: 5, cost: 150 },
+    { barcode: "BC-20260404-0001", name: "powder cleanser", brand: "calla", acq: "Purchased", cat: cats["Maintenance Supplies"], desc: "1.6kg pink", stock: 25, reorder: 12, cost: 45 },
+    { barcode: "BC-20260416-0001", name: "ballpen", brand: "panda", acq: "Purchased", cat: cats["Office Supply"], desc: "black (pieces)", stock: 21, reorder: 10, cost: 7.5 },
+    { barcode: "BC-20260422-0001", name: "ballpen", brand: "panda", acq: "Purchased", cat: cats["Office Supply"], desc: "blue (pieces)", stock: 24, reorder: 10, cost: 7.5 },
+    { barcode: "BC-20260422-0002", name: "stapler", brand: "hbw", acq: "Purchased", cat: cats["Office Supply"], desc: "small (pieces)", stock: 10, reorder: 6, cost: 95 },
+    { barcode: "BC-20260426-0001", name: "binder", brand: "", acq: "Purchased", cat: cats["Office Supply"], desc: "black", stock: 10, reorder: 4, cost: 35 },
+    { barcode: "BC-20260426-0002", name: "paper clips", brand: "", acq: "Purchased", cat: cats["Office Supply"], desc: "small (box)", stock: 5, reorder: 3, cost: 18 },
+    { barcode: "BC-20260427-0001", name: "index card", brand: "b&e", acq: "Purchased", cat: cats["Office Supply"], desc: "short (pack)", stock: 24, reorder: 8, cost: 40 },
   ];
   const productIds = {};
   products.forEach((p, i) => {
@@ -118,7 +118,7 @@ const tx = db.transaction(() => {
     const r = insProduct.run({
       barcode: p.barcode, name: p.name, brand: p.brand,
       acquisition_type: p.acq, category: p.cat, description: p.desc,
-      stock: p.stock, reorder_level: p.reorder, date_added: date.toISOString().slice(0, 10),
+      stock: p.stock, reorder_level: p.reorder, unit_cost: p.cost, date_added: date.toISOString().slice(0, 10),
     });
     productIds["idx:" + i] = r.lastInsertRowid;
   });

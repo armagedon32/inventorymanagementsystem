@@ -43,17 +43,17 @@ router.get("/:id", (req, res) => {
 });
 
 router.post("/", (req, res) => {
-  const { barcode, name, brand, acquisition_type, category, description, stock, reorder_level } = req.body || {};
+  const { barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost } = req.body || {};
   if (!name || !category) return res.status(400).json({ error: "Name and category are required." });
 
   const code = barcode || nextBarcode();
   const info = db
     .prepare(
       `INSERT INTO tbl_product
-        (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, date_added, is_archived)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, date('now','localtime'), 0)`
+        (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, date_added, is_archived)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, date('now','localtime'), 0)`
     )
-    .run(code, name, brand || "", acquisition_type || "Purchased", category, description || "", stock || 0, reorder_level || 0);
+    .run(code, name, brand || "", acquisition_type || "Purchased", category, description || "", stock || 0, reorder_level || 0, unit_cost || 0);
 
   db.prepare(
     "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
@@ -72,10 +72,10 @@ router.put("/:id", (req, res) => {
   const p = db.prepare("SELECT * FROM tbl_product WHERE pid = ?").get(req.params.id);
   if (!p) return res.status(404).json({ error: "Product not found" });
 
-  const { barcode, name, brand, acquisition_type, category, description, reorder_level } = req.body || {};
+  const { barcode, name, brand, acquisition_type, category, description, reorder_level, unit_cost } = req.body || {};
   db.prepare(
     `UPDATE tbl_product SET
-       barcode = ?, name = ?, brand = ?, acquisition_type = ?, category = ?, description = ?, reorder_level = ?
+       barcode = ?, name = ?, brand = ?, acquisition_type = ?, category = ?, description = ?, reorder_level = ?, unit_cost = ?
      WHERE pid = ?`
   ).run(
     barcode || p.barcode,
@@ -85,6 +85,7 @@ router.put("/:id", (req, res) => {
     category || p.category,
     description !== undefined ? description : p.description,
     reorder_level !== undefined ? reorder_level : p.reorder_level,
+    unit_cost !== undefined ? unit_cost : p.unit_cost,
     p.pid
   );
 
