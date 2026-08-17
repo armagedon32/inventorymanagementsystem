@@ -23,6 +23,7 @@ export default function Layout() {
       items: [
         { to: "/stock", label: "Supplies / Stock In", icon: "▤" },
         { to: "/stock/add", label: "Supply Registration", icon: "✚" },
+        { to: "/categories", label: "Categories", icon: "☰" },
       ],
     },
     {

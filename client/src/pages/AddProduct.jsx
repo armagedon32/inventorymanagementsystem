@@ -18,6 +18,7 @@ export default function AddProduct({ type = "Stock" }) {
     stock: 0,
     reorder_level: 0,
     unit_cost: 0,
+    unit: "pcs",
     product_type: type,
     serial_number: "",
     condition: "Good",
@@ -95,6 +96,14 @@ export default function AddProduct({ type = "Stock" }) {
             <div className="form-group">
               <label>Description</label>
               <input className="form-control" value={form.description} onChange={(e) => set("description", e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label>Unit</label>
+              <select className="form-select" value={form.unit} onChange={(e) => set("unit", e.target.value)}>
+                {["pcs", "box", "ream", "pack", "bottle", "set", "unit", "liter", "kg", "pair"].map((u) => (
+                  <option key={u}>{u}</option>
+                ))}
+              </select>
             </div>
 
             {isAsset ? (

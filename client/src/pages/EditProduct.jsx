@@ -26,6 +26,7 @@ export default function EditProduct({ type = "Stock" }) {
           description: p.description,
           reorder_level: p.reorder_level,
           unit_cost: p.unit_cost || 0,
+          unit: p.unit || "pcs",
           product_type: p.product_type || type,
           serial_number: p.serial_number || "",
           condition: p.condition || "Good",
@@ -95,6 +96,14 @@ export default function EditProduct({ type = "Stock" }) {
             <div className="form-group">
               <label>Description</label>
               <input className="form-control" value={form.description} onChange={(e) => set("description", e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label>Unit</label>
+              <select className="form-select" value={form.unit || "pcs"} onChange={(e) => set("unit", e.target.value)}>
+                {["pcs", "box", "ream", "pack", "bottle", "set", "unit", "liter", "kg", "pair"].map((u) => (
+                  <option key={u}>{u}</option>
+                ))}
+              </select>
             </div>
 
             {isAsset ? (

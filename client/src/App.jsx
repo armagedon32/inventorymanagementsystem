@@ -11,6 +11,7 @@ import StockIn from "./pages/StockIn";
 import StockOut from "./pages/StockOut";
 import StockHistory from "./pages/StockHistory";
 import Users from "./pages/Users";
+import Categories from "./pages/Categories";
 import Forecasting from "./pages/Forecasting";
 import ChangePassword from "./pages/ChangePassword";
 
@@ -51,6 +52,7 @@ export default function App() {
         <Route path="/products" element={<Navigate to="/stock" replace />} />
         <Route path="/products/*" element={<StockRedirect />} />
         <Route path="/users" element={<Users />} />
+        <Route path="/categories" element={<Categories />} />
         <Route path="/forecasting" element={<Forecasting />} />
         <Route path="/change-password" element={<ChangePassword />} />
       </Route>

@@ -23,6 +23,7 @@ export default function ViewProduct({ type = "Stock" }) {
     ["Acquisition Type", product.acquisition_type],
     ["Category", product.category_name],
     ["Description", product.description],
+    ["Unit", product.unit || "pcs"],
     ["Unit Cost", product.unit_cost != null ? "₱" + Number(product.unit_cost).toFixed(2) : "₱0.00"],
     ["Date Added", product.date_added],
   ];

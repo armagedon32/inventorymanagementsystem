@@ -38,14 +38,19 @@ const tx = db.transaction(() => {
   });
 
   // ---- Categories ----
-  const insCat = db.prepare("INSERT INTO tbl_category (category, is_archived) VALUES (?, 0)");
+  const insCat = db.prepare("INSERT INTO tbl_category (category, description, is_archived) VALUES (?, ?, 0)");
   const cats = {};
   [
-    ["furniture", "89"], ["ICT Equipment", "91"], ["Office Equipment", "93"],
-    ["Office Supply", "94"], ["Building & Infrastructure", "95"], ["Maintenance Supplies", "99"],
-    ["sports equipment", "102"], ["kitchen equipment", "103"],
-  ].forEach(([name]) => {
-    const r = insCat.run(name);
+    ["furniture", "89", "Tables, chairs, and other office furniture"],
+    ["ICT Equipment", "91", "Computers, printers, and related equipment"],
+    ["Office Equipment", "93", "General office machines and equipment"],
+    ["Office Supply", "94", "Consumable office materials"],
+    ["Building & Infrastructure", "95", "Building parts and infrastructure items"],
+    ["Maintenance Supplies", "99", "Cleaning and maintenance consumables"],
+    ["sports equipment", "102", "Sports and athletic equipment"],
+    ["kitchen equipment", "103", "Kitchen appliances and utensils"],
+  ].forEach(([name, , desc]) => {
+    const r = insCat.run(name, desc);
     cats[name] = r.lastInsertRowid;
   });
 
@@ -95,27 +100,27 @@ const tx = db.transaction(() => {
 
   // ---- Products ----
   const insProduct = db.prepare(
-    `INSERT INTO tbl_product (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, product_type, serial_number, condition, assigned_to, date_added, image, is_archived)
-     VALUES (@barcode, @name, @brand, @acquisition_type, @category, @description, @stock, @reorder_level, @unit_cost, @product_type, @serial_number, @condition, @assigned_to, @date_added, NULL, 0)`
+    `INSERT INTO tbl_product (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to, date_added, image, is_archived)
+     VALUES (@barcode, @name, @brand, @acquisition_type, @category, @description, @stock, @reorder_level, @unit_cost, @unit, @product_type, @serial_number, @condition, @assigned_to, @date_added, NULL, 0)`
   );
   const products = [
-    { barcode: "72112204", name: "bondpaper", brand: "easy", acq: "Donated", cat: cats["Office Supply"], desc: "short", stock: 105, reorder: 30, cost: 0.5 },
-    { barcode: "71111504", name: "ballpen", brand: "hbw", acq: "Purchased", cat: cats["Office Supply"], desc: "red (pieces)", stock: 25, reorder: 20, cost: 8 },
-    { barcode: "4801981116072", name: "bondpaper", brand: "easy", acq: "Purchased", cat: cats["Office Supply"], desc: "long", stock: 9, reorder: 15, cost: 0.55 },
-    { barcode: "BC-20260330-0001", name: "stapler", brand: "HBW", acq: "Donated", cat: cats["Office Supply"], desc: "long", stock: 10, reorder: 5, cost: 150 },
-    { barcode: "BC-20260404-0001", name: "powder cleanser", brand: "calla", acq: "Purchased", cat: cats["Maintenance Supplies"], desc: "1.6kg pink", stock: 25, reorder: 12, cost: 45 },
-    { barcode: "BC-20260416-0001", name: "ballpen", brand: "panda", acq: "Purchased", cat: cats["Office Supply"], desc: "black (pieces)", stock: 21, reorder: 10, cost: 7.5 },
-    { barcode: "BC-20260422-0001", name: "ballpen", brand: "panda", acq: "Purchased", cat: cats["Office Supply"], desc: "blue (pieces)", stock: 24, reorder: 10, cost: 7.5 },
-    { barcode: "BC-20260422-0002", name: "stapler", brand: "hbw", acq: "Purchased", cat: cats["Office Supply"], desc: "small (pieces)", stock: 10, reorder: 6, cost: 95 },
-    { barcode: "BC-20260426-0001", name: "binder", brand: "", acq: "Purchased", cat: cats["Office Supply"], desc: "black", stock: 10, reorder: 4, cost: 35 },
-    { barcode: "BC-20260426-0002", name: "paper clips", brand: "", acq: "Purchased", cat: cats["Office Supply"], desc: "small (box)", stock: 5, reorder: 3, cost: 18 },
-    { barcode: "BC-20260427-0001", name: "index card", brand: "b&e", acq: "Purchased", cat: cats["Office Supply"], desc: "short (pack)", stock: 24, reorder: 8, cost: 40 },
+    { barcode: "72112204", name: "bondpaper", brand: "easy", acq: "Donated", cat: cats["Office Supply"], desc: "short", stock: 105, reorder: 30, cost: 0.5, unit: "ream" },
+    { barcode: "71111504", name: "ballpen", brand: "hbw", acq: "Purchased", cat: cats["Office Supply"], desc: "red (pieces)", stock: 25, reorder: 20, cost: 8, unit: "pcs" },
+    { barcode: "4801981116072", name: "bondpaper", brand: "easy", acq: "Purchased", cat: cats["Office Supply"], desc: "long", stock: 9, reorder: 15, cost: 0.55, unit: "ream" },
+    { barcode: "BC-20260330-0001", name: "stapler", brand: "HBW", acq: "Donated", cat: cats["Office Supply"], desc: "long", stock: 10, reorder: 5, cost: 150, unit: "pcs" },
+    { barcode: "BC-20260404-0001", name: "powder cleanser", brand: "calla", acq: "Purchased", cat: cats["Maintenance Supplies"], desc: "1.6kg pink", stock: 25, reorder: 12, cost: 45, unit: "pack" },
+    { barcode: "BC-20260416-0001", name: "ballpen", brand: "panda", acq: "Purchased", cat: cats["Office Supply"], desc: "black (pieces)", stock: 21, reorder: 10, cost: 7.5, unit: "pcs" },
+    { barcode: "BC-20260422-0001", name: "ballpen", brand: "panda", acq: "Purchased", cat: cats["Office Supply"], desc: "blue (pieces)", stock: 24, reorder: 10, cost: 7.5, unit: "pcs" },
+    { barcode: "BC-20260422-0002", name: "stapler", brand: "hbw", acq: "Purchased", cat: cats["Office Supply"], desc: "small (pieces)", stock: 10, reorder: 6, cost: 95, unit: "pcs" },
+    { barcode: "BC-20260426-0001", name: "binder", brand: "", acq: "Purchased", cat: cats["Office Supply"], desc: "black", stock: 10, reorder: 4, cost: 35, unit: "pcs" },
+    { barcode: "BC-20260426-0002", name: "paper clips", brand: "", acq: "Purchased", cat: cats["Office Supply"], desc: "small (box)", stock: 5, reorder: 3, cost: 18, unit: "box" },
+    { barcode: "BC-20260427-0001", name: "index card", brand: "b&e", acq: "Purchased", cat: cats["Office Supply"], desc: "short (pack)", stock: 24, reorder: 8, cost: 40, unit: "pack" },
   ];
   const assets = [
-    { barcode: "AST-2026-0001", name: "Desktop Computer", brand: "Dell", acq: "Purchased", cat: cats["ICT Equipment"], desc: "Core i5, 8GB RAM", stock: 1, reorder: 0, cost: 25000, serial: "DELL-8Y7KD33", cond: "Good", assigned: "Comlab 1" },
-    { barcode: "AST-2026-0002", name: "Printer", brand: "Epson", acq: "Donated", cat: cats["Office Equipment"], desc: "Laser printer", stock: 1, reorder: 0, cost: 12000, serial: "EPS-4471X", cond: "Good", assigned: "Registrar Office" },
-    { barcode: "AST-2026-0003", name: "Projector", brand: "Epson", acq: "Purchased", cat: cats["ICT Equipment"], desc: "HD projector", stock: 1, reorder: 0, cost: 18500, serial: "EPS-99823P", cond: "Needs Repair", assigned: "Audio Visual Room" },
-    { barcode: "AST-2026-0004", name: "Office Chair", brand: "", acq: "Donated", cat: cats["furniture"], desc: "Ergonomic chair", stock: 2, reorder: 0, cost: 1500, serial: "", cond: "Fair", assigned: "Admin Office" },
+    { barcode: "AST-2026-0001", name: "Desktop Computer", brand: "Dell", acq: "Purchased", cat: cats["ICT Equipment"], desc: "Core i5, 8GB RAM", stock: 1, reorder: 0, cost: 25000, serial: "DELL-8Y7KD33", cond: "Good", assigned: "Comlab 1", unit: "unit" },
+    { barcode: "AST-2026-0002", name: "Printer", brand: "Epson", acq: "Donated", cat: cats["Office Equipment"], desc: "Laser printer", stock: 1, reorder: 0, cost: 12000, serial: "EPS-4471X", cond: "Good", assigned: "Registrar Office", unit: "unit" },
+    { barcode: "AST-2026-0003", name: "Projector", brand: "Epson", acq: "Purchased", cat: cats["ICT Equipment"], desc: "HD projector", stock: 1, reorder: 0, cost: 18500, serial: "EPS-99823P", cond: "Needs Repair", assigned: "Audio Visual Room", unit: "unit" },
+    { barcode: "AST-2026-0004", name: "Office Chair", brand: "", acq: "Donated", cat: cats["furniture"], desc: "Ergonomic chair", stock: 2, reorder: 0, cost: 1500, serial: "", cond: "Fair", assigned: "Admin Office", unit: "unit" },
   ];
   const productIds = {};
   products.forEach((p, i) => {
@@ -124,7 +129,7 @@ const tx = db.transaction(() => {
     const r = insProduct.run({
       barcode: p.barcode, name: p.name, brand: p.brand,
       acquisition_type: p.acq, category: p.cat, description: p.desc,
-      stock: p.stock, reorder_level: p.reorder, unit_cost: p.cost,
+      stock: p.stock, reorder_level: p.reorder, unit_cost: p.cost, unit: p.unit || "pcs",
       product_type: "Stock", serial_number: null, condition: "Good", assigned_to: null,
       date_added: date.toISOString().slice(0, 10),
     });
@@ -136,7 +141,7 @@ const tx = db.transaction(() => {
     const r = insProduct.run({
       barcode: p.barcode, name: p.name, brand: p.brand,
       acquisition_type: p.acq, category: p.cat, description: p.desc,
-      stock: p.stock, reorder_level: p.reorder, unit_cost: p.cost,
+      stock: p.stock, reorder_level: p.reorder, unit_cost: p.cost, unit: p.unit || "pcs",
       product_type: "Asset", serial_number: p.serial, condition: p.cond, assigned_to: p.assigned,
       date_added: date.toISOString().slice(0, 10),
     });

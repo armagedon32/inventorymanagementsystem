@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
+import { exportCSV, exportPDF } from "../utils/export";
 
 export default function Products({ type = "Stock" }) {
   const isAsset = type === "Asset";
@@ -31,6 +32,50 @@ export default function Products({ type = "Stock" }) {
     }
   }
 
+  const statusOf = (p) => {
+    if (p.stock === 0) return "Out of Stock";
+    if (p.stock <= p.reorder_level) return "Low";
+    return "OK";
+  };
+
+  const exportColumns = isAsset
+    ? [
+        { label: "Asset Tag", key: "barcode" },
+        { label: "Name", key: "name" },
+        { label: "Brand", key: "brand" },
+        { label: "Category", key: "category_name" },
+        { label: "Serial No.", key: "serial_number" },
+        { label: "Condition", key: "condition" },
+        { label: "Assigned To", key: "assigned_to" },
+        { label: "Unit", key: "unit" },
+        { label: "Quantity", key: "stock" },
+        { label: "Unit Cost", key: "unit_cost" },
+      ]
+    : [
+        { label: "Barcode", key: "barcode" },
+        { label: "Name", key: "name" },
+        { label: "Brand", key: "brand" },
+        { label: "Acquisition Type", key: "acquisition_type" },
+        { label: "Category", key: "category_name" },
+        { label: "Description", key: "description" },
+        { label: "Unit", key: "unit" },
+        { label: "Stock", key: "stock" },
+        { label: "Reorder Level", key: "reorder_level" },
+        { label: "Unit Cost", key: "unit_cost" },
+        { label: "Status", key: "__status" },
+      ];
+
+  const exportRows = isAsset
+    ? products
+    : products.map((p) => ({ ...p, __status: statusOf(p) }));
+
+  function handleExport(format) {
+    const title = isAsset ? "Asset Management List" : "Stock Inventory List";
+    const filename = `${isAsset ? "assets" : "stock-inventory"}-${new Date().toISOString().slice(0, 10)}`;
+    if (format === "pdf") exportPDF({ title, filename: `${filename}.pdf`, headers: exportColumns, rows: exportRows });
+    else exportCSV({ filename: `${filename}.csv`, headers: exportColumns, rows: exportRows });
+  }
+
   return (
     <div className="card">
       <div className="card-header">
@@ -39,6 +84,12 @@ export default function Products({ type = "Stock" }) {
           <span className="text-muted" style={{ fontSize: "0.85rem" }}>
             {products.length} item(s)
           </span>
+          <button className="btn btn-sm" title="Export to Excel (CSV)" onClick={() => handleExport("excel")}>
+            ⤓ Excel
+          </button>
+          <button className="btn btn-sm" title="Export to PDF (print)" onClick={() => handleExport("pdf")}>
+            ⤓ PDF
+          </button>
           <Link to={`${base}/add`} className="btn btn-primary btn-sm">
             ✚ {isAsset ? "New Asset" : "New Supply"}
           </Link>
@@ -57,6 +108,7 @@ export default function Products({ type = "Stock" }) {
                 <th>Brand</th>
                 {!isAsset && <th>Acq. Type</th>}
                 <th>Category</th>
+                <th>Unit</th>
                 {isAsset && <th>Serial No.</th>}
                 {isAsset && <th>Condition</th>}
                 {isAsset && <th>Assigned To</th>}
@@ -78,6 +130,7 @@ export default function Products({ type = "Stock" }) {
                     <td>{p.brand}</td>
                     {!isAsset && <td>{p.acquisition_type}</td>}
                     <td>{p.category_name}</td>
+                    <td>{p.unit || "pcs"}</td>
                     {isAsset && <td>{p.serial_number || "—"}</td>}
                     {isAsset && (
                       <td>
@@ -129,7 +182,7 @@ export default function Products({ type = "Stock" }) {
               })}
               {products.length === 0 && (
                 <tr>
-                  <td colSpan={isAsset ? 8 : 10} className="empty">
+                  <td colSpan={isAsset ? 9 : 11} className="empty">
                     No {isAsset ? "assets" : "supplies"} yet. Click "{isAsset ? "New Asset" : "New Supply"}".
                   </td>
                 </tr>
