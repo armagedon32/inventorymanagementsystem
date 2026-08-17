@@ -3,6 +3,9 @@
 Converted from the legacy PHP (XAMPP/MySQL) system into a modern **React + Node/Express + SQLite** full-stack app.
 No XAMPP, no MySQL, no third-party servers needed — SQLite runs inside Node.
 
+> **Live deployment:** https://server-production-df0e.up.railway.app
+> (Admin: `superadmin` / `admin123`)
+
 ## Features (Core Modules)
 
 - **Authentication** — login (email/username), JWT session, change password, role-based access
