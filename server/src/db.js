@@ -49,6 +49,10 @@ CREATE TABLE IF NOT EXISTS tbl_product (
   stock           INTEGER DEFAULT 0,
   reorder_level   INTEGER DEFAULT 0,
   unit_cost       REAL DEFAULT 0,
+  product_type    TEXT DEFAULT 'Stock',
+  serial_number   TEXT,
+  condition       TEXT DEFAULT 'Good',
+  assigned_to     TEXT,
   date_added      TEXT,
   image           TEXT,
   is_archived     INTEGER DEFAULT 0
@@ -114,5 +118,9 @@ if (!productCols.includes("unit_cost")) {
   db.exec("ALTER TABLE tbl_product ADD COLUMN unit_cost REAL DEFAULT 0");
   db.exec("UPDATE tbl_product SET unit_cost = 25 WHERE unit_cost = 0");
 }
+if (!productCols.includes("product_type")) db.exec("ALTER TABLE tbl_product ADD COLUMN product_type TEXT DEFAULT 'Stock'");
+if (!productCols.includes("serial_number")) db.exec("ALTER TABLE tbl_product ADD COLUMN serial_number TEXT");
+if (!productCols.includes("condition")) db.exec("ALTER TABLE tbl_product ADD COLUMN condition TEXT DEFAULT 'Good'");
+if (!productCols.includes("assigned_to")) db.exec("ALTER TABLE tbl_product ADD COLUMN assigned_to TEXT");
 
 export default db;

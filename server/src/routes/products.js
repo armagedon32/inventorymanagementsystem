@@ -17,15 +17,14 @@ function nextBarcode() {
 // ============ PRODUCTS ============
 
 router.get("/", (req, res) => {
-  const rows = db
-    .prepare(
-      `SELECT p.*, c.category AS category_name
-       FROM tbl_product p
-       LEFT JOIN tbl_category c ON p.category = c.catid
-       WHERE p.is_archived = 0
-       ORDER BY p.pid DESC`
-    )
-    .all();
+  const type = req.query.type;
+  const base = `SELECT p.*, c.category AS category_name
+                FROM tbl_product p
+                LEFT JOIN tbl_category c ON p.category = c.catid
+                WHERE p.is_archived = 0`;
+  const rows = type
+    ? db.prepare(`${base} AND p.product_type = ? ORDER BY p.pid DESC`).all(type)
+    : db.prepare(`${base} ORDER BY p.pid DESC`).all();
   res.json(rows);
 });
 
@@ -43,17 +42,21 @@ router.get("/:id", (req, res) => {
 });
 
 router.post("/", (req, res) => {
-  const { barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost } = req.body || {};
+  const { barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, product_type, serial_number, condition, assigned_to } = req.body || {};
   if (!name || !category) return res.status(400).json({ error: "Name and category are required." });
 
   const code = barcode || nextBarcode();
   const info = db
     .prepare(
       `INSERT INTO tbl_product
-        (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, date_added, is_archived)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, date('now','localtime'), 0)`
+        (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, product_type, serial_number, condition, assigned_to, date_added, is_archived)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, date('now','localtime'), 0)`
     )
-    .run(code, name, brand || "", acquisition_type || "Purchased", category, description || "", stock || 0, reorder_level || 0, unit_cost || 0);
+    .run(
+      code, name, brand || "", acquisition_type || "Purchased", category, description || "",
+      stock || 0, reorder_level || 0, unit_cost || 0, product_type || "Stock",
+      serial_number || null, condition || "Good", assigned_to || null
+    );
 
   db.prepare(
     "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
@@ -72,10 +75,11 @@ router.put("/:id", (req, res) => {
   const p = db.prepare("SELECT * FROM tbl_product WHERE pid = ?").get(req.params.id);
   if (!p) return res.status(404).json({ error: "Product not found" });
 
-  const { barcode, name, brand, acquisition_type, category, description, reorder_level, unit_cost } = req.body || {};
+  const { barcode, name, brand, acquisition_type, category, description, reorder_level, unit_cost, product_type, serial_number, condition, assigned_to } = req.body || {};
   db.prepare(
     `UPDATE tbl_product SET
-       barcode = ?, name = ?, brand = ?, acquisition_type = ?, category = ?, description = ?, reorder_level = ?, unit_cost = ?
+       barcode = ?, name = ?, brand = ?, acquisition_type = ?, category = ?, description = ?,
+       reorder_level = ?, unit_cost = ?, product_type = ?, serial_number = ?, condition = ?, assigned_to = ?
      WHERE pid = ?`
   ).run(
     barcode || p.barcode,
@@ -86,6 +90,10 @@ router.put("/:id", (req, res) => {
     description !== undefined ? description : p.description,
     reorder_level !== undefined ? reorder_level : p.reorder_level,
     unit_cost !== undefined ? unit_cost : p.unit_cost,
+    product_type || p.product_type || "Stock",
+    serial_number !== undefined ? serial_number : p.serial_number,
+    condition || p.condition || "Good",
+    assigned_to !== undefined ? assigned_to : p.assigned_to,
     p.pid
   );
 

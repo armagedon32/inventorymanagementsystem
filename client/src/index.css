@@ -279,6 +279,9 @@ a {
 .gray {
   background: linear-gradient(135deg, #475569, #64748b);
 }
+.purple {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+}
 
 .row {
   display: flex;

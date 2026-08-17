@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 
-export default function AddProduct() {
+export default function AddProduct({ type = "Stock" }) {
+  const isAsset = type === "Asset";
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState("");
@@ -17,6 +18,10 @@ export default function AddProduct() {
     stock: 0,
     reorder_level: 0,
     unit_cost: 0,
+    product_type: type,
+    serial_number: "",
+    condition: "Good",
+    assigned_to: "",
   });
 
   useEffect(() => {
@@ -33,7 +38,7 @@ export default function AddProduct() {
     setLoading(true);
     try {
       await api.post("/products", form);
-      navigate("/products");
+      navigate(isAsset ? "/assets" : "/stock");
     } catch (e) {
       setError(e.message);
     } finally {
@@ -44,7 +49,7 @@ export default function AddProduct() {
   return (
     <div className="card">
       <div className="card-header">
-        <h5>Supply Registration</h5>
+        <h5>{isAsset ? "Asset Registration" : "Supply Registration"}</h5>
       </div>
       <div className="card-body">
         {error && <div className="alert alert-error">{error}</div>}
@@ -59,7 +64,7 @@ export default function AddProduct() {
               <input className="form-control" value={form.brand} onChange={(e) => set("brand", e.target.value)} />
             </div>
             <div className="form-group">
-              <label>Barcode (leave blank to auto-generate)</label>
+              <label>{isAsset ? "Asset Tag / Barcode (blank = auto)" : "Barcode (blank = auto)"}</label>
               <input className="form-control" value={form.barcode} onChange={(e) => set("barcode", e.target.value)} />
             </div>
             <div className="form-group">
@@ -91,26 +96,62 @@ export default function AddProduct() {
               <label>Description</label>
               <input className="form-control" value={form.description} onChange={(e) => set("description", e.target.value)} />
             </div>
-            <div className="form-group">
-              <label>Initial Stock</label>
-              <input
-                type="number"
-                min="0"
-                className="form-control"
-                value={form.stock}
-                onChange={(e) => set("stock", Number(e.target.value))}
-              />
-            </div>
-            <div className="form-group">
-              <label>Reorder Level</label>
-              <input
-                type="number"
-                min="0"
-                className="form-control"
-                value={form.reorder_level}
-                onChange={(e) => set("reorder_level", Number(e.target.value))}
-              />
-            </div>
+
+            {isAsset ? (
+              <>
+                <div className="form-group">
+                  <label>Serial Number</label>
+                  <input className="form-control" value={form.serial_number} onChange={(e) => set("serial_number", e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label>Condition</label>
+                  <select className="form-select" value={form.condition} onChange={(e) => set("condition", e.target.value)}>
+                    <option>Good</option>
+                    <option>Fair</option>
+                    <option>Needs Repair</option>
+                    <option>For Disposal</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Assigned To (Office / Person)</label>
+                  <input className="form-control" value={form.assigned_to} onChange={(e) => set("assigned_to", e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label>Quantity</label>
+                  <input
+                    type="number"
+                    min="0"
+                    className="form-control"
+                    value={form.stock}
+                    onChange={(e) => set("stock", Number(e.target.value))}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="form-group">
+                  <label>Initial Stock</label>
+                  <input
+                    type="number"
+                    min="0"
+                    className="form-control"
+                    value={form.stock}
+                    onChange={(e) => set("stock", Number(e.target.value))}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Reorder Level</label>
+                  <input
+                    type="number"
+                    min="0"
+                    className="form-control"
+                    value={form.reorder_level}
+                    onChange={(e) => set("reorder_level", Number(e.target.value))}
+                  />
+                </div>
+              </>
+            )}
+
             <div className="form-group">
               <label>Unit Cost (₱)</label>
               <input
@@ -127,7 +168,7 @@ export default function AddProduct() {
           <div className="flex between mt-4">
             <button type="button" className="btn btn-light" onClick={() => navigate(-1)}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? "Saving..." : "Save Supply"}
+              {loading ? "Saving..." : isAsset ? "Save Asset" : "Save Supply"}
             </button>
           </div>
         </form>

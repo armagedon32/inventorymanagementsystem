@@ -41,11 +41,20 @@ export default function Dashboard() {
     <div>
       <div className="row mb-3">
         <div className="col">
-          <Link to="/forecasting">
+          <Link to="/stock">
             <div className="card-box blue">
               <i className="bg-icon">▤</i>
               <h3>{data.totalProducts}</h3>
               <p>Total Products</p>
+            </div>
+          </Link>
+        </div>
+        <div className="col">
+          <Link to="/assets">
+            <div className="card-box purple">
+              <i className="bg-icon">◉</i>
+              <h3>{data.totalAssets}</h3>
+              <p>Total Assets</p>
             </div>
           </Link>
         </div>
@@ -57,7 +66,7 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="col">
-          <Link to="/products">
+          <Link to="/stock">
             <div className="card-box orange">
               <i className="bg-icon">!</i>
               <h3>{data.lowStock}</h3>
@@ -66,7 +75,7 @@ export default function Dashboard() {
           </Link>
         </div>
         <div className="col">
-          <Link to="/products">
+          <Link to="/stock">
             <div className="card-box red">
               <i className="bg-icon">×</i>
               <h3>{data.outOfStock}</h3>
@@ -89,7 +98,7 @@ export default function Dashboard() {
           </div>
         )}
         <div className="col">
-          <Link to="/products">
+          <Link to="/stock">
             <div className="card-box blue">
               <i className="bg-icon">↘</i>
               <h3>{data.totalStockout}</h3>
@@ -98,7 +107,7 @@ export default function Dashboard() {
           </Link>
         </div>
         <div className="col">
-          <Link to="/products">
+          <Link to="/stock">
             <div className="card-box green">
               <i className="bg-icon">₱</i>
               <h3 style={{ fontSize: "1.5rem" }}>{peso(data.totalValue)}</h3>
@@ -107,7 +116,7 @@ export default function Dashboard() {
           </Link>
         </div>
         <div className="col">
-          <Link to="/products">
+          <Link to="/stock">
             <div className="card-box orange">
               <i className="bg-icon">⚑</i>
               <h3>{data.reorderAlerts}</h3>

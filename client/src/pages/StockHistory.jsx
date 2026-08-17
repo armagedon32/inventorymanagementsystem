@@ -19,7 +19,7 @@ export default function StockHistory() {
     <div className="card">
       <div className="card-header">
         <h5>Stock History - {product?.name}</h5>
-        <Link to={`/products/${id}`} className="btn btn-light btn-sm">Back</Link>
+        <Link to={`/stock/${id}`} className="btn btn-light btn-sm">Back</Link>
       </div>
       <div className="card-body">
         <div className="table-wrap">

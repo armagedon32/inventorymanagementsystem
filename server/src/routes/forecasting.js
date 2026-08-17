@@ -207,7 +207,7 @@ function buildPerProductForecast(seriesMap) {
       `SELECT p.*, c.category AS category_name
        FROM tbl_product p
        LEFT JOIN tbl_category c ON p.category = c.catid
-       WHERE p.is_archived = 0`
+       WHERE p.is_archived = 0 AND p.product_type = 'Stock'`
     )
     .all();
 

@@ -21,7 +21,7 @@ export default function StockIn() {
     setLoading(true);
     try {
       await api.post(`/products/${id}/stock-in`, { quantity: Number(quantity), remarks });
-      navigate(`/products/${id}`, { replace: true });
+      navigate(`/stock/${id}`, { replace: true });
     } catch (e) {
       setError(e.message);
     } finally {

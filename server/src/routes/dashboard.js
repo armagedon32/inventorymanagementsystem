@@ -7,20 +7,21 @@ router.use(requireAuth);
 
 router.get("/summary", (req, res) => {
   const totalProducts = db.prepare("SELECT COUNT(*) AS c FROM tbl_product WHERE is_archived = 0").get().c;
+  const totalAssets = db.prepare("SELECT COUNT(*) AS c FROM tbl_product WHERE is_archived = 0 AND product_type = 'Asset'").get().c;
   const totalStock = db
-    .prepare("SELECT IFNULL(SUM(stock), 0) AS s FROM tbl_product WHERE is_archived = 0")
+    .prepare("SELECT IFNULL(SUM(stock), 0) AS s FROM tbl_product WHERE is_archived = 0 AND product_type = 'Stock'")
     .get().s;
   const totalValue = db
     .prepare("SELECT IFNULL(SUM(stock * unit_cost), 0) AS v FROM tbl_product WHERE is_archived = 0")
     .get().v;
   const lowStock = db
-    .prepare("SELECT COUNT(*) AS c FROM tbl_product WHERE is_archived = 0 AND stock > 0 AND stock <= reorder_level")
+    .prepare("SELECT COUNT(*) AS c FROM tbl_product WHERE is_archived = 0 AND product_type = 'Stock' AND stock > 0 AND stock <= reorder_level")
     .get().c;
   const outOfStock = db
-    .prepare("SELECT COUNT(*) AS c FROM tbl_product WHERE is_archived = 0 AND stock = 0")
+    .prepare("SELECT COUNT(*) AS c FROM tbl_product WHERE is_archived = 0 AND product_type = 'Stock' AND stock = 0")
     .get().c;
   const reorderAlerts = db
-    .prepare("SELECT COUNT(*) AS c FROM tbl_product WHERE is_archived = 0 AND stock <= reorder_level")
+    .prepare("SELECT COUNT(*) AS c FROM tbl_product WHERE is_archived = 0 AND product_type = 'Stock' AND stock <= reorder_level")
     .get().c;
   const totalUsers = db
     .prepare("SELECT COUNT(*) AS c FROM tbl_user WHERE is_archived = 0")
@@ -72,6 +73,7 @@ router.get("/summary", (req, res) => {
 
   res.json({
     totalProducts,
+    totalAssets,
     totalStock,
     totalValue,
     lowStock,

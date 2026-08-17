@@ -32,7 +32,7 @@ export default function StockOut() {
         instructor_id: instructorId || null,
         remarks,
       });
-      navigate(`/products/${id}`, { replace: true });
+      navigate(`/stock/${id}`, { replace: true });
     } catch (e) {
       setError(e.message);
     } finally {

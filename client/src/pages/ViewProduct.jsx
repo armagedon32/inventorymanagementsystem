@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 
-export default function ViewProduct() {
+export default function ViewProduct({ type = "Stock" }) {
+  const isAsset = type === "Asset";
+  const base = isAsset ? "/assets" : "/stock";
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [error, setError] = useState("");
@@ -15,28 +17,40 @@ export default function ViewProduct() {
   if (!product) return <div className="empty">Loading...</div>;
 
   const rows = [
-    ["Barcode", product.barcode],
+    ["Asset Tag / Barcode", product.barcode],
     ["Item Name", product.name],
     ["Brand", product.brand],
     ["Acquisition Type", product.acquisition_type],
     ["Category", product.category_name],
     ["Description", product.description],
-    ["Current Stock", product.stock],
-    ["Reorder Level", product.reorder_level],
     ["Unit Cost", product.unit_cost != null ? "₱" + Number(product.unit_cost).toFixed(2) : "₱0.00"],
     ["Date Added", product.date_added],
   ];
+
+  if (isAsset) {
+    rows.splice(6, 0, ["Serial Number", product.serial_number || "—"]);
+    rows.splice(6, 0, ["Condition", product.condition || "Good"]);
+    rows.splice(6, 0, ["Quantity", product.stock]);
+    rows.splice(6, 0, ["Assigned To", product.assigned_to || "—"]);
+  } else {
+    rows.splice(6, 0, ["Current Stock", product.stock]);
+    rows.splice(7, 0, ["Reorder Level", product.reorder_level]);
+  }
 
   return (
     <div className="card">
       <div className="card-header">
         <h5>{product.name} - Details</h5>
         <div className="flex">
-          <Link to={`/products/${id}/history`} className="btn btn-dark btn-sm">History</Link>
-          <Link to={`/products/${id}/stock-in`} className="btn btn-info btn-sm">Stock In</Link>
-          <Link to={`/products/${id}/stock-out`} className="btn btn-primary btn-sm">Issue</Link>
-          <Link to={`/products/${id}/edit`} className="btn btn-success btn-sm">Edit</Link>
-          <Link to="/products" className="btn btn-light btn-sm">Back</Link>
+          {!isAsset && (
+            <>
+              <Link to={`${base}/${id}/history`} className="btn btn-dark btn-sm">History</Link>
+              <Link to={`${base}/${id}/stock-in`} className="btn btn-info btn-sm">Stock In</Link>
+              <Link to={`${base}/${id}/stock-out`} className="btn btn-primary btn-sm">Issue</Link>
+            </>
+          )}
+          <Link to={`${base}/${id}/edit`} className="btn btn-success btn-sm">Edit</Link>
+          <Link to={base} className="btn btn-light btn-sm">Back</Link>
         </div>
       </div>
       <div className="card-body">

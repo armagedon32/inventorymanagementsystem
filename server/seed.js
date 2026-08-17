@@ -95,8 +95,8 @@ const tx = db.transaction(() => {
 
   // ---- Products ----
   const insProduct = db.prepare(
-    `INSERT INTO tbl_product (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, date_added, image, is_archived)
-     VALUES (@barcode, @name, @brand, @acquisition_type, @category, @description, @stock, @reorder_level, @unit_cost, @date_added, NULL, 0)`
+    `INSERT INTO tbl_product (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, product_type, serial_number, condition, assigned_to, date_added, image, is_archived)
+     VALUES (@barcode, @name, @brand, @acquisition_type, @category, @description, @stock, @reorder_level, @unit_cost, @product_type, @serial_number, @condition, @assigned_to, @date_added, NULL, 0)`
   );
   const products = [
     { barcode: "72112204", name: "bondpaper", brand: "easy", acq: "Donated", cat: cats["Office Supply"], desc: "short", stock: 105, reorder: 30, cost: 0.5 },
@@ -111,6 +111,12 @@ const tx = db.transaction(() => {
     { barcode: "BC-20260426-0002", name: "paper clips", brand: "", acq: "Purchased", cat: cats["Office Supply"], desc: "small (box)", stock: 5, reorder: 3, cost: 18 },
     { barcode: "BC-20260427-0001", name: "index card", brand: "b&e", acq: "Purchased", cat: cats["Office Supply"], desc: "short (pack)", stock: 24, reorder: 8, cost: 40 },
   ];
+  const assets = [
+    { barcode: "AST-2026-0001", name: "Desktop Computer", brand: "Dell", acq: "Purchased", cat: cats["ICT Equipment"], desc: "Core i5, 8GB RAM", stock: 1, reorder: 0, cost: 25000, serial: "DELL-8Y7KD33", cond: "Good", assigned: "Comlab 1" },
+    { barcode: "AST-2026-0002", name: "Printer", brand: "Epson", acq: "Donated", cat: cats["Office Equipment"], desc: "Laser printer", stock: 1, reorder: 0, cost: 12000, serial: "EPS-4471X", cond: "Good", assigned: "Registrar Office" },
+    { barcode: "AST-2026-0003", name: "Projector", brand: "Epson", acq: "Purchased", cat: cats["ICT Equipment"], desc: "HD projector", stock: 1, reorder: 0, cost: 18500, serial: "EPS-99823P", cond: "Needs Repair", assigned: "Audio Visual Room" },
+    { barcode: "AST-2026-0004", name: "Office Chair", brand: "", acq: "Donated", cat: cats["furniture"], desc: "Ergonomic chair", stock: 2, reorder: 0, cost: 1500, serial: "", cond: "Fair", assigned: "Admin Office" },
+  ];
   const productIds = {};
   products.forEach((p, i) => {
     const date = new Date();
@@ -118,9 +124,23 @@ const tx = db.transaction(() => {
     const r = insProduct.run({
       barcode: p.barcode, name: p.name, brand: p.brand,
       acquisition_type: p.acq, category: p.cat, description: p.desc,
-      stock: p.stock, reorder_level: p.reorder, unit_cost: p.cost, date_added: date.toISOString().slice(0, 10),
+      stock: p.stock, reorder_level: p.reorder, unit_cost: p.cost,
+      product_type: "Stock", serial_number: null, condition: "Good", assigned_to: null,
+      date_added: date.toISOString().slice(0, 10),
     });
     productIds["idx:" + i] = r.lastInsertRowid;
+  });
+  assets.forEach((p, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (assets.length - i) * 3);
+    const r = insProduct.run({
+      barcode: p.barcode, name: p.name, brand: p.brand,
+      acquisition_type: p.acq, category: p.cat, description: p.desc,
+      stock: p.stock, reorder_level: p.reorder, unit_cost: p.cost,
+      product_type: "Asset", serial_number: p.serial, condition: p.cond, assigned_to: p.assigned,
+      date_added: date.toISOString().slice(0, 10),
+    });
+    productIds["asset:" + i] = r.lastInsertRowid;
   });
 
   // ---- Stock history for forecasting ----

@@ -19,10 +19,17 @@ export default function Layout() {
       ? [{ to: "/users", label: "User Management", icon: "◈" }]
       : []),
     {
-      section: "Inventory / Stock",
+      section: "Stock Inventory",
       items: [
-        { to: "/products", label: "Supplies / Stock In", icon: "▤" },
-        { to: "/products/add", label: "Supply Registration", icon: "✚" },
+        { to: "/stock", label: "Supplies / Stock In", icon: "▤" },
+        { to: "/stock/add", label: "Supply Registration", icon: "✚" },
+      ],
+    },
+    {
+      section: "Asset Management",
+      items: [
+        { to: "/assets", label: "Assets", icon: "◉" },
+        { to: "/assets/add", label: "Asset Registration", icon: "✚" },
       ],
     },
     { to: "/change-password", label: "Change Password", icon: "⚿" },
