@@ -20,8 +20,8 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = useCallback(async (identifier, password, captchaToken) => {
-    const data = await api.post("/auth/login", { identifier, password, captchaToken });
+  const login = useCallback(async (identifier, password, captchaToken, captchaAnswer) => {
+    const data = await api.post("/auth/login", { identifier, password, captchaToken, captchaAnswer });
     authStore.setSession(data.token, data.user);
     setUser(data.user);
     return data.user;

@@ -1,42 +1,44 @@
 import db from "../db.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { Router } from "express";
-import { requireAuth, signToken } from "../middleware/auth.js";
+import { requireAuth, signToken, JWT_SECRET } from "../middleware/auth.js";
 
 const router = Router();
 
-async function verifyCaptcha(token) {
-  const secret = process.env.RECAPTCHA_SECRET_KEY;
-  if (!secret) {
-    console.warn("RECAPTCHA_SECRET_KEY not set - skipping CAPTCHA verification");
-    return true;
-  }
-  if (!token) return false;
-  const params = new URLSearchParams({ secret, response: token });
-  const res = await fetch("https://www.google.com/recaptcha/api/siteverify", {
-    method: "POST",
-    body: params,
-  });
-  const data = await res.json();
-  return data.success === true;
+function makeCaptcha() {
+  const a = 1 + Math.floor(Math.random() * 20);
+  const b = 1 + Math.floor(Math.random() * 20);
+  const add = Math.random() < 0.5;
+  const bigger = Math.max(a, b);
+  const smaller = Math.min(a, b);
+  const question = add ? `${bigger} + ${smaller}` : `${bigger} - ${smaller}`;
+  const answer = add ? bigger + smaller : bigger - smaller;
+  const token = jwt.sign({ a: answer }, JWT_SECRET, { expiresIn: "5m" });
+  return { question: `${question} = ?`, token };
 }
 
-router.get("/captcha-config", (req, res) => {
-  res.json({
-    siteKey: process.env.RECAPTCHA_SITE_KEY || "",
-    enabled: Boolean(process.env.RECAPTCHA_SECRET_KEY && process.env.RECAPTCHA_SITE_KEY),
-  });
+function verifyCaptcha(token, answer) {
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    return payload.a === Number(answer);
+  } catch {
+    return false;
+  }
+}
+
+router.get("/captcha", (req, res) => {
+  res.json(makeCaptcha());
 });
 
-router.post("/login", async (req, res) => {
-  const { identifier, password, captchaToken } = req.body;
+router.post("/login", (req, res) => {
+  const { identifier, password, captchaToken, captchaAnswer } = req.body;
   if (!identifier || !password) {
     return res.status(400).json({ error: "Email/Username and password are required." });
   }
 
-  const captchaOk = await verifyCaptcha(captchaToken);
-  if (!captchaOk) {
-    return res.status(400).json({ error: "CAPTCHA verification failed. Please try again." });
+  if (!verifyCaptcha(captchaToken, captchaAnswer)) {
+    return res.status(400).json({ error: "Incorrect CAPTCHA answer. Please try again." });
   }
 
   const user = db

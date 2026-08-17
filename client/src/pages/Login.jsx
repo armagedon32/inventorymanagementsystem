@@ -1,9 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
-
-const CAPTCHA_SCRIPT = "https://www.google.com/recaptcha/api.js?render=explicit";
 
 export default function Login() {
   const { login } = useAuth();
@@ -13,79 +11,43 @@ export default function Login() {
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [captchaState, setCaptchaState] = useState({ enabled: false, ready: false, failed: false });
-  const widgetId = useRef(null);
-  const captchaEl = useRef(null);
+  const [captcha, setCaptcha] = useState(null);
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadCaptcha() {
-      try {
-        const cfg = await api.get("/auth/captcha-config");
-        if (cancelled || !cfg.enabled || !cfg.siteKey) return;
-        setCaptchaState((s) => ({ ...s, enabled: true }));
-
-        if (!window.grecaptcha) {
-          await new Promise((resolve, reject) => {
-            const script = document.createElement("script");
-            script.src = CAPTCHA_SCRIPT;
-            script.async = true;
-            script.onload = resolve;
-            script.onerror = () => reject(new Error("script load failed"));
-            document.head.appendChild(script);
-          });
-        }
-
-        window.grecaptcha.ready(() => {
-          if (cancelled) return;
-          widgetId.current = window.grecaptcha.render(captchaEl.current, {
-            sitekey: cfg.siteKey,
-            theme: "dark",
-          });
-          setCaptchaState((s) => ({ ...s, ready: true }));
-        });
-      } catch {
-        if (!cancelled) setCaptchaState((s) => ({ ...s, failed: true }));
-      }
+  const loadCaptcha = useCallback(async () => {
+    try {
+      const data = await api.get("/auth/captcha");
+      setCaptcha(data);
+      setCaptchaAnswer("");
+    } catch {
+      setCaptcha(null);
     }
-
-    loadCaptcha();
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
-  function resetCaptcha() {
-    if (widgetId.current != null && window.grecaptcha) {
-      window.grecaptcha.reset(widgetId.current);
-    }
-  }
+  useEffect(() => {
+    loadCaptcha();
+  }, [loadCaptcha]);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
 
-    let captchaToken;
-    if (captchaState.enabled) {
-      try {
-        captchaToken = window.grecaptcha.getResponse(widgetId.current);
-      } catch {
-        captchaToken = "";
-      }
-      if (!captchaToken) {
-        setError("Please complete the CAPTCHA to continue.");
-        return;
-      }
+    if (!captcha) {
+      setError("Could not load the CAPTCHA. Please try again.");
+      return;
+    }
+    if (!captchaAnswer.trim()) {
+      setError("Please answer the CAPTCHA to continue.");
+      return;
     }
 
     setLoading(true);
     try {
-      const user = await login(identifier, password, captchaToken);
+      const user = await login(identifier, password, captcha.token, captchaAnswer);
       navigate("/", { replace: true });
     } catch (err) {
       setError(err.message);
-      resetCaptcha();
+      loadCaptcha();
     } finally {
       setLoading(false);
     }
@@ -103,11 +65,6 @@ export default function Login() {
           </div>
 
           {error && <div className="login-error">{error}</div>}
-          {captchaState.failed && (
-            <div className="login-error">
-              CAPTCHA could not be loaded. Please check your internet connection and refresh.
-            </div>
-          )}
 
           <form onSubmit={handleSubmit}>
             <div className="input-row">
@@ -133,11 +90,20 @@ export default function Login() {
               </span>
             </div>
 
-            {captchaState.enabled && (
-              <div className="recaptcha-row">
-                <div ref={captchaEl} />
-              </div>
-            )}
+            <div className="captcha-box">
+              <div className="captcha-question">{captcha ? captcha.question : "Loading..."}</div>
+              <input
+                type="text"
+                inputMode="numeric"
+                className="captcha-input"
+                placeholder="Enter answer"
+                value={captchaAnswer}
+                onChange={(e) => setCaptchaAnswer(e.target.value)}
+              />
+              <button type="button" className="captcha-refresh" title="New question" onClick={loadCaptcha}>
+                ⟳
+              </button>
+            </div>
 
             <button type="submit" className="btn-login" disabled={loading}>
               {loading ? "Signing in..." : "LOGIN"}
