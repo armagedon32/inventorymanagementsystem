@@ -607,6 +607,14 @@ textarea.form-control {
   text-align: center;
 }
 
+.recaptcha-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+  transform: scale(0.92);
+  transform-origin: center;
+}
+
 /* ===== CHART / STATS ===== */
 .chart-box {
   background: #fff;

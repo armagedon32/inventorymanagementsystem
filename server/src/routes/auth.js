@@ -5,10 +5,38 @@ import { requireAuth, signToken } from "../middleware/auth.js";
 
 const router = Router();
 
-router.post("/login", (req, res) => {
-  const { identifier, password } = req.body;
+async function verifyCaptcha(token) {
+  const secret = process.env.RECAPTCHA_SECRET_KEY;
+  if (!secret) {
+    console.warn("RECAPTCHA_SECRET_KEY not set - skipping CAPTCHA verification");
+    return true;
+  }
+  if (!token) return false;
+  const params = new URLSearchParams({ secret, response: token });
+  const res = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+    method: "POST",
+    body: params,
+  });
+  const data = await res.json();
+  return data.success === true;
+}
+
+router.get("/captcha-config", (req, res) => {
+  res.json({
+    siteKey: process.env.RECAPTCHA_SITE_KEY || "",
+    enabled: Boolean(process.env.RECAPTCHA_SECRET_KEY && process.env.RECAPTCHA_SITE_KEY),
+  });
+});
+
+router.post("/login", async (req, res) => {
+  const { identifier, password, captchaToken } = req.body;
   if (!identifier || !password) {
     return res.status(400).json({ error: "Email/Username and password are required." });
+  }
+
+  const captchaOk = await verifyCaptcha(captchaToken);
+  if (!captchaOk) {
+    return res.status(400).json({ error: "CAPTCHA verification failed. Please try again." });
   }
 
   const user = db
