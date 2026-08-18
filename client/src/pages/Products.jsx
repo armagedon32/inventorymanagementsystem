@@ -162,6 +162,11 @@ export default function Products({ type = "Stock" }) {
                         <Link to={`${base}/${p.pid}/edit`} className="btn btn-success btn-sm" title="Edit">
                           ✎
                         </Link>
+                        {isAsset && (
+                          <Link to={`${base}/${p.pid}/assign`} className="btn btn-dark btn-sm" title="Assign">
+                            ⇄ Assign
+                          </Link>
+                        )}
                         {!isAsset && (
                           <>
                             <Link to={`${base}/${p.pid}/stock-in`} className="btn btn-info btn-sm" title="Restock">

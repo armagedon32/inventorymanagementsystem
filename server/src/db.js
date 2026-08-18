@@ -55,6 +55,8 @@ CREATE TABLE IF NOT EXISTS tbl_product (
   serial_number   TEXT,
   condition       TEXT DEFAULT 'Good',
   assigned_to     TEXT,
+  assigned_remarks TEXT,
+  assigned_date   TEXT,
   date_added      TEXT,
   image           TEXT,
   is_archived     INTEGER DEFAULT 0
@@ -107,6 +109,17 @@ CREATE TABLE IF NOT EXISTS activity_log (
   date_created TEXT DEFAULT (datetime('now','localtime'))
 );
 
+CREATE TABLE IF NOT EXISTS tbl_asset_assignments (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  asset_id      INTEGER NOT NULL,
+  assigned_to   TEXT NOT NULL,
+  office_id     INTEGER,
+  instructor_id INTEGER,
+  remarks       TEXT,
+  date_assigned TEXT DEFAULT (datetime('now','localtime')),
+  is_archived   INTEGER DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS settings (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   oic_property TEXT,
@@ -125,6 +138,8 @@ if (!productCols.includes("product_type")) db.exec("ALTER TABLE tbl_product ADD 
 if (!productCols.includes("serial_number")) db.exec("ALTER TABLE tbl_product ADD COLUMN serial_number TEXT");
 if (!productCols.includes("condition")) db.exec("ALTER TABLE tbl_product ADD COLUMN condition TEXT DEFAULT 'Good'");
 if (!productCols.includes("assigned_to")) db.exec("ALTER TABLE tbl_product ADD COLUMN assigned_to TEXT");
+if (!productCols.includes("assigned_remarks")) db.exec("ALTER TABLE tbl_product ADD COLUMN assigned_remarks TEXT");
+if (!productCols.includes("assigned_date")) db.exec("ALTER TABLE tbl_product ADD COLUMN assigned_date TEXT");
 
 const categoryCols = db.prepare("PRAGMA table_info(tbl_category)").all().map((c) => c.name);
 if (!categoryCols.includes("description")) db.exec("ALTER TABLE tbl_category ADD COLUMN description TEXT");

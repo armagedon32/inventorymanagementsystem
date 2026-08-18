@@ -7,11 +7,15 @@ export default function ViewProduct({ type = "Stock" }) {
   const base = isAsset ? "/assets" : "/stock";
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [assignments, setAssignments] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     api.get(`/products/${id}`).then(setProduct).catch((e) => setError(e.message));
-  }, [id]);
+    if (isAsset) {
+      api.get(`/products/${id}/assignments`).then(setAssignments).catch(() => {});
+    }
+  }, [id, isAsset]);
 
   if (error) return <div className="alert alert-error">{error}</div>;
   if (!product) return <div className="empty">Loading...</div>;
@@ -33,6 +37,8 @@ export default function ViewProduct({ type = "Stock" }) {
     rows.splice(6, 0, ["Condition", product.condition || "Good"]);
     rows.splice(6, 0, ["Quantity", product.stock]);
     rows.splice(6, 0, ["Assigned To", product.assigned_to || "—"]);
+    rows.splice(9, 0, ["Assigned Remarks", product.assigned_remarks || "—"]);
+    rows.splice(10, 0, ["Date Assigned", product.assigned_date || "—"]);
   } else {
     rows.splice(6, 0, ["Current Stock", product.stock]);
     rows.splice(7, 0, ["Reorder Level", product.reorder_level]);
@@ -43,7 +49,9 @@ export default function ViewProduct({ type = "Stock" }) {
       <div className="card-header">
         <h5>{product.name} - Details</h5>
         <div className="flex">
-          {!isAsset && (
+          {isAsset ? (
+            <Link to={`${base}/${id}/assign`} className="btn btn-dark btn-sm">⇄ Assign</Link>
+          ) : (
             <>
               <Link to={`${base}/${id}/history`} className="btn btn-dark btn-sm">History</Link>
               <Link to={`${base}/${id}/stock-in`} className="btn btn-info btn-sm">Stock In</Link>
@@ -63,6 +71,39 @@ export default function ViewProduct({ type = "Stock" }) {
             </div>
           ))}
         </div>
+
+        {isAsset && (
+          <div className="mt-4">
+            <h6 style={{ marginBottom: "0.5rem" }}>Assignment History</h6>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Assigned To</th>
+                    <th>Remarks</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assignments.map((a, i) => (
+                    <tr key={a.id}>
+                      <td>{i + 1}</td>
+                      <td><strong>{a.assigned_to}</strong></td>
+                      <td>{a.remarks || "—"}</td>
+                      <td>{a.date_assigned}</td>
+                    </tr>
+                  ))}
+                  {assignments.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="empty">No assignments yet.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

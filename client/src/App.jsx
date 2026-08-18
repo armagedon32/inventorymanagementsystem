@@ -7,6 +7,7 @@ import Products from "./pages/Products";
 import AddProduct from "./pages/AddProduct";
 import EditProduct from "./pages/EditProduct";
 import ViewProduct from "./pages/ViewProduct";
+import AssignAsset from "./pages/AssignAsset";
 import StockIn from "./pages/StockIn";
 import StockOut from "./pages/StockOut";
 import StockHistory from "./pages/StockHistory";
@@ -48,6 +49,7 @@ export default function App() {
         <Route path="/assets" element={<Products type="Asset" />} />
         <Route path="/assets/add" element={<AddProduct type="Asset" />} />
         <Route path="/assets/:id/edit" element={<EditProduct type="Asset" />} />
+        <Route path="/assets/:id/assign" element={<AssignAsset />} />
         <Route path="/assets/:id" element={<ViewProduct type="Asset" />} />
         <Route path="/products" element={<Navigate to="/stock" replace />} />
         <Route path="/products/*" element={<StockRedirect />} />

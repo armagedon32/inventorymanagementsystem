@@ -181,6 +181,50 @@ router.get("/:id/history", (req, res) => {
   res.json(rows);
 });
 
+// ============ ASSET ASSIGNMENT ============
+
+router.post("/:id/assign", (req, res) => {
+  const { office_id, instructor_id, remarks } = req.body || {};
+  const p = db.prepare("SELECT * FROM tbl_product WHERE pid = ? AND is_archived = 0").get(req.params.id);
+  if (!p) return res.status(404).json({ error: "Asset not found" });
+
+  let assignedTo = "";
+  if (office_id) {
+    const off = db.prepare("SELECT office_name FROM tbl_office WHERE id = ? AND is_archived = 0").get(office_id);
+    if (off) assignedTo = off.office_name;
+  }
+  if (instructor_id) {
+    const inst = db.prepare("SELECT fullname FROM tbl_instructors WHERE id = ? AND is_archived = 0").get(instructor_id);
+    if (inst) assignedTo = assignedTo ? `${inst.fullname} (${assignedTo})` : inst.fullname;
+  }
+  if (!assignedTo) {
+    return res.status(400).json({ error: "Choose an office or personnel to assign the asset to." });
+  }
+
+  db.transaction(() => {
+    db.prepare(
+      "UPDATE tbl_product SET assigned_to = ?, assigned_remarks = ?, assigned_date = date('now','localtime') WHERE pid = ?"
+    ).run(assignedTo, remarks || "", p.pid);
+    db.prepare(
+      "INSERT INTO tbl_asset_assignments (asset_id, assigned_to, office_id, instructor_id, remarks) VALUES (?, ?, ?, ?, ?)"
+    ).run(p.pid, assignedTo, office_id || null, instructor_id || null, remarks || "");
+    db.prepare(
+      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
+    ).run(req.user.userid, `Assigned Asset: ${p.name} to ${assignedTo}`);
+  })();
+
+  res.json({ success: true, assigned_to: assignedTo });
+});
+
+router.get("/:id/assignments", (req, res) => {
+  const rows = db
+    .prepare(
+      "SELECT * FROM tbl_asset_assignments WHERE asset_id = ? AND is_archived = 0 ORDER BY date_assigned DESC, id DESC"
+    )
+    .all(req.params.id);
+  res.json(rows);
+});
+
 // ============ CATEGORIES ============
 
 router.get("/meta/categories", (req, res) => {
