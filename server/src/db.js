@@ -120,6 +120,27 @@ CREATE TABLE IF NOT EXISTS tbl_asset_assignments (
   is_archived   INTEGER DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS tbl_requisition (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  req_no        TEXT NOT NULL,
+  purpose       TEXT NOT NULL,
+  requested_by  INTEGER,
+  status        TEXT DEFAULT 'Pending',
+  reject_reason TEXT,
+  date_created  TEXT DEFAULT (datetime('now','localtime')),
+  date_processed TEXT,
+  processed_by  INTEGER,
+  is_archived   INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS tbl_requisition_item (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  requisition_id INTEGER NOT NULL,
+  product_id     INTEGER NOT NULL,
+  quantity       INTEGER NOT NULL,
+  is_archived    INTEGER DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS settings (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   oic_property TEXT,

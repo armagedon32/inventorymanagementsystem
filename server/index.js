@@ -8,6 +8,7 @@ import authRoutes from "./src/routes/auth.js";
 import productRoutes from "./src/routes/products.js";
 import userRoutes from "./src/routes/users.js";
 import dashboardRoutes from "./src/routes/dashboard.js";
+import requisitionRoutes from "./src/routes/requisitions.js";
 import forecasting from "./src/routes/forecasting.js";
 import { requireAuth } from "./src/middleware/auth.js";
 import db from "./src/db.js";
@@ -29,6 +30,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/requisitions", requisitionRoutes);
 
 app.get("/api/forecasting", requireAuth, forecasting);
 
