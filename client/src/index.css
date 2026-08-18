@@ -604,6 +604,26 @@ textarea.form-control {
   font-size: 0.85rem;
 }
 
+.login-links {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  font-size: 0.85rem;
+}
+
+.login-links .forgot-password { margin-top: 0; }
+
+.tos-link {
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+}
+
+.tos-link:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
 .login-error {
   background: rgba(211, 47, 47, 0.9);
   color: #fff;

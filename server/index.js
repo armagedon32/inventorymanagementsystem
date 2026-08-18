@@ -19,7 +19,7 @@ import disposalRoutes from "./src/routes/disposal.js";
 import incidentRoutes from "./src/routes/incidents.js";
 import maintenanceRoutes from "./src/routes/maintenance.js";
 import facilityRoutes from "./src/routes/facilities.js";
-import { requireAuth } from "./src/middleware/auth.js";
+import { requireAuth, requireAdmin } from "./src/middleware/auth.js";
 import db from "./src/db.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -34,6 +34,38 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 app.use("/uploads", express.static(UPLOADS_DIR));
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
+
+app.get("/api/settings", (req, res) => {
+  const s = db.prepare("SELECT * FROM settings WHERE id = 1").get();
+  res.json({
+    oic_property: s?.oic_property || "",
+    oic_president: s?.oic_president || "",
+    terms_of_service: s?.terms_of_service || "",
+  });
+});
+
+app.put("/api/settings", requireAuth, requireAdmin, (req, res) => {
+  const { oic_property, oic_president, terms_of_service } = req.body || {};
+  const exists = db.prepare("SELECT id FROM settings WHERE id = 1").get();
+  if (!exists) {
+    db.prepare(
+      "INSERT INTO settings (id, oic_property, oic_president, terms_of_service) VALUES (1, ?, ?, ?)"
+    ).run(oic_property || "", oic_president || "", terms_of_service || "");
+  } else {
+    const s = db.prepare("SELECT * FROM settings WHERE id = 1").get();
+    db.prepare(
+      "UPDATE settings SET oic_property = ?, oic_president = ?, terms_of_service = ? WHERE id = 1"
+    ).run(
+      oic_property !== undefined ? oic_property : s.oic_property || "",
+      oic_president !== undefined ? oic_president : s.oic_president || "",
+      terms_of_service !== undefined ? terms_of_service : s.terms_of_service || ""
+    );
+  }
+  db.prepare(
+    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
+  ).run(req.user.userid, "Updated System Settings");
+  res.json({ success: true });
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
@@ -51,14 +83,6 @@ app.use("/api/maintenance", maintenanceRoutes);
 app.use("/api/facilities", facilityRoutes);
 
 app.get("/api/forecasting", requireAuth, forecasting);
-
-app.get("/api/settings", (req, res) => {
-  const s = db.prepare("SELECT * FROM settings WHERE id = 1").get();
-  res.json({
-    oic_property: s?.oic_property || "",
-    oic_president: s?.oic_president || "",
-  });
-});
 
 // Serve the built React app in production
 const CLIENT_DIST = path.join(__dirname, "..", "client", "dist");

@@ -165,7 +165,8 @@ CREATE TABLE IF NOT EXISTS tbl_room_reservation (
 CREATE TABLE IF NOT EXISTS settings (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   oic_property TEXT,
-  oic_president TEXT
+  oic_president TEXT,
+  terms_of_service TEXT
 );
 
 CREATE TABLE IF NOT EXISTS tbl_supplier (
@@ -331,5 +332,8 @@ if (!categoryCols.includes("description")) db.exec("ALTER TABLE tbl_category ADD
 
 const userCols = db.prepare("PRAGMA table_info(tbl_user)").all().map((c) => c.name);
 if (!userCols.includes("address")) db.exec("ALTER TABLE tbl_user ADD COLUMN address TEXT");
+
+const settingsCols = db.prepare("PRAGMA table_info(settings)").all().map((c) => c.name);
+if (!settingsCols.includes("terms_of_service")) db.exec("ALTER TABLE settings ADD COLUMN terms_of_service TEXT");
 
 export default db;

@@ -41,6 +41,7 @@ import Facilities from "./pages/Facilities";
 import NewFacility from "./pages/NewFacility";
 import FacilityView from "./pages/FacilityView";
 import Settings from "./pages/Settings";
+import Admin from "./pages/Admin";
 
 function StockRedirect() {
   const location = useLocation();
@@ -110,6 +111,7 @@ export default function App() {
         <Route path="/facilities/new" element={<NewFacility />} />
         <Route path="/facilities/:id" element={<FacilityView />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="/change-password" element={<Navigate to="/settings" replace />} />
       </Route>
 

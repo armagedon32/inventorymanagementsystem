@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
+import Modal from "../components/Modal";
 
 export default function Login() {
   const { login } = useAuth();
@@ -13,6 +14,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [captcha, setCaptcha] = useState(null);
   const [captchaAnswer, setCaptchaAnswer] = useState("");
+  const [tos, setTos] = useState("");
+  const [showTos, setShowTos] = useState(false);
 
   const loadCaptcha = useCallback(async () => {
     try {
@@ -27,6 +30,17 @@ export default function Login() {
   useEffect(() => {
     loadCaptcha();
   }, [loadCaptcha]);
+
+  async function openTos() {
+    setError("");
+    try {
+      const s = await api.get("/settings");
+      setTos(s.terms_of_service || "No Terms of Service has been published yet.");
+      setShowTos(true);
+    } catch {
+      setError("Could not load the Terms of Service.");
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -109,10 +123,22 @@ export default function Login() {
               {loading ? "Signing in..." : "LOGIN"}
             </button>
 
-            <span className="forgot-password">Forgot Password?</span>
+            <div className="login-links">
+              <span className="forgot-password">Forgot Password?</span>
+              <span className="tos-link" onClick={openTos}>Terms of Service</span>
+            </div>
           </form>
         </div>
       </div>
+
+      {showTos && (
+        <Modal title="Terms of Service" onClose={() => setShowTos(false)} wide>
+          <div style={{ whiteSpace: "pre-wrap", fontSize: "0.9rem", maxHeight: "60vh", overflow: "auto" }}>{tos}</div>
+          <div className="flex between mt-4">
+            <button type="button" className="btn btn-light" onClick={() => setShowTos(false)}>Close</button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
