@@ -17,6 +17,7 @@ export default function Layout() {
     { to: "/forecasting", label: "Demand Forecasting", icon: "△" },
     { to: "/requisitions", label: "Requisitions", icon: "◫" },
     { to: "/reservations", label: "Reservations", icon: "⛾" },
+    { to: "/reports", label: "Reports", icon: "≡" },
     ...(isAdmin(user)
       ? [{ to: "/users", label: "User Management", icon: "◈" }]
       : []),

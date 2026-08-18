@@ -19,6 +19,7 @@ import RequisitionView from "./pages/RequisitionView";
 import Reservations from "./pages/Reservations";
 import NewReservation from "./pages/NewReservation";
 import ReservationView from "./pages/ReservationView";
+import Reports from "./pages/Reports";
 import Forecasting from "./pages/Forecasting";
 import ChangePassword from "./pages/ChangePassword";
 
@@ -67,6 +68,7 @@ export default function App() {
         <Route path="/reservations" element={<Reservations />} />
         <Route path="/reservations/new" element={<NewReservation />} />
         <Route path="/reservations/:id" element={<ReservationView />} />
+        <Route path="/reports" element={<Reports />} />
         <Route path="/forecasting" element={<Forecasting />} />
         <Route path="/change-password" element={<ChangePassword />} />
       </Route>
