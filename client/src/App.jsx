@@ -21,7 +21,6 @@ import NewReservation from "./pages/NewReservation";
 import ReservationView from "./pages/ReservationView";
 import Reports from "./pages/Reports";
 import Forecasting from "./pages/Forecasting";
-import ChangePassword from "./pages/ChangePassword";
 import Suppliers from "./pages/Suppliers";
 import Organizations from "./pages/Organizations";
 import Offices from "./pages/Offices";
@@ -41,6 +40,7 @@ import MaintenanceForm from "./pages/MaintenanceForm";
 import Facilities from "./pages/Facilities";
 import NewFacility from "./pages/NewFacility";
 import FacilityView from "./pages/FacilityView";
+import Settings from "./pages/Settings";
 
 function StockRedirect() {
   const location = useLocation();
@@ -109,7 +109,8 @@ export default function App() {
         <Route path="/facilities" element={<Facilities />} />
         <Route path="/facilities/new" element={<NewFacility />} />
         <Route path="/facilities/:id" element={<FacilityView />} />
-        <Route path="/change-password" element={<ChangePassword />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/change-password" element={<Navigate to="/settings" replace />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

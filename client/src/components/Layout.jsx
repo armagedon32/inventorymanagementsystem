@@ -56,7 +56,7 @@ export default function Layout() {
         { to: "/instructors", label: "Instructors", icon: "◍" },
       ],
     },
-    { to: "/change-password", label: "Change Password", icon: "⚿" },
+    { to: "/settings", label: "Account Settings", icon: "⚙" },
   ];
 
   return (
@@ -105,8 +105,8 @@ export default function Layout() {
         </ul>
 
         <div className="account-actions">
-          <NavLink to="/change-password">
-            <span>⚿</span> Change Password
+          <NavLink to="/settings">
+            <span>⚙</span> Account Settings
           </NavLink>
           <a className="logout" onClick={logout}>
             <span>⏻</span> Logout

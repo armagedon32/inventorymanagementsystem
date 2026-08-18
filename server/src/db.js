@@ -329,4 +329,7 @@ if (!productCols.includes("office_id")) db.exec("ALTER TABLE tbl_product ADD COL
 const categoryCols = db.prepare("PRAGMA table_info(tbl_category)").all().map((c) => c.name);
 if (!categoryCols.includes("description")) db.exec("ALTER TABLE tbl_category ADD COLUMN description TEXT");
 
+const userCols = db.prepare("PRAGMA table_info(tbl_user)").all().map((c) => c.name);
+if (!userCols.includes("address")) db.exec("ALTER TABLE tbl_user ADD COLUMN address TEXT");
+
 export default db;

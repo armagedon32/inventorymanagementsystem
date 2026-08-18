@@ -37,9 +37,15 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const updateUser = useCallback((next) => {
+    const token = authStore.getToken();
+    if (token) authStore.setSession(token, next);
+    setUser(next);
+  }, []);
+
   if (loading) return null;
 
-  return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, login, logout, updateUser }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
