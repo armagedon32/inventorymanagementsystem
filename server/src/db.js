@@ -167,6 +167,148 @@ CREATE TABLE IF NOT EXISTS settings (
   oic_property TEXT,
   oic_president TEXT
 );
+
+CREATE TABLE IF NOT EXISTS tbl_supplier (
+  sup_id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  supplier_name TEXT NOT NULL,
+  contact       TEXT,
+  address       TEXT,
+  is_archived   INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS tbl_organization (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  org_name    TEXT NOT NULL,
+  president   TEXT,
+  org_logo    TEXT,
+  is_archived INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS tbl_ris_header (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  ris_no         TEXT NOT NULL,
+  last_name      TEXT NOT NULL,
+  first_name     TEXT NOT NULL,
+  mi_name        TEXT,
+  cp_number      TEXT,
+  position       TEXT,
+  event_name     TEXT,
+  event_date     TEXT,
+  start_datetime TEXT,
+  end_datetime   TEXT,
+  is_returned    INTEGER DEFAULT 0,
+  return_date    TEXT,
+  is_archived    INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS tbl_ris_items (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  ris_id        INTEGER NOT NULL,
+  asset_id      INTEGER NOT NULL,
+  quantity      INTEGER NOT NULL,
+  borrowed_from INTEGER,
+  is_archived   INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS tbl_ptr_header (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  ptr_no        TEXT NOT NULL,
+  transfer_date TEXT,
+  from_office   INTEGER,
+  to_office     INTEGER,
+  remarks       TEXT,
+  is_archived   INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS tbl_ptr_items (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  ptr_id        INTEGER NOT NULL,
+  asset_id      INTEGER NOT NULL,
+  inventory_no  TEXT,
+  description   TEXT,
+  quantity      INTEGER,
+  is_archived   INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS tbl_disposal (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  dis_no        TEXT NOT NULL,
+  asset_id      INTEGER,
+  item_name     TEXT,
+  inventory_no  TEXT,
+  serial_number TEXT,
+  office_id     INTEGER,
+  quantity      INTEGER,
+  remarks       TEXT,
+  disposed_by   INTEGER,
+  disposed_at   TEXT DEFAULT (datetime('now','localtime')),
+  is_archived   INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS tbl_incident_reports (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  report_number    TEXT NOT NULL,
+  reported_by      TEXT,
+  office           INTEGER,
+  incident_date    TEXT,
+  incident_time    TEXT,
+  description      TEXT,
+  extent_of_damage TEXT,
+  status           TEXT DEFAULT 'Open',
+  is_archived      INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS tbl_incident_items (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  incident_id   INTEGER NOT NULL,
+  asset_id      INTEGER,
+  quantity      INTEGER DEFAULT 1,
+  serial_number TEXT,
+  location      TEXT,
+  last_borrower TEXT,
+  is_archived   INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS tbl_maintenance_reports (
+  id                        INTEGER PRIMARY KEY AUTOINCREMENT,
+  item_name                 TEXT NOT NULL,
+  office                    TEXT,
+  brand                     TEXT,
+  serial_number             TEXT,
+  maintenance_code          TEXT,
+  maintenance_task          TEXT,
+  frequency_days            INTEGER DEFAULT 0,
+  previous_maintenance_date TEXT,
+  next_maintenance_date     TEXT,
+  is_archived               INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS tbl_facility_header (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  request_no       TEXT NOT NULL,
+  office_or_org    TEXT,
+  requesting_name  TEXT,
+  contact_no       TEXT,
+  address          TEXT,
+  date_of_filing   TEXT,
+  event_name       TEXT NOT NULL,
+  num_participants INTEGER DEFAULT 0,
+  start_datetime   TEXT,
+  end_datetime     TEXT,
+  facility_id      INTEGER,
+  status           TEXT DEFAULT 'Pending',
+  is_archived      INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS tbl_facility_equipment (
+  id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+  facility_request_id INTEGER NOT NULL,
+  asset_id            INTEGER,
+  quantity            INTEGER DEFAULT 1,
+  item_name           TEXT,
+  description         TEXT,
+  is_archived         INTEGER DEFAULT 0
+);
 `);
 
 // Migrations for existing databases
@@ -182,6 +324,7 @@ if (!productCols.includes("condition")) db.exec("ALTER TABLE tbl_product ADD COL
 if (!productCols.includes("assigned_to")) db.exec("ALTER TABLE tbl_product ADD COLUMN assigned_to TEXT");
 if (!productCols.includes("assigned_remarks")) db.exec("ALTER TABLE tbl_product ADD COLUMN assigned_remarks TEXT");
 if (!productCols.includes("assigned_date")) db.exec("ALTER TABLE tbl_product ADD COLUMN assigned_date TEXT");
+if (!productCols.includes("office_id")) db.exec("ALTER TABLE tbl_product ADD COLUMN office_id INTEGER");
 
 const categoryCols = db.prepare("PRAGMA table_info(tbl_category)").all().map((c) => c.name);
 if (!categoryCols.includes("description")) db.exec("ALTER TABLE tbl_category ADD COLUMN description TEXT");

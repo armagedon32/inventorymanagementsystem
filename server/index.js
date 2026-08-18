@@ -12,6 +12,13 @@ import requisitionRoutes from "./src/routes/requisitions.js";
 import reservationRoutes from "./src/routes/reservations.js";
 import reportRoutes from "./src/routes/reports.js";
 import forecasting from "./src/routes/forecasting.js";
+import masterRoutes from "./src/routes/master.js";
+import ptrRoutes from "./src/routes/ptr.js";
+import risRoutes from "./src/routes/ris.js";
+import disposalRoutes from "./src/routes/disposal.js";
+import incidentRoutes from "./src/routes/incidents.js";
+import maintenanceRoutes from "./src/routes/maintenance.js";
+import facilityRoutes from "./src/routes/facilities.js";
 import { requireAuth } from "./src/middleware/auth.js";
 import db from "./src/db.js";
 
@@ -35,6 +42,13 @@ app.use("/api/users", userRoutes);
 app.use("/api/requisitions", requisitionRoutes);
 app.use("/api", reservationRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/master", masterRoutes);
+app.use("/api/ptr", ptrRoutes);
+app.use("/api/ris", risRoutes);
+app.use("/api/disposal", disposalRoutes);
+app.use("/api/incidents", incidentRoutes);
+app.use("/api/maintenance", maintenanceRoutes);
+app.use("/api/facilities", facilityRoutes);
 
 app.get("/api/forecasting", requireAuth, forecasting);
 

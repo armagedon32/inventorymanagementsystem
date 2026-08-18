@@ -36,6 +36,26 @@ export default function Layout() {
         { to: "/assets/add", label: "Asset Registration", icon: "✚" },
       ],
     },
+    {
+      section: "Documents & Records",
+      items: [
+        { to: "/ris", label: "RIS / Borrowed Property", icon: "⇄" },
+        { to: "/ptr", label: "PTR (Transfer)", icon: "⇔" },
+        { to: "/disposal", label: "Property Disposal", icon: "▽" },
+        { to: "/incidents", label: "Incident Reports", icon: "⚠" },
+        { to: "/maintenance", label: "Maintenance Records", icon: "☑" },
+        { to: "/facilities", label: "Facilities & Borrowed", icon: "⌂" },
+      ],
+    },
+    {
+      section: "Master Data",
+      items: [
+        { to: "/suppliers", label: "Suppliers", icon: "◻" },
+        { to: "/organizations", label: "Organizations", icon: "◈" },
+        { to: "/offices", label: "Offices / Sections", icon: "▣" },
+        { to: "/instructors", label: "Instructors", icon: "◍" },
+      ],
+    },
     { to: "/change-password", label: "Change Password", icon: "⚿" },
   ];
 

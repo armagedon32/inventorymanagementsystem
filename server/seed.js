@@ -124,8 +124,8 @@ const tx = db.transaction(() => {
 
   // ---- Products ----
   const insProduct = db.prepare(
-    `INSERT INTO tbl_product (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to, date_added, image, is_archived)
-     VALUES (@barcode, @name, @brand, @acquisition_type, @category, @description, @stock, @reorder_level, @unit_cost, @unit, @product_type, @serial_number, @condition, @assigned_to, @date_added, NULL, 0)`
+    `INSERT INTO tbl_product (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to, office_id, date_added, image, is_archived)
+     VALUES (@barcode, @name, @brand, @acquisition_type, @category, @description, @stock, @reorder_level, @unit_cost, @unit, @product_type, @serial_number, @condition, @assigned_to, @office_id, @date_added, NULL, 0)`
   );
   const products = [
     { barcode: "72112204", name: "bondpaper", brand: "easy", acq: "Donated", cat: cats["Office Supply"], desc: "short", stock: 105, reorder: 30, cost: 0.5, unit: "ream" },
@@ -141,10 +141,10 @@ const tx = db.transaction(() => {
     { barcode: "BC-20260427-0001", name: "index card", brand: "b&e", acq: "Purchased", cat: cats["Office Supply"], desc: "short (pack)", stock: 24, reorder: 8, cost: 40, unit: "pack" },
   ];
   const assets = [
-    { barcode: "AST-2026-0001", name: "Desktop Computer", brand: "Dell", acq: "Purchased", cat: cats["ICT Equipment"], desc: "Core i5, 8GB RAM", stock: 1, reorder: 0, cost: 25000, serial: "DELL-8Y7KD33", cond: "Good", assigned: "Comlab 1", unit: "unit" },
-    { barcode: "AST-2026-0002", name: "Printer", brand: "Epson", acq: "Donated", cat: cats["Office Equipment"], desc: "Laser printer", stock: 1, reorder: 0, cost: 12000, serial: "EPS-4471X", cond: "Good", assigned: "Registrar Office", unit: "unit" },
-    { barcode: "AST-2026-0003", name: "Projector", brand: "Epson", acq: "Purchased", cat: cats["ICT Equipment"], desc: "HD projector", stock: 1, reorder: 0, cost: 18500, serial: "EPS-99823P", cond: "Needs Repair", assigned: "Audio Visual Room", unit: "unit" },
-    { barcode: "AST-2026-0004", name: "Office Chair", brand: "", acq: "Donated", cat: cats["furniture"], desc: "Ergonomic chair", stock: 2, reorder: 0, cost: 1500, serial: "", cond: "Fair", assigned: "Admin Office", unit: "unit" },
+    { barcode: "AST-2026-0001", name: "Desktop Computer", brand: "Dell", acq: "Purchased", cat: cats["ICT Equipment"], desc: "Core i5, 8GB RAM", stock: 1, reorder: 0, cost: 25000, serial: "DELL-8Y7KD33", cond: "Good", assigned: "Comlab 1", unit: "unit", office: "Comlab 1" },
+    { barcode: "AST-2026-0002", name: "Printer", brand: "Epson", acq: "Donated", cat: cats["Office Equipment"], desc: "Laser printer", stock: 1, reorder: 0, cost: 12000, serial: "EPS-4471X", cond: "Good", assigned: "Registrar Office", unit: "unit", office: "Registrar Office" },
+    { barcode: "AST-2026-0003", name: "Projector", brand: "Epson", acq: "Purchased", cat: cats["ICT Equipment"], desc: "HD projector", stock: 1, reorder: 0, cost: 18500, serial: "EPS-99823P", cond: "Needs Repair", assigned: "Audio Visual Room", unit: "unit", office: "Audio Visual Room" },
+    { barcode: "AST-2026-0004", name: "Office Chair", brand: "", acq: "Donated", cat: cats["furniture"], desc: "Ergonomic chair", stock: 2, reorder: 0, cost: 1500, serial: "", cond: "Fair", assigned: "Admin Office", unit: "unit", office: "Admin" },
   ];
   const productIds = {};
   products.forEach((p, i) => {
@@ -154,7 +154,7 @@ const tx = db.transaction(() => {
       barcode: p.barcode, name: p.name, brand: p.brand,
       acquisition_type: p.acq, category: p.cat, description: p.desc,
       stock: p.stock, reorder_level: p.reorder, unit_cost: p.cost, unit: p.unit || "pcs",
-      product_type: "Stock", serial_number: null, condition: "Good", assigned_to: null,
+      product_type: "Stock", serial_number: null, condition: "Good", assigned_to: null, office_id: null,
       date_added: date.toISOString().slice(0, 10),
     });
     productIds["idx:" + i] = r.lastInsertRowid;
@@ -167,6 +167,7 @@ const tx = db.transaction(() => {
       acquisition_type: p.acq, category: p.cat, description: p.desc,
       stock: p.stock, reorder_level: p.reorder, unit_cost: p.cost, unit: p.unit || "pcs",
       product_type: "Asset", serial_number: p.serial, condition: p.cond, assigned_to: p.assigned,
+      office_id: officeIds[p.office] || null,
       date_added: date.toISOString().slice(0, 10),
     });
     productIds["asset:" + i] = r.lastInsertRowid;
@@ -235,6 +236,98 @@ const tx = db.transaction(() => {
     d.setDate(d.getDate() - daysAgo);
     insStockin.run(pid, qty, remarks, d.toISOString().slice(0, 10));
   });
+
+  // ---- Suppliers & Organizations ----
+  const insSupplier = db.prepare(
+    "INSERT INTO tbl_supplier (supplier_name, contact, address, is_archived) VALUES (?, ?, ?, 0)"
+  );
+  insSupplier.run("Easy Brand Paper Corp.", "0917-000-0000", "Olongapo City");
+  insSupplier.run("HBW Trading", "0918-111-2222", "Subic, Zambales");
+  insSupplier.run("Calla Supplies", "0919-333-4444", "Olongapo City");
+
+  const insOrg = db.prepare(
+    "INSERT INTO tbl_organization (org_name, president, org_logo, is_archived) VALUES (?, ?, NULL, 0)"
+  );
+  insOrg.run("Student Council", "Juan Dela Cruz");
+  insOrg.run("ICT Club", "Maria Santos");
+  insOrg.run("Leadership Society", "Pedro Cruz");
+
+  // ---- PTR sample: transfer Desktop from Comlab 1 to Registrar Office ----
+  const insPtr = db.prepare(
+    "INSERT INTO tbl_ptr_header (ptr_no, transfer_date, from_office, to_office, remarks, is_archived) VALUES (?, ?, ?, ?, ?, 0)"
+  );
+  const ptrDate = new Date().toISOString().slice(0, 10);
+  const ptrId = insPtr.run(`PTR-${now.replace(/-/g, "")}-001`, ptrDate, officeIds["Comlab 1"], officeIds["Registrar Office"], "Sample transfer for documentation").lastInsertRowid;
+  const insPtrItem = db.prepare(
+    "INSERT INTO tbl_ptr_items (ptr_id, asset_id, inventory_no, description, quantity) VALUES (?, ?, ?, ?, ?)"
+  );
+  insPtrItem.run(ptrId, productIds["asset:0"], "AST-2026-0001", "Core i5, 8GB RAM", 1);
+  db.prepare("UPDATE tbl_product SET office_id = ?, assigned_to = ? WHERE pid = ?").run(
+    officeIds["Registrar Office"], "Registrar Office", productIds["asset:0"]
+  );
+
+  // ---- RIS sample: borrow Projector for an event ----
+  const insRis = db.prepare(
+    `INSERT INTO tbl_ris_header (ris_no, last_name, first_name, mi_name, cp_number, position, event_name, event_date, start_datetime, end_datetime, is_archived)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`
+  );
+  const start = new Date(Date.now() + 86400000);
+  const end = new Date(Date.now() + 3 * 86400000);
+  const fmt = (d) => d.toISOString().slice(0, 16).replace("T", " ");
+  const risId = insRis.run(
+    `RIS-${now.replace(/-/g, "")}-001`, "Dela Cruz", "Juan", "P", "09123456789", "Student Assistant",
+    "Audio Visual Orientation", now, fmt(start), fmt(end)
+  ).lastInsertRowid;
+  const insRisItem = db.prepare(
+    "INSERT INTO tbl_ris_items (ris_id, asset_id, quantity, borrowed_from) VALUES (?, ?, ?, ?)"
+  );
+  insRisItem.run(risId, productIds["asset:2"], 1, officeIds["Audio Visual Room"]);
+  db.prepare("UPDATE tbl_product SET stock = stock - 1 WHERE pid = ?").run(productIds["asset:2"]);
+
+  // ---- Disposal sample: dispose 1 Office Chair ----
+  const insDis = db.prepare(
+    "INSERT INTO tbl_disposal (dis_no, asset_id, item_name, inventory_no, serial_number, office_id, quantity, remarks, disposed_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)"
+  );
+  insDis.run(`DIS-${now.replace(/-/g, "")}-001`, productIds["asset:3"], "Office Chair", "AST-2026-0004", "", officeIds["Admin"], 1, "Beyond economic repair");
+  db.prepare("UPDATE tbl_product SET stock = stock - 1 WHERE pid = ?").run(productIds["asset:3"]);
+
+  // ---- Incident sample: projector issue ----
+  const insInc = db.prepare(
+    `INSERT INTO tbl_incident_reports (report_number, reported_by, office, incident_date, incident_time, description, extent_of_damage, status, is_archived)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'Open', 0)`
+  );
+  const incId = insInc.run(
+    `IR-${new Date().getFullYear()}-0001`, "Jomar Gonzaga", officeIds["Audio Visual Room"],
+    now, "14:30", "Projector failed to turn on during the orientation session.",
+    "Power unit suspected; lamp may need replacement."
+  ).lastInsertRowid;
+  db.prepare(
+    "INSERT INTO tbl_incident_items (incident_id, asset_id, quantity, serial_number, location, last_borrower) VALUES (?, ?, ?, ?, ?, ?)"
+  ).run(incId, productIds["asset:2"], 1, "EPS-99823P", "Audio Visual Room", "Jomar Gonzaga");
+
+  // ---- Maintenance sample: projector PM schedule ----
+  db.prepare(
+    `INSERT INTO tbl_maintenance_reports (item_name, office, brand, serial_number, maintenance_code, maintenance_task, frequency_days, previous_maintenance_date, next_maintenance_date, is_archived)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`
+  ).run(
+    "Projector", "Audio Visual Room", "Epson", "EPS-99823P",
+    `MC-${new Date().getFullYear()}-0001`, "Lens cleaning and lamp check", 30,
+    now, new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
+  );
+
+  // ---- Facility sample: ICT Club workshop at Audio Visual Room ----
+  const insFac = db.prepare(
+    `INSERT INTO tbl_facility_header (request_no, office_or_org, requesting_name, contact_no, address, date_of_filing, event_name, num_participants, start_datetime, end_datetime, facility_id, status, is_archived)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', 0)`
+  );
+  const facId = insFac.run(
+    `FAC-${now.replace(/-/g, "")}-001`, "ICT Club", "Maria Santos", "09123456789",
+    "Main Building", now, "Game Development Workshop", 20, fmt(start), fmt(end),
+    roomIds["Audio Visual Room"]
+  ).lastInsertRowid;
+  db.prepare(
+    "INSERT INTO tbl_facility_equipment (facility_request_id, asset_id, quantity, item_name, description) VALUES (?, ?, ?, ?, ?)"
+  ).run(facId, productIds["asset:0"], 1, "Desktop Computer", "Core i5, 8GB RAM");
 
   // ---- Settings / OIC ----
   db.prepare(

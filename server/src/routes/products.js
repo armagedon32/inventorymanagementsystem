@@ -18,9 +18,10 @@ function nextBarcode() {
 
 router.get("/", (req, res) => {
   const type = req.query.type;
-  const base = `SELECT p.*, c.category AS category_name
+  const base = `SELECT p.*, c.category AS category_name, o.office_name AS office_name
                 FROM tbl_product p
                 LEFT JOIN tbl_category c ON p.category = c.catid
+                LEFT JOIN tbl_office o ON o.id = p.office_id
                 WHERE p.is_archived = 0`;
   const rows = type
     ? db.prepare(`${base} AND p.product_type = ? ORDER BY p.pid DESC`).all(type)
@@ -31,9 +32,10 @@ router.get("/", (req, res) => {
 router.get("/:id", (req, res) => {
   const p = db
     .prepare(
-      `SELECT p.*, c.category AS category_name
+      `SELECT p.*, c.category AS category_name, o.office_name AS office_name
        FROM tbl_product p
        LEFT JOIN tbl_category c ON p.category = c.catid
+       LEFT JOIN tbl_office o ON o.id = p.office_id
        WHERE p.pid = ? AND p.is_archived = 0`
     )
     .get(req.params.id);
@@ -42,20 +44,20 @@ router.get("/:id", (req, res) => {
 });
 
 router.post("/", (req, res) => {
-  const { barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to } = req.body || {};
+  const { barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to, office_id } = req.body || {};
   if (!name || !category) return res.status(400).json({ error: "Name and category are required." });
 
   const code = barcode || nextBarcode();
   const info = db
     .prepare(
       `INSERT INTO tbl_product
-        (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to, date_added, is_archived)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, date('now','localtime'), 0)`
+        (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to, office_id, date_added, is_archived)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, date('now','localtime'), 0)`
     )
     .run(
       code, name, brand || "", acquisition_type || "Purchased", category, description || "",
       stock || 0, reorder_level || 0, unit_cost || 0, unit || "pcs", product_type || "Stock",
-      serial_number || null, condition || "Good", assigned_to || null
+      serial_number || null, condition || "Good", assigned_to || null, office_id || null
     );
 
   db.prepare(
@@ -75,11 +77,11 @@ router.put("/:id", (req, res) => {
   const p = db.prepare("SELECT * FROM tbl_product WHERE pid = ?").get(req.params.id);
   if (!p) return res.status(404).json({ error: "Product not found" });
 
-  const { barcode, name, brand, acquisition_type, category, description, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to } = req.body || {};
+  const { barcode, name, brand, acquisition_type, category, description, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to, office_id } = req.body || {};
   db.prepare(
     `UPDATE tbl_product SET
        barcode = ?, name = ?, brand = ?, acquisition_type = ?, category = ?, description = ?,
-       reorder_level = ?, unit_cost = ?, unit = ?, product_type = ?, serial_number = ?, condition = ?, assigned_to = ?
+       reorder_level = ?, unit_cost = ?, unit = ?, product_type = ?, serial_number = ?, condition = ?, assigned_to = ?, office_id = ?
      WHERE pid = ?`
   ).run(
     barcode || p.barcode,
@@ -95,6 +97,7 @@ router.put("/:id", (req, res) => {
     serial_number !== undefined ? serial_number : p.serial_number,
     condition || p.condition || "Good",
     assigned_to !== undefined ? assigned_to : p.assigned_to,
+    office_id !== undefined ? office_id : p.office_id,
     p.pid
   );
 
@@ -203,8 +206,8 @@ router.post("/:id/assign", (req, res) => {
 
   db.transaction(() => {
     db.prepare(
-      "UPDATE tbl_product SET assigned_to = ?, assigned_remarks = ?, assigned_date = date('now','localtime') WHERE pid = ?"
-    ).run(assignedTo, remarks || "", p.pid);
+      "UPDATE tbl_product SET assigned_to = ?, assigned_remarks = ?, assigned_date = date('now','localtime'), office_id = ? WHERE pid = ?"
+    ).run(assignedTo, remarks || "", office_id || null, p.pid);
     db.prepare(
       "INSERT INTO tbl_asset_assignments (asset_id, assigned_to, office_id, instructor_id, remarks) VALUES (?, ?, ?, ?, ?)"
     ).run(p.pid, assignedTo, office_id || null, instructor_id || null, remarks || "");
