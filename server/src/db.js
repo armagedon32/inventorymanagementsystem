@@ -141,6 +141,27 @@ CREATE TABLE IF NOT EXISTS tbl_requisition_item (
   is_archived    INTEGER DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS tbl_room (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  room_name  TEXT NOT NULL,
+  capacity   INTEGER DEFAULT 0,
+  location   TEXT,
+  is_archived INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS tbl_room_reservation (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  room_id     INTEGER NOT NULL,
+  event_name  TEXT NOT NULL,
+  purpose     TEXT,
+  start_time  TEXT NOT NULL,
+  end_time    TEXT NOT NULL,
+  reserved_by INTEGER,
+  status      TEXT DEFAULT 'Confirmed',
+  date_created TEXT DEFAULT (datetime('now','localtime')),
+  is_archived INTEGER DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS settings (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   oic_property TEXT,

@@ -82,6 +82,30 @@ const tx = db.transaction(() => {
     officeIds[name] = r.lastInsertRowid;
   });
 
+  // ---- Conference Rooms ----
+  const insRoom = db.prepare(
+    "INSERT INTO tbl_room (room_name, capacity, location) VALUES (?, ?, ?)"
+  );
+  const roomIds = {};
+  const rooms = [
+    ["Conference Room 1", 30, "2nd Floor"],
+    ["Conference Room 2", 50, "2nd Floor"],
+    ["Audio Visual Room", 25, "Main Building"],
+    ["Faculty Conference Room", 20, "Faculty Building"],
+  ];
+  rooms.forEach(([name, cap, loc]) => {
+    const r = insRoom.run(name, cap, loc);
+    roomIds[name] = r.lastInsertRowid;
+  });
+
+  // ---- Sample Room Reservations ----
+  const insRes = db.prepare(
+    "INSERT INTO tbl_room_reservation (room_id, event_name, purpose, start_time, end_time, reserved_by, status) VALUES (?, ?, ?, ?, ?, ?, ?)"
+  );
+  insRes.run(roomIds["Conference Room 1"], "Faculty Meeting", "Monthly faculty meeting", "2026-08-20 09:00:00", "2026-08-20 11:00:00", 1, "Confirmed");
+  insRes.run(roomIds["Audio Visual Room"], "ICT Orientation", "New student orientation", "2026-08-21 13:00:00", "2026-08-21 15:30:00", 1, "Confirmed");
+  insRes.run(roomIds["Conference Room 2"], "Sports Club Meeting", "Cancelled due to schedule conflict", "2026-08-22 14:00:00", "2026-08-22 16:00:00", 2, "Cancelled");
+
   // ---- Instructors ----
   const insInstructor = db.prepare(
     "INSERT INTO tbl_instructors (fullname, contact, email, assigned_dept, is_archived) VALUES (?, ?, ?, ?, 0)"

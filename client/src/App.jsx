@@ -16,6 +16,9 @@ import Categories from "./pages/Categories";
 import Requisitions from "./pages/Requisitions";
 import NewRequisition from "./pages/NewRequisition";
 import RequisitionView from "./pages/RequisitionView";
+import Reservations from "./pages/Reservations";
+import NewReservation from "./pages/NewReservation";
+import ReservationView from "./pages/ReservationView";
 import Forecasting from "./pages/Forecasting";
 import ChangePassword from "./pages/ChangePassword";
 
@@ -61,6 +64,9 @@ export default function App() {
         <Route path="/requisitions" element={<Requisitions />} />
         <Route path="/requisitions/new" element={<NewRequisition />} />
         <Route path="/requisitions/:id" element={<RequisitionView />} />
+        <Route path="/reservations" element={<Reservations />} />
+        <Route path="/reservations/new" element={<NewReservation />} />
+        <Route path="/reservations/:id" element={<ReservationView />} />
         <Route path="/forecasting" element={<Forecasting />} />
         <Route path="/change-password" element={<ChangePassword />} />
       </Route>
