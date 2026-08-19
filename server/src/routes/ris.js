@@ -62,7 +62,7 @@ router.post("/", (req, res) => {
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "Select at least one asset to borrow." });
   }
-  const asset = db.prepare("SELECT pid, name, barcode, serial_number, stock FROM tbl_product WHERE pid = ? AND product_type = 'Asset' AND is_archived = 0");
+  const asset = db.prepare("SELECT pid, name, barcode, serial_number, stock, office_id FROM tbl_product WHERE pid = ? AND product_type = 'Asset' AND is_archived = 0");
   for (const it of items) {
     const qty = Number(it.quantity);
     if (!Number.isInteger(qty) || qty <= 0) {
@@ -70,6 +70,11 @@ router.post("/", (req, res) => {
     }
     const a = asset.get(it.asset_id);
     if (!a) return res.status(400).json({ error: `Asset (id ${it.asset_id}) is not a valid asset.` });
+    if (a.office_id) {
+      return res.status(400).json({
+        error: `${a.name} is already assigned to ${officeName(a.office_id) || "an office"} and cannot be borrowed.`,
+      });
+    }
     if (a.stock < qty) return res.status(400).json({ error: `Insufficient units for ${a.name}. Available: ${a.stock}.` });
   }
 

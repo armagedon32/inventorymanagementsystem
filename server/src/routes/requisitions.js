@@ -71,10 +71,16 @@ router.post("/", (req, res) => {
       return res.status(400).json({ error: "Quantities must be positive integers." });
     }
   }
-  const invalid = db.prepare("SELECT pid FROM tbl_product WHERE pid = ? AND product_type = 'Stock' AND is_archived = 0");
+  const invalid = db.prepare("SELECT pid, name, stock FROM tbl_product WHERE pid = ? AND product_type = 'Stock' AND is_archived = 0");
   for (const it of items) {
-    if (!invalid.get(it.product_id)) {
+    const p = invalid.get(it.product_id);
+    if (!p) {
       return res.status(400).json({ error: `Selected item (id ${it.product_id}) is not a valid stock item.` });
+    }
+    if (Number(it.quantity) > p.stock) {
+      return res.status(400).json({
+        error: `Insufficient stock for ${p.name}. Requested: ${it.quantity}, Available: ${p.stock}.`,
+      });
     }
   }
 

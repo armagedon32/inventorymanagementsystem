@@ -15,7 +15,7 @@ export default function NewRis() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    api.get("/products?type=Asset").then((rows) => setAssets(rows.filter((a) => a.stock > 0))).catch((e) => setError(e.message));
+    api.get("/products?type=Asset").then((rows) => setAssets(rows.filter((a) => a.stock > 0 && !a.office_id))).catch((e) => setError(e.message));
     api.get("/master/offices").then(setOffices).catch((e) => setError(e.message));
   }, []);
 

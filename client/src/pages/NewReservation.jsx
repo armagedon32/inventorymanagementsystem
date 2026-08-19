@@ -5,6 +5,7 @@ import { api } from "../api/client";
 export default function NewReservation() {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
+  const [bookedRooms, setBookedRooms] = useState([]);
   const [form, setForm] = useState({
     room_id: "",
     event_name: "",
@@ -17,6 +18,16 @@ export default function NewReservation() {
 
   useEffect(() => {
     api.get("/rooms").then(setRooms).catch((e) => setError(e.message));
+    api
+      .get("/reservations")
+      .then((rows) => {
+        const d = new Date();
+        const p = (n) => String(n).padStart(2, "0");
+        const now = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+        const active = rows.filter((r) => r.status !== "Cancelled" && r.start_time <= now && now < r.end_time);
+        setBookedRooms(active.map((r) => r.room_id));
+      })
+      .catch((e) => setError(e.message));
   }, []);
 
   function set(field, value) {
@@ -57,8 +68,9 @@ export default function NewReservation() {
               <select className="form-select" value={form.room_id} onChange={(e) => set("room_id", e.target.value)} required>
                 <option value="">-- Select Room --</option>
                 {rooms.map((r) => (
-                  <option key={r.id} value={r.id}>
+                  <option key={r.id} value={r.id} disabled={bookedRooms.includes(r.id)}>
                     {r.room_name}{r.location ? ` (${r.location})` : ""}{r.capacity ? ` - ${r.capacity} seats` : ""}
+                    {bookedRooms.includes(r.id) ? " — Booked" : ""}
                   </option>
                 ))}
               </select>

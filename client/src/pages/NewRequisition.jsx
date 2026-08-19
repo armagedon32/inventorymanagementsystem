@@ -11,11 +11,22 @@ export default function NewRequisition() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    api.get("/products?type=Stock").then(setProducts).catch((e) => setError(e.message));
+    api.get("/products?type=Stock").then((rows) => setProducts(rows.filter((p) => p.stock > 0))).catch((e) => setError(e.message));
   }, []);
+
+  function maxQty(productId) {
+    const p = products.find((x) => x.pid === Number(productId));
+    return p ? p.stock : 1;
+  }
 
   function setLine(idx, field, value) {
     setLines((ls) => ls.map((l, i) => (i === idx ? { ...l, [field]: field === "quantity" ? Number(value) : value } : l)));
+  }
+
+  function handleQuantityChange(idx, value) {
+    const v = Number(value);
+    const max = maxQty(lines[idx].product_id);
+    setLines((ls) => ls.map((l, i) => (i === idx ? { ...l, quantity: Math.min(v, max) } : l)));
   }
 
   function addLine() {
@@ -89,13 +100,14 @@ export default function NewRequisition() {
                 </select>
               </div>
               <div className="form-group">
-                <label>Quantity *</label>
+                <label>Quantity * (max {maxQty(line.product_id)})</label>
                 <input
                   type="number"
                   min="1"
+                  max={maxQty(line.product_id)}
                   className="form-control"
                   value={line.quantity}
-                  onChange={(e) => setLine(i, "quantity", e.target.value)}
+                  onChange={(e) => handleQuantityChange(i, e.target.value)}
                   required
                 />
               </div>
