@@ -1,5 +1,6 @@
 import { Router } from "express";
 import db from "../db.js";
+import { logActivity } from "../activity.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
@@ -43,9 +44,7 @@ router.post("/", (req, res) => {
       code, maintenance_task || "", Number(frequency_days) || 0,
       next_maintenance_date || null
     );
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Created Maintenance Record: ${code}`);
+    logActivity(req, `Created Maintenance Record: ${code}`);
   res.status(201).json({ id: Number(info.lastInsertRowid), maintenance_code: code });
 });
 
@@ -65,9 +64,7 @@ router.put("/:id", (req, res) => {
     next_maintenance_date !== undefined ? next_maintenance_date : m.next_maintenance_date,
     m.id
   );
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Updated Maintenance Record: ${m.maintenance_code}`);
+    logActivity(req, `Updated Maintenance Record: ${m.maintenance_code}`);
   res.json({ success: true });
 });
 
@@ -78,9 +75,7 @@ router.post("/:id/complete", (req, res) => {
   db.prepare(
     "UPDATE tbl_maintenance_reports SET previous_maintenance_date = date('now','localtime'), next_maintenance_date = date('now','localtime', ?) WHERE id = ?"
   ).run(`+${days} days`, m.id);
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Completed Maintenance: ${m.maintenance_code}`);
+    logActivity(req, `Completed Maintenance: ${m.maintenance_code}`);
   res.json({ success: true });
 });
 
@@ -88,9 +83,7 @@ router.delete("/:id", (req, res) => {
   const m = db.prepare("SELECT * FROM tbl_maintenance_reports WHERE id = ?").get(req.params.id);
   if (!m) return res.status(404).json({ error: "Maintenance record not found" });
   db.prepare("UPDATE tbl_maintenance_reports SET is_archived = 1 WHERE id = ?").run(m.id);
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Deleted Maintenance Record: ${m.maintenance_code}`);
+    logActivity(req, `Deleted Maintenance Record: ${m.maintenance_code}`);
   res.json({ success: true });
 });
 

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import db from "../db.js";
+import { logActivity } from "../activity.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
@@ -57,9 +58,7 @@ router.post("/", (req, res) => {
     db.prepare("UPDATE tbl_product SET stock = stock - ? WHERE pid = ?").run(qty, a.pid);
     const left = db.prepare("SELECT stock FROM tbl_product WHERE pid = ?").get(a.pid).stock;
     if (left <= 0) db.prepare("UPDATE tbl_product SET condition = 'Disposed' WHERE pid = ?").run(a.pid);
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Disposed ${qty} unit(s) of ${a.name}: ${disNo}`);
+        logActivity(req, `Disposed ${qty} unit(s) of ${a.name}: ${disNo}`);
   })();
   res.status(201).json({ id: Number(newId), dis_no: disNo });
 });
@@ -71,9 +70,7 @@ router.delete("/:id", (req, res) => {
     db.prepare("UPDATE tbl_product SET stock = stock + ? WHERE pid = ?").run(d.quantity, d.asset_id);
     db.prepare("UPDATE tbl_product SET condition = 'Good' WHERE pid = ? AND stock > 0").run(d.asset_id);
     db.prepare("UPDATE tbl_disposal SET is_archived = 1 WHERE id = ?").run(d.id);
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Reversed Disposal: ${d.dis_no}`);
+        logActivity(req, `Reversed Disposal: ${d.dis_no}`);
   })();
   res.json({ success: true });
 });

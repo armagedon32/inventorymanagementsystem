@@ -1,4 +1,5 @@
 import db from "../db.js";
+import { logActivity } from "../activity.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import fs from "fs";
@@ -65,9 +66,7 @@ router.post("/login", (req, res) => {
     return res.status(401).json({ error: "Incorrect Password." });
   }
 
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(user.userid, `${user.role} Logged In`);
+  logActivity(req, `${user.role} Logged In`, undefined, undefined, user.userid);
 
   const token = signToken(user);
   res.json({
@@ -102,9 +101,7 @@ router.get("/me", requireAuth, (req, res) => {
 });
 
 router.post("/logout", requireAuth, (req, res) => {
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, "User Logged Out");
+  logActivity(req, "User Logged Out");
   res.json({ success: true });
 });
 
@@ -158,9 +155,7 @@ router.put("/profile", requireAuth, (req, res) => {
     u.userid
   );
 
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(u.userid, "Updated Profile");
+  logActivity(req, "Updated Profile", undefined, undefined, u.userid);
 
   const updated = db.prepare("SELECT * FROM tbl_user WHERE userid = ?").get(u.userid);
   res.json({
@@ -191,9 +186,7 @@ router.post("/change-password", requireAuth, (req, res) => {
   }
   const hash = bcrypt.hashSync(newPassword, 10);
   db.prepare("UPDATE tbl_user SET userpassword = ?, must_change_password = 0 WHERE userid = ?").run(hash, req.user.userid);
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, "Password Changed");
+  logActivity(req, "Password Changed");
   res.json({ success: true });
 });
 

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import db from "../db.js";
+import { logActivity } from "../activity.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
@@ -94,9 +95,7 @@ router.post("/", (req, res) => {
       insItem.run(newId, it.asset_id, Number(it.quantity), it.borrowed_from || null);
       db.prepare("UPDATE tbl_product SET stock = stock - ? WHERE pid = ?").run(Number(it.quantity), it.asset_id);
     }
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Created RIS: ${risNo} for ${last_name}, ${first_name}`);
+        logActivity(req, `Created RIS: ${risNo} for ${last_name}, ${first_name}`);
   })();
   res.status(201).json({ id: Number(newId), ris_no: risNo });
 });
@@ -110,9 +109,7 @@ router.post("/:id/return", (req, res) => {
     const inc = db.prepare("UPDATE tbl_product SET stock = stock + ? WHERE pid = ?");
     for (const it of items) inc.run(it.quantity, it.asset_id);
     db.prepare("UPDATE tbl_ris_header SET is_returned = 1, return_date = date('now','localtime') WHERE id = ?").run(h.id);
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Returned RIS: ${h.ris_no}`);
+        logActivity(req, `Returned RIS: ${h.ris_no}`);
   })();
   res.json({ success: true });
 });
@@ -128,9 +125,7 @@ router.delete("/:id", (req, res) => {
     }
     db.prepare("UPDATE tbl_ris_header SET is_archived = 1 WHERE id = ?").run(h.id);
     db.prepare("UPDATE tbl_ris_items SET is_archived = 1 WHERE ris_id = ?").run(h.id);
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Deleted RIS: ${h.ris_no}`);
+        logActivity(req, `Deleted RIS: ${h.ris_no}`);
   })();
   res.json({ success: true });
 });

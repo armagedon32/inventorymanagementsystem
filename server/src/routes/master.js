@@ -1,5 +1,6 @@
 import { Router } from "express";
 import db from "../db.js";
+import { logActivity } from "../activity.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
@@ -40,7 +41,7 @@ router.post("/offices", (req, res) => {
       "INSERT INTO tbl_office (parent_id, office_name, address, contact, max_capacity, instructor_id, is_archived) VALUES (?, ?, ?, ?, ?, ?, 0)"
     )
     .run(parent_id || null, String(office_name).trim(), address || "", contact || "", max_capacity || 0, instructor_id || null);
-  log(req.user.userid, `Added Office: ${office_name}`);
+  logActivity(req, `Added Office: ${office_name}`);
   res.status(201).json({ id: Number(info.lastInsertRowid) });
 });
 
@@ -59,7 +60,7 @@ router.put("/offices/:id", (req, res) => {
     instructor_id !== undefined ? instructor_id : o.instructor_id,
     o.id
   );
-  log(req.user.userid, `Updated Office: ${o.office_name}`);
+  logActivity(req, `Updated Office: ${o.office_name}`);
   res.json({ success: true });
 });
 
@@ -69,7 +70,7 @@ router.delete("/offices/:id", (req, res) => {
   db.transaction(() => {
     db.prepare("UPDATE tbl_office SET is_archived = 1 WHERE id = ?").run(o.id);
     db.prepare("UPDATE tbl_office SET parent_id = NULL WHERE parent_id = ?").run(o.id);
-    log(req.user.userid, `Deleted Office: ${o.office_name}`);
+    logActivity(req, `Deleted Office: ${o.office_name}`);
   })();
   res.json({ success: true });
 });
@@ -92,7 +93,7 @@ router.post("/instructors", (req, res) => {
       "INSERT INTO tbl_instructors (fullname, contact, email, assigned_dept, is_archived) VALUES (?, ?, ?, ?, 0)"
     )
     .run(String(fullname).trim(), contact || "", email || "", assigned_dept || "");
-  log(req.user.userid, `Added Instructor: ${fullname}`);
+  logActivity(req, `Added Instructor: ${fullname}`);
   res.status(201).json({ id: Number(info.lastInsertRowid) });
 });
 
@@ -107,7 +108,7 @@ router.put("/instructors/:id", (req, res) => {
     assigned_dept !== undefined ? assigned_dept : i.assigned_dept,
     i.id
   );
-  log(req.user.userid, `Updated Instructor: ${i.fullname}`);
+  logActivity(req, `Updated Instructor: ${i.fullname}`);
   res.json({ success: true });
 });
 
@@ -115,7 +116,7 @@ router.delete("/instructors/:id", (req, res) => {
   const i = db.prepare("SELECT * FROM tbl_instructors WHERE id = ?").get(req.params.id);
   if (!i) return res.status(404).json({ error: "Instructor not found" });
   db.prepare("UPDATE tbl_instructors SET is_archived = 1 WHERE id = ?").run(i.id);
-  log(req.user.userid, `Deleted Instructor: ${i.fullname}`);
+  logActivity(req, `Deleted Instructor: ${i.fullname}`);
   res.json({ success: true });
 });
 
@@ -140,7 +141,7 @@ router.post("/organizations", (req, res) => {
       "INSERT INTO tbl_organization (org_name, president, org_logo, is_archived) VALUES (?, ?, ?, 0)"
     )
     .run(String(org_name).trim(), president || "", org_logo || "");
-  log(req.user.userid, `Added Organization: ${org_name}`);
+  logActivity(req, `Added Organization: ${org_name}`);
   res.status(201).json({ id: Number(info.lastInsertRowid) });
 });
 
@@ -154,7 +155,7 @@ router.put("/organizations/:id", (req, res) => {
     org_logo !== undefined ? org_logo : org.org_logo,
     org.id
   );
-  log(req.user.userid, `Updated Organization: ${org.org_name}`);
+  logActivity(req, `Updated Organization: ${org.org_name}`);
   res.json({ success: true });
 });
 
@@ -162,7 +163,7 @@ router.delete("/organizations/:id", (req, res) => {
   const org = db.prepare("SELECT * FROM tbl_organization WHERE id = ?").get(req.params.id);
   if (!org) return res.status(404).json({ error: "Organization not found" });
   db.prepare("UPDATE tbl_organization SET is_archived = 1 WHERE id = ?").run(org.id);
-  log(req.user.userid, `Deleted Organization: ${org.org_name}`);
+  logActivity(req, `Deleted Organization: ${org.org_name}`);
   res.json({ success: true });
 });
 

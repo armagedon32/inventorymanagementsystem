@@ -1,5 +1,6 @@
 import { Router } from "express";
 import db from "../db.js";
+import { logActivity } from "../activity.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
@@ -100,9 +101,7 @@ router.post("/", (req, res) => {
       }
       insEquip.run(newId, it.asset_id || null, Number(it.quantity) || 1, itemName, desc);
     }
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Filed Facility Request: ${reqNo}`);
+        logActivity(req, `Filed Facility Request: ${reqNo}`);
   })();
   res.status(201).json({ id: Number(newId), request_no: reqNo });
 });
@@ -117,9 +116,7 @@ router.post("/:id/approve", (req, res) => {
       if (it.asset_id) db.prepare("UPDATE tbl_product SET stock = stock - ? WHERE pid = ?").run(it.quantity, it.asset_id);
     }
     db.prepare("UPDATE tbl_facility_header SET status = 'Issued' WHERE id = ?").run(h.id);
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Approved Facility Request: ${h.request_no}`);
+        logActivity(req, `Approved Facility Request: ${h.request_no}`);
   })();
   res.json({ success: true });
 });
@@ -134,9 +131,7 @@ router.post("/:id/return", (req, res) => {
       if (it.asset_id) db.prepare("UPDATE tbl_product SET stock = stock + ? WHERE pid = ?").run(it.quantity, it.asset_id);
     }
     db.prepare("UPDATE tbl_facility_header SET status = 'Returned' WHERE id = ?").run(h.id);
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Returned Facility Request: ${h.request_no}`);
+        logActivity(req, `Returned Facility Request: ${h.request_no}`);
   })();
   res.json({ success: true });
 });
@@ -146,9 +141,7 @@ router.post("/:id/cancel", (req, res) => {
   if (!h) return res.status(404).json({ error: "Facility request not found" });
   if (h.status !== "Pending") return res.status(400).json({ error: `Only pending requests can be cancelled (current: ${h.status}).` });
   db.prepare("UPDATE tbl_facility_header SET status = 'Cancelled' WHERE id = ?").run(h.id);
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Cancelled Facility Request: ${h.request_no}`);
+    logActivity(req, `Cancelled Facility Request: ${h.request_no}`);
   res.json({ success: true });
 });
 
@@ -164,9 +157,7 @@ router.delete("/:id", (req, res) => {
     }
     db.prepare("UPDATE tbl_facility_header SET is_archived = 1 WHERE id = ?").run(h.id);
     db.prepare("UPDATE tbl_facility_equipment SET is_archived = 1 WHERE facility_request_id = ?").run(h.id);
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Deleted Facility Request: ${h.request_no}`);
+        logActivity(req, `Deleted Facility Request: ${h.request_no}`);
   })();
   res.json({ success: true });
 });

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import db from "../db.js";
+import { logActivity } from "../activity.js";
 import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
 const router = Router();
@@ -93,9 +94,7 @@ router.post("/", (req, res) => {
       "INSERT INTO tbl_requisition_item (requisition_id, product_id, quantity) VALUES (?, ?, ?)"
     );
     for (const it of items) insItem.run(id, it.product_id, Number(it.quantity));
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Created Requisition: ${reqNo}`);
+        logActivity(req, `Created Requisition: ${reqNo}`, undefined, Number(id));
     return id;
   })();
 
@@ -135,9 +134,7 @@ router.post("/:id/approve", requireAdmin, (req, res) => {
       dec.run(it.quantity, it.product_id);
       insOut.run(it.product_id, it.quantity, `Auto-issued from approved requisition ${r.req_no}`);
     }
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Approved Requisition: ${r.req_no}`);
+        logActivity(req, `Approved Requisition: ${r.req_no}`, undefined, r.id);
   })();
 
   res.json({ success: true });
@@ -157,9 +154,7 @@ router.post("/:id/reject", requireAdmin, (req, res) => {
     db.prepare(
       "UPDATE tbl_requisition SET status = 'Rejected', reject_reason = ?, date_processed = datetime('now','localtime'), processed_by = ? WHERE id = ?"
     ).run(String(reason).trim(), req.user.userid, r.id);
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Rejected Requisition: ${r.req_no} - ${reason}`);
+        logActivity(req, `Rejected Requisition: ${r.req_no} - ${reason}`, undefined, r.id);
   })();
   res.json({ success: true });
 });
@@ -172,9 +167,7 @@ router.delete("/:id", requireAdmin, (req, res) => {
   db.transaction(() => {
     db.prepare("UPDATE tbl_requisition SET is_archived = 1 WHERE id = ?").run(r.id);
     db.prepare("UPDATE tbl_requisition_item SET is_archived = 1 WHERE requisition_id = ?").run(r.id);
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Deleted Requisition: ${r.req_no}`);
+        logActivity(req, `Deleted Requisition: ${r.req_no}`, undefined, r.id);
   })();
   res.json({ success: true });
 });

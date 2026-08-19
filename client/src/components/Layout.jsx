@@ -22,6 +22,9 @@ export default function Layout() {
       ? [{ to: "/admin", label: "Admin Settings", icon: "⚙" }]
       : []),
     ...(isAdmin(user)
+      ? [{ to: "/audit-logs", label: "Audit Logs", icon: "≡" }]
+      : []),
+    ...(isAdmin(user)
       ? [{ to: "/users", label: "User Management", icon: "◈" }]
       : []),
     {

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import db from "../db.js";
+import { logActivity } from "../activity.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
@@ -80,9 +81,7 @@ router.post("/", (req, res) => {
       );
       if (a) db.prepare("UPDATE tbl_product SET condition = 'Needs Repair' WHERE pid = ? AND condition = 'Good'").run(a.pid);
     }
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Filed Incident Report: ${reportNo}`);
+        logActivity(req, `Filed Incident Report: ${reportNo}`);
   })();
   res.status(201).json({ id: Number(newId), report_number: reportNo });
 });
@@ -92,9 +91,7 @@ router.post("/:id/resolve", (req, res) => {
   if (!r) return res.status(404).json({ error: "Incident report not found" });
   if (r.status === "Resolved") return res.status(400).json({ error: "Incident already resolved." });
   db.prepare("UPDATE tbl_incident_reports SET status = 'Resolved' WHERE id = ?").run(r.id);
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Resolved Incident: ${r.report_number}`);
+    logActivity(req, `Resolved Incident: ${r.report_number}`);
   res.json({ success: true });
 });
 
@@ -104,9 +101,7 @@ router.delete("/:id", (req, res) => {
   db.transaction(() => {
     db.prepare("UPDATE tbl_incident_reports SET is_archived = 1 WHERE id = ?").run(r.id);
     db.prepare("UPDATE tbl_incident_items SET is_archived = 1 WHERE incident_id = ?").run(r.id);
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Deleted Incident: ${r.report_number}`);
+        logActivity(req, `Deleted Incident: ${r.report_number}`);
   })();
   res.json({ success: true });
 });

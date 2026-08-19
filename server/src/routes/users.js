@@ -1,5 +1,6 @@
 import { Router } from "express";
 import db from "../db.js";
+import { logActivity } from "../activity.js";
 import bcrypt from "bcryptjs";
 import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
@@ -49,9 +50,7 @@ router.post("/", requireAdmin, (req, res) => {
     )
     .run(fullname, username, useremail, contact_number || null, department || null, hash, role, photo || null);
 
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Added New User: ${fullname}`);
+    logActivity(req, `Added New User: ${fullname}`, undefined, Number(info.lastInsertRowid));
 
   res.status(201).json({ userid: Number(info.lastInsertRowid) });
 });
@@ -80,9 +79,7 @@ router.put("/:id", requireAdmin, (req, res) => {
     db.prepare("UPDATE tbl_user SET userpassword = ?, must_change_password = 1 WHERE userid = ?").run(hash, u.userid);
   }
 
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Updated User: ${fullname || u.fullname}`);
+    logActivity(req, `Updated User: ${fullname || u.fullname}`, undefined, u.userid);
 
   res.json({ success: true });
 });
@@ -92,9 +89,7 @@ router.delete("/:id", requireAdmin, (req, res) => {
   if (!u) return res.status(404).json({ error: "User not found" });
   if (Number(u.userid) === 1) return res.status(400).json({ error: "Cannot archive the primary admin." });
   db.prepare("UPDATE tbl_user SET is_archived = 1 WHERE userid = ?").run(u.userid);
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Archived User: ${u.fullname}`);
+    logActivity(req, `Archived User: ${u.fullname}`, undefined, u.userid);
   res.json({ success: true });
 });
 

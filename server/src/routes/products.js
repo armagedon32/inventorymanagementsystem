@@ -1,5 +1,6 @@
 import { Router } from "express";
 import db from "../db.js";
+import { logActivity } from "../activity.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
@@ -60,9 +61,7 @@ router.post("/", (req, res) => {
       serial_number || null, condition || "Good", assigned_to || null, office_id || null
     );
 
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Added New Product: ${name}`);
+    logActivity(req, `Added New Product: ${name}`, undefined, Number(info.lastInsertRowid));
 
   if ((stock || 0) > 0) {
     db.prepare(
@@ -101,9 +100,7 @@ router.put("/:id", (req, res) => {
     p.pid
   );
 
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Updated Product: ${name || p.name}`);
+    logActivity(req, `Updated Product: ${name || p.name}`, undefined, p.pid);
 
   res.json({ success: true });
 });
@@ -112,9 +109,7 @@ router.delete("/:id", (req, res) => {
   const p = db.prepare("SELECT * FROM tbl_product WHERE pid = ?").get(req.params.id);
   if (!p) return res.status(404).json({ error: "Product not found" });
   db.prepare("UPDATE tbl_product SET is_archived = 1 WHERE pid = ?").run(p.pid);
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Deleted Product: ${p.name}`);
+    logActivity(req, `Deleted Product: ${p.name}`, undefined, p.pid);
   res.json({ success: true });
 });
 
@@ -134,9 +129,7 @@ router.post("/:id/stock-in", (req, res) => {
     db.prepare(
       "INSERT INTO tbl_stockin (product_id, quantity, remarks, stock_date) VALUES (?, ?, ?, datetime('now','localtime'))"
     ).run(p.pid, qty, remarks || "Restocked");
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Restocked Product: ${p.name} (+${qty})`);
+        logActivity(req, `Restocked Product: ${p.name} (+${qty})`, undefined, p.pid);
   })();
 
   res.json({ success: true, stock: p.stock + qty });
@@ -162,9 +155,7 @@ router.post("/:id/stock-out", (req, res) => {
       `INSERT INTO tbl_stockout (product_id, office_id, instructor_id, quantity, stockout_date, remarks)
        VALUES (?, ?, ?, ?, datetime('now','localtime'), ?)`
     ).run(p.pid, office_id || null, instructor_id || null, qty, remarks || "");
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Stock Out: ${p.name} (-${qty})`);
+        logActivity(req, `Stock Out: ${p.name} (-${qty})`, undefined, p.pid);
   })();
 
   res.json({ success: true, stock: p.stock - qty });
@@ -211,9 +202,7 @@ router.post("/:id/assign", (req, res) => {
     db.prepare(
       "INSERT INTO tbl_asset_assignments (asset_id, assigned_to, office_id, instructor_id, remarks) VALUES (?, ?, ?, ?, ?)"
     ).run(p.pid, assignedTo, office_id || null, instructor_id || null, remarks || "");
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Assigned Asset: ${p.name} to ${assignedTo}`);
+        logActivity(req, `Assigned Asset: ${p.name} to ${assignedTo}`, undefined, p.pid);
   })();
 
   res.json({ success: true, assigned_to: assignedTo });
@@ -251,9 +240,7 @@ router.post("/meta/categories", (req, res) => {
   const info = db
     .prepare("INSERT INTO tbl_category (category, description, is_archived) VALUES (?, ?, 0)")
     .run(String(category).trim(), description || "");
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Added Category: ${category}`);
+    logActivity(req, `Added Category: ${category}`, undefined, Number(info.lastInsertRowid));
   res.status(201).json({ catid: Number(info.lastInsertRowid) });
 });
 
@@ -266,9 +253,7 @@ router.put("/meta/categories/:id", (req, res) => {
     description !== undefined ? description : c.description || "",
     c.catid
   );
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Updated Category: ${category || c.category}`);
+    logActivity(req, `Updated Category: ${category || c.category}`, undefined, c.catid);
   res.json({ success: true });
 });
 
@@ -281,9 +266,7 @@ router.delete("/meta/categories/:id", (req, res) => {
   if (used.n > 0)
     return res.status(400).json({ error: `Cannot archive: ${used.n} item(s) still use this category.` });
   db.prepare("UPDATE tbl_category SET is_archived = 1 WHERE catid = ?").run(c.catid);
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Deleted Category: ${c.category}`);
+    logActivity(req, `Deleted Category: ${c.category}`, undefined, c.catid);
   res.json({ success: true });
 });
 

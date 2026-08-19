@@ -1,5 +1,6 @@
 import { Router } from "express";
 import db from "../db.js";
+import { logActivity } from "../activity.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
@@ -79,9 +80,7 @@ router.post("/", (req, res) => {
         to_office, officeName(to_office), it.asset_id
       );
     }
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Created PTR: ${ptrNo}`);
+        logActivity(req, `Created PTR: ${ptrNo}`);
   })();
   res.status(201).json({ id: Number(newId), ptr_no: ptrNo });
 });
@@ -92,9 +91,7 @@ router.delete("/:id", (req, res) => {
   db.transaction(() => {
     db.prepare("UPDATE tbl_ptr_header SET is_archived = 1 WHERE id = ?").run(h.id);
     db.prepare("UPDATE tbl_ptr_items SET is_archived = 1 WHERE ptr_id = ?").run(h.id);
-    db.prepare(
-      "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-    ).run(req.user.userid, `Deleted PTR: ${h.ptr_no}`);
+        logActivity(req, `Deleted PTR: ${h.ptr_no}`);
   })();
   res.json({ success: true });
 });

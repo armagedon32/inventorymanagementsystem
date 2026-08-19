@@ -107,6 +107,9 @@ CREATE TABLE IF NOT EXISTS activity_log (
   id           INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id      INTEGER,
   action       TEXT,
+  description  TEXT,
+  target_id    INTEGER,
+  ip_address   TEXT,
   date_created TEXT DEFAULT (datetime('now','localtime'))
 );
 
@@ -337,5 +340,11 @@ if (!userCols.includes("department")) db.exec("ALTER TABLE tbl_user ADD COLUMN d
 
 const settingsCols = db.prepare("PRAGMA table_info(settings)").all().map((c) => c.name);
 if (!settingsCols.includes("terms_of_service")) db.exec("ALTER TABLE settings ADD COLUMN terms_of_service TEXT");
+
+const actCols = db.prepare("PRAGMA table_info(activity_log)").all().map((c) => c.name);
+if (!actCols.includes("description")) db.exec("ALTER TABLE activity_log ADD COLUMN description TEXT");
+if (!actCols.includes("target_id")) db.exec("ALTER TABLE activity_log ADD COLUMN target_id INTEGER");
+if (!actCols.includes("ip_address")) db.exec("ALTER TABLE activity_log ADD COLUMN ip_address TEXT");
+db.exec("UPDATE activity_log SET description = action WHERE description IS NULL AND action IS NOT NULL");
 
 export default db;

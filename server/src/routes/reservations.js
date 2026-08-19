@@ -1,5 +1,6 @@
 import { Router } from "express";
 import db from "../db.js";
+import { logActivity } from "../activity.js";
 import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
 const router = Router();
@@ -25,9 +26,7 @@ router.post("/rooms", requireAdmin, (req, res) => {
   const info = db
     .prepare("INSERT INTO tbl_room (room_name, capacity, location) VALUES (?, ?, ?)")
     .run(String(room_name).trim(), capacity || 0, location || "");
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Added Room: ${room_name}`);
+    logActivity(req, `Added Room: ${room_name}`, undefined, Number(info.lastInsertRowid));
   res.status(201).json({ id: Number(info.lastInsertRowid) });
 });
 
@@ -92,9 +91,7 @@ router.post("/reservations", (req, res) => {
       "INSERT INTO tbl_room_reservation (room_id, event_name, purpose, start_time, end_time, reserved_by) VALUES (?, ?, ?, ?, ?, ?)"
     )
     .run(room_id, String(event_name).trim(), purpose || "", start_time, end_time, req.user.userid);
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Booked Room: ${room.room_name} - ${event_name}`);
+    logActivity(req, `Booked Room: ${room.room_name} - ${event_name}`, undefined, Number(info.lastInsertRowid));
 
   res.status(201).json({ id: Number(info.lastInsertRowid) });
 });
@@ -107,9 +104,7 @@ router.post("/reservations/:id/cancel", (req, res) => {
   if (r.status === "Cancelled")
     return res.status(400).json({ error: "This reservation is already cancelled." });
   db.prepare("UPDATE tbl_room_reservation SET status = 'Cancelled' WHERE id = ?").run(r.id);
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, `Cancelled Reservation: ${r.event_name}`);
+    logActivity(req, `Cancelled Reservation: ${r.event_name}`, undefined, r.id);
   res.json({ success: true });
 });
 

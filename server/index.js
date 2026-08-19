@@ -21,6 +21,8 @@ import maintenanceRoutes from "./src/routes/maintenance.js";
 import facilityRoutes from "./src/routes/facilities.js";
 import { requireAuth, requireAdmin } from "./src/middleware/auth.js";
 import db from "./src/db.js";
+import { logActivity } from "./src/activity.js";
+import activityRoutes from "./src/routes/activity.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -61,9 +63,7 @@ app.put("/api/settings", requireAuth, requireAdmin, (req, res) => {
       terms_of_service !== undefined ? terms_of_service : s.terms_of_service || ""
     );
   }
-  db.prepare(
-    "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
-  ).run(req.user.userid, "Updated System Settings");
+  logActivity(req, "Updated System Settings");
   res.json({ success: true });
 });
 
@@ -81,6 +81,7 @@ app.use("/api/disposal", disposalRoutes);
 app.use("/api/incidents", incidentRoutes);
 app.use("/api/maintenance", maintenanceRoutes);
 app.use("/api/facilities", facilityRoutes);
+app.use("/api/activity", activityRoutes);
 
 app.get("/api/forecasting", requireAuth, forecasting);
 
