@@ -50,7 +50,7 @@ export default function Admin() {
 
         <h6 style={{ margin: "0 0 0.5rem" }}>Terms of Service</h6>
         <p className="text-muted" style={{ fontSize: "0.85rem", marginTop: 0 }}>
-          Ito ang nilalaman ng Terms of Service na ipinapakita sa mga user. I-update ang teksto at i-save.
+          This is the Terms of Service content shown to users. Update the text and click Save Settings.
         </p>
         <form onSubmit={handleSave}>
           <div className="form-group">
@@ -64,7 +64,7 @@ export default function Admin() {
             />
           </div>
 
-          <h6 style={{ margin: "1.25rem 0 0.5rem" }}>Document Signatories (ginagamit sa printed forms)</h6>
+          <h6 style={{ margin: "1.25rem 0 0.5rem" }}>Document Signatories (used on printed forms)</h6>
           <div className="form-grid">
             <div className="form-group">
               <label>OIC - Property &amp; Supplies</label>

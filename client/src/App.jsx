@@ -21,7 +21,6 @@ import NewReservation from "./pages/NewReservation";
 import ReservationView from "./pages/ReservationView";
 import Reports from "./pages/Reports";
 import Forecasting from "./pages/Forecasting";
-import Suppliers from "./pages/Suppliers";
 import Organizations from "./pages/Organizations";
 import Offices from "./pages/Offices";
 import Instructors from "./pages/Instructors";
@@ -90,7 +89,6 @@ export default function App() {
         <Route path="/reservations/:id" element={<ReservationView />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/forecasting" element={<Forecasting />} />
-        <Route path="/suppliers" element={<Suppliers />} />
         <Route path="/organizations" element={<Organizations />} />
         <Route path="/offices" element={<Offices />} />
         <Route path="/instructors" element={<Instructors />} />

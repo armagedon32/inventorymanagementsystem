@@ -53,7 +53,6 @@ export default function Layout() {
     {
       section: "Master Data",
       items: [
-        { to: "/suppliers", label: "Suppliers", icon: "◻" },
         { to: "/organizations", label: "Organizations", icon: "◈" },
         { to: "/offices", label: "Offices / Sections", icon: "▣" },
         { to: "/instructors", label: "Instructors", icon: "◍" },

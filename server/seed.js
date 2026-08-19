@@ -237,14 +237,7 @@ const tx = db.transaction(() => {
     insStockin.run(pid, qty, remarks, d.toISOString().slice(0, 10));
   });
 
-  // ---- Suppliers & Organizations ----
-  const insSupplier = db.prepare(
-    "INSERT INTO tbl_supplier (supplier_name, contact, address, is_archived) VALUES (?, ?, ?, 0)"
-  );
-  insSupplier.run("Easy Brand Paper Corp.", "0917-000-0000", "Olongapo City");
-  insSupplier.run("HBW Trading", "0918-111-2222", "Subic, Zambales");
-  insSupplier.run("Calla Supplies", "0919-333-4444", "Olongapo City");
-
+  // ---- Organizations ----
   const insOrg = db.prepare(
     "INSERT INTO tbl_organization (org_name, president, org_logo, is_archived) VALUES (?, ?, NULL, 0)"
   );
