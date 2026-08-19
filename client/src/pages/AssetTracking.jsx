@@ -86,6 +86,11 @@ export default function AssetTracking() {
     else exportCSV({ filename: `${filename}.csv`, headers, rows });
   }
 
+  if (error) return <div className="alert alert-error">{error}</div>;
+  if (!data) return <div className="empty">Loading asset tracking...</div>;
+
+  const u = data.utilization;
+
   const visible = query.trim()
     ? data.assets.filter((a) =>
         [a.name, a.barcode, a.serial_number, a.department, a.category_name, a.assigned_to]
@@ -93,11 +98,6 @@ export default function AssetTracking() {
           .some((v) => String(v).toLowerCase().includes(query.toLowerCase()))
       )
     : data.assets;
-
-  if (error) return <div className="alert alert-error">{error}</div>;
-  if (!data) return <div className="empty">Loading asset tracking...</div>;
-
-  const u = data.utilization;
 
   return (
     <div>
