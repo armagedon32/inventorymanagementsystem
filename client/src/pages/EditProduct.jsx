@@ -31,6 +31,7 @@ export default function EditProduct({ type = "Stock" }) {
           serial_number: p.serial_number || "",
           condition: p.condition || "Good",
           assigned_to: p.assigned_to || "",
+          department: p.department || "",
         })
       )
       .catch((e) => setError(e.message));
@@ -159,6 +160,15 @@ export default function EditProduct({ type = "Stock" }) {
                 value={form.unit_cost}
                 onChange={(e) => set("unit_cost", Number(e.target.value))}
               />
+            </div>
+            <div className="form-group">
+              <label>Department</label>
+              <select className="form-select" value={form.department} onChange={(e) => set("department", e.target.value)}>
+                <option value="">-- Select --</option>
+                {["Admin/Staff", "HM", "BED", "TED", "CSD"].map((d) => (
+                  <option key={d}>{d}</option>
+                ))}
+              </select>
             </div>
           </div>
 

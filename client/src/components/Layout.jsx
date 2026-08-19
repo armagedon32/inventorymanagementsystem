@@ -18,6 +18,7 @@ export default function Layout() {
     { to: "/requisitions", label: "Requisitions", icon: "◫" },
     { to: "/reservations", label: "Reservations", icon: "⛾" },
     { to: "/reports", label: "Reports", icon: "≡" },
+    { to: "/department-reports", label: "Department Reports", icon: "▦" },
     ...(isAdmin(user)
       ? [{ to: "/admin", label: "Admin Settings", icon: "⚙" }]
       : []),

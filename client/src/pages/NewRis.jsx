@@ -2,15 +2,18 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 
+const DEPARTMENTS = ["Admin/Staff", "HM", "BED", "TED", "CSD"];
+const CONDITIONS = ["Excellent", "Good", "Slightly Damaged", "Broken"];
+
 export default function NewRis() {
   const navigate = useNavigate();
   const [assets, setAssets] = useState([]);
   const [offices, setOffices] = useState([]);
   const [form, setForm] = useState({
-    last_name: "", first_name: "", mi_name: "", cp_number: "", position: "",
+    last_name: "", first_name: "", mi_name: "", cp_number: "", position: "", department: "",
     event_name: "", event_date: "", start_datetime: "", end_datetime: "",
   });
-  const [lines, setLines] = useState([{ asset_id: "", quantity: 1, borrowed_from: "" }]);
+  const [lines, setLines] = useState([{ asset_id: "", quantity: 1, borrowed_from: "", condition: "Good" }]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +29,7 @@ export default function NewRis() {
   }
 
   function addLine() {
-    setLines((ls) => [...ls, { asset_id: "", quantity: 1, borrowed_from: "" }]);
+    setLines((ls) => [...ls, { asset_id: "", quantity: 1, borrowed_from: "", condition: "Good" }]);
   }
 
   function removeLine(idx) {
@@ -40,7 +43,7 @@ export default function NewRis() {
     try {
       const items = lines
         .filter((l) => l.asset_id && Number(l.quantity) > 0)
-        .map((l) => ({ asset_id: Number(l.asset_id), quantity: Number(l.quantity), borrowed_from: l.borrowed_from ? Number(l.borrowed_from) : null }));
+        .map((l) => ({ asset_id: Number(l.asset_id), quantity: Number(l.quantity), borrowed_from: l.borrowed_from ? Number(l.borrowed_from) : null, condition: l.condition || "Good" }));
       if (items.length === 0) {
         setError("Select at least one asset with a valid quantity.");
         setLoading(false);
@@ -85,6 +88,15 @@ export default function NewRis() {
               <label>Position</label>
               <input className="form-control" value={form.position} onChange={(e) => set("position", e.target.value)} />
             </div>
+            <div className="form-group">
+              <label>Department *</label>
+              <select className="form-select" value={form.department} onChange={(e) => set("department", e.target.value)} required>
+                <option value="">-- Select --</option>
+                {DEPARTMENTS.map((d) => (
+                  <option key={d}>{d}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <h6 style={{ margin: "1rem 0 0.5rem" }}>Event Details</h6>
@@ -124,6 +136,14 @@ export default function NewRis() {
               <div className="form-group">
                 <label>Quantity *</label>
                 <input type="number" min="1" className="form-control" value={line.quantity} onChange={(e) => setLine(i, "quantity", e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label>Condition</label>
+                <select className="form-select" value={line.condition} onChange={(e) => setLine(i, "condition", e.target.value)}>
+                  {CONDITIONS.map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </select>
               </div>
               <div className="form-group">
                 <label>Borrowed From</label>

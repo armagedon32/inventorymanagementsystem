@@ -23,6 +23,7 @@ import { requireAuth, requireAdmin } from "./src/middleware/auth.js";
 import db from "./src/db.js";
 import { logActivity } from "./src/activity.js";
 import activityRoutes from "./src/routes/activity.js";
+import departmentReportRoutes from "./src/routes/department-report.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -82,6 +83,7 @@ app.use("/api/incidents", incidentRoutes);
 app.use("/api/maintenance", maintenanceRoutes);
 app.use("/api/facilities", facilityRoutes);
 app.use("/api/activity", activityRoutes);
+app.use("/api/department-report", departmentReportRoutes);
 
 app.get("/api/forecasting", requireAuth, forecasting);
 app.post("/api/forecasting/retrain", requireAuth, retrainForecasting);

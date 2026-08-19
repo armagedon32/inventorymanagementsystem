@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS tbl_product (
   assigned_date   TEXT,
   date_added      TEXT,
   image           TEXT,
+  department      TEXT,
   is_archived     INTEGER DEFAULT 0
 );
 
@@ -201,6 +202,7 @@ CREATE TABLE IF NOT EXISTS tbl_ris_header (
   event_date     TEXT,
   start_datetime TEXT,
   end_datetime   TEXT,
+  department     TEXT,
   is_returned    INTEGER DEFAULT 0,
   return_date    TEXT,
   is_archived    INTEGER DEFAULT 0
@@ -212,6 +214,7 @@ CREATE TABLE IF NOT EXISTS tbl_ris_items (
   asset_id      INTEGER NOT NULL,
   quantity      INTEGER NOT NULL,
   borrowed_from INTEGER,
+  condition     TEXT DEFAULT 'Good',
   is_archived   INTEGER DEFAULT 0
 );
 
@@ -346,5 +349,14 @@ if (!actCols.includes("description")) db.exec("ALTER TABLE activity_log ADD COLU
 if (!actCols.includes("target_id")) db.exec("ALTER TABLE activity_log ADD COLUMN target_id INTEGER");
 if (!actCols.includes("ip_address")) db.exec("ALTER TABLE activity_log ADD COLUMN ip_address TEXT");
 db.exec("UPDATE activity_log SET description = action WHERE description IS NULL AND action IS NOT NULL");
+
+const prodCols = db.prepare("PRAGMA table_info(tbl_product)").all().map((c) => c.name);
+if (!prodCols.includes("department")) db.exec("ALTER TABLE tbl_product ADD COLUMN department TEXT");
+
+const risHCols = db.prepare("PRAGMA table_info(tbl_ris_header)").all().map((c) => c.name);
+if (!risHCols.includes("department")) db.exec("ALTER TABLE tbl_ris_header ADD COLUMN department TEXT");
+
+const risICols = db.prepare("PRAGMA table_info(tbl_ris_items)").all().map((c) => c.name);
+if (!risICols.includes("condition")) db.exec("ALTER TABLE tbl_ris_items ADD COLUMN condition TEXT DEFAULT 'Good'");
 
 export default db;

@@ -6,6 +6,8 @@ import { requireAuth } from "../middleware/auth.js";
 const router = Router();
 router.use(requireAuth);
 
+const CONDITION_OPTIONS = ["Excellent", "Good", "Slightly Damaged", "Broken"];
+
 function nextRisNo() {
   const row = db.prepare("SELECT id FROM tbl_ris_header ORDER BY id DESC LIMIT 1").get();
   const seq = row ? String(row.id + 1).padStart(3, "0") : "001";
@@ -41,7 +43,7 @@ router.get("/:id", (req, res) => {
   if (!h) return res.status(404).json({ error: "RIS not found" });
   const items = db
     .prepare(
-      `SELECT i.id, i.asset_id, i.quantity, i.borrowed_from, o.office_name AS borrowed_from_name,
+      `SELECT i.id, i.asset_id, i.quantity, i.borrowed_from, i.condition, o.office_name AS borrowed_from_name,
         p.name AS asset_name, p.brand, p.barcode AS inventory_no, p.serial_number
        FROM tbl_ris_items i
        LEFT JOIN tbl_product p ON p.pid = i.asset_id
@@ -53,7 +55,7 @@ router.get("/:id", (req, res) => {
 });
 
 router.post("/", (req, res) => {
-  const { last_name, first_name, mi_name, cp_number, position, event_name, event_date, start_datetime, end_datetime, items } = req.body || {};
+  const { last_name, first_name, mi_name, cp_number, position, department, event_name, event_date, start_datetime, end_datetime, items } = req.body || {};
   if (!last_name || !first_name || !String(last_name).trim() || !String(first_name).trim()) {
     return res.status(400).json({ error: "Borrower first and last name are required." });
   }
@@ -77,6 +79,9 @@ router.post("/", (req, res) => {
       });
     }
     if (a.stock < qty) return res.status(400).json({ error: `Insufficient units for ${a.name}. Available: ${a.stock}.` });
+    if (it.condition && !CONDITION_OPTIONS.includes(it.condition)) {
+      return res.status(400).json({ error: `Invalid condition for ${a.name}. Use Excellent, Good, Slightly Damaged or Broken.` });
+    }
   }
 
   const risNo = nextRisNo();
@@ -84,18 +89,18 @@ router.post("/", (req, res) => {
   db.transaction(() => {
     newId = db
       .prepare(
-        `INSERT INTO tbl_ris_header (ris_no, last_name, first_name, mi_name, cp_number, position, event_name, event_date, start_datetime, end_datetime, is_archived)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`
+        `INSERT INTO tbl_ris_header (ris_no, last_name, first_name, mi_name, cp_number, position, department, event_name, event_date, start_datetime, end_datetime, is_archived)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`
       )
-      .run(risNo, String(last_name).trim(), String(first_name).trim(), mi_name || "", cp_number || "", position || "", String(event_name).trim(), event_date || null, start_datetime || null, end_datetime || null).lastInsertRowid;
+      .run(risNo, String(last_name).trim(), String(first_name).trim(), mi_name || "", cp_number || "", position || "", department || null, String(event_name).trim(), event_date || null, start_datetime || null, end_datetime || null).lastInsertRowid;
     const insItem = db.prepare(
-      "INSERT INTO tbl_ris_items (ris_id, asset_id, quantity, borrowed_from) VALUES (?, ?, ?, ?)"
+      "INSERT INTO tbl_ris_items (ris_id, asset_id, quantity, borrowed_from, condition) VALUES (?, ?, ?, ?, ?)"
     );
     for (const it of items) {
-      insItem.run(newId, it.asset_id, Number(it.quantity), it.borrowed_from || null);
+      insItem.run(newId, it.asset_id, Number(it.quantity), it.borrowed_from || null, it.condition || "Good");
       db.prepare("UPDATE tbl_product SET stock = stock - ? WHERE pid = ?").run(Number(it.quantity), it.asset_id);
     }
-        logActivity(req, `Created RIS: ${risNo} for ${last_name}, ${first_name}`);
+    logActivity(req, `Created RIS: ${risNo} for ${last_name}, ${first_name}`, `RIS ${risNo} — ${items.length} item(s) borrowed`, Number(newId));
   })();
   res.status(201).json({ id: Number(newId), ris_no: risNo });
 });

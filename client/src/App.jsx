@@ -27,6 +27,7 @@ import Instructors from "./pages/Instructors";
 import Ris from "./pages/Ris";
 import NewRis from "./pages/NewRis";
 import RisView from "./pages/RisView";
+import DepartmentReport from "./pages/DepartmentReport";
 import Ptrs from "./pages/Ptrs";
 import NewPtr from "./pages/NewPtr";
 import PtrView from "./pages/PtrView";
@@ -96,6 +97,7 @@ export default function App() {
         <Route path="/ris" element={<Ris />} />
         <Route path="/ris/new" element={<NewRis />} />
         <Route path="/ris/:id" element={<RisView />} />
+        <Route path="/department-reports" element={<DepartmentReport />} />
         <Route path="/ptr" element={<Ptrs />} />
         <Route path="/ptr/new" element={<NewPtr />} />
         <Route path="/ptr/:id" element={<PtrView />} />

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 
+const DEPARTMENTS = ["Admin/Staff", "HM", "BED", "TED", "CSD"];
+
 export default function AddProduct({ type = "Stock" }) {
   const isAsset = type === "Asset";
   const navigate = useNavigate();
@@ -23,6 +25,7 @@ export default function AddProduct({ type = "Stock" }) {
     serial_number: "",
     condition: "Good",
     assigned_to: "",
+    department: "",
   });
 
   useEffect(() => {
@@ -171,6 +174,15 @@ export default function AddProduct({ type = "Stock" }) {
                 value={form.unit_cost}
                 onChange={(e) => set("unit_cost", Number(e.target.value))}
               />
+            </div>
+            <div className="form-group">
+              <label>Department *</label>
+              <select className="form-select" value={form.department} onChange={(e) => set("department", e.target.value)} required>
+                <option value="">-- Select --</option>
+                {DEPARTMENTS.map((d) => (
+                  <option key={d}>{d}</option>
+                ))}
+              </select>
             </div>
           </div>
 

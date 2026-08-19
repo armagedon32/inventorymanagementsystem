@@ -53,6 +53,7 @@ export default function RisView() {
       ["RIS No.", ris.ris_no],
       ["Borrower", `${ris.last_name}, ${ris.first_name} ${ris.mi_name || ""}`.trim()],
       ["Position", ris.position || "—"],
+      ["Department", ris.department || "—"],
       ["Contact No.", ris.cp_number || "—"],
       ["Event", ris.event_name],
       ["Event Date", ris.event_date || "—"],
@@ -70,6 +71,7 @@ export default function RisView() {
         { label: "Inventory No.", key: "inventory_no" },
         { label: "Property / Item", key: "item" },
         { label: "Serial No.", key: "serial" },
+        { label: "Condition", key: "condition" },
         { label: "Borrowed From", key: "from" },
       ],
       items: ris.items.map((it) => ({
@@ -77,6 +79,7 @@ export default function RisView() {
         inventory_no: it.inventory_no || "—",
         item: it.asset_name || "—",
         serial: it.serial_number || "—",
+        condition: it.condition || "Good",
         from: it.borrowed_from_name || "—",
       })),
       signLeft: settings.oic_property || "MARITES MENDIGORIN",
@@ -93,6 +96,7 @@ export default function RisView() {
     ["RIS No.", ris.ris_no],
     ["Borrower", `${ris.last_name}, ${ris.first_name} ${ris.mi_name || ""}`.trim()],
     ["Position", ris.position || "—"],
+    ["Department", ris.department || "—"],
     ["Contact No.", ris.cp_number || "—"],
     ["Event", ris.event_name],
     ["Event Date", ris.event_date || "—"],
@@ -137,6 +141,7 @@ export default function RisView() {
                 <th>Item</th>
                 <th>Serial No.</th>
                 <th>Quantity</th>
+                <th>Condition</th>
                 <th>Borrowed From</th>
               </tr>
             </thead>
@@ -148,10 +153,11 @@ export default function RisView() {
                   <td><strong>{it.asset_name}</strong></td>
                   <td>{it.serial_number || "—"}</td>
                   <td>{it.quantity}</td>
+                  <td>{it.condition || "Good"}</td>
                   <td>{it.borrowed_from_name || "—"}</td>
                 </tr>
               ))}
-              {ris.items.length === 0 && <tr><td colSpan={6} className="empty">No items.</td></tr>}
+              {ris.items.length === 0 && <tr><td colSpan={7} className="empty">No items.</td></tr>}
             </tbody>
           </table>
         </div>
