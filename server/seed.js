@@ -17,24 +17,24 @@ const tx = db.transaction(() => {
   const saPass = bcrypt.hashSync("assistant123", 10);
 
   const insUser = db.prepare(
-    `INSERT INTO tbl_user (fullname, username, useremail, contact_number, course, major, year_level, userpassword, must_change_password, role, photo, is_archived)
-     VALUES (@fullname, @username, @useremail, @contact_number, @course, @major, @year_level, @userpassword, @must_change_password, @role, @photo, 0)`
+    `INSERT INTO tbl_user (fullname, username, useremail, contact_number, department, userpassword, must_change_password, role, photo, is_archived)
+     VALUES (@fullname, @username, @useremail, @contact_number, @department, @userpassword, @must_change_password, @role, @photo, 0)`
   );
 
   insUser.run({
     fullname: "Super Admin", username: "superadmin", useremail: "superadmin@example.com",
-    contact_number: "09000000000", course: null, major: null, year_level: null,
+    contact_number: "09000000000", department: "Admin/Staff",
     userpassword: adminPass, must_change_password: 0, role: "Admin", photo: null,
   });
   insUser.run({
-    fullname: "Juan Dela Cruz", username: "intern", useremail: "intern@example.com",
-    contact_number: "09100000000", course: "BSCS", major: "", year_level: "4th",
-    userpassword: internPass, must_change_password: 0, role: "Intern", photo: null,
+    fullname: "Juan Dela Cruz", username: "faculty", useremail: "faculty@example.com",
+    contact_number: "09100000000", department: "TED",
+    userpassword: internPass, must_change_password: 0, role: "Faculty", photo: null,
   });
   insUser.run({
-    fullname: "Maria Santos", username: "assistant", useremail: "assistant@example.com",
-    contact_number: "09200000000", course: "BSCS", major: "", year_level: "2nd",
-    userpassword: saPass, must_change_password: 0, role: "Student Assistant", photo: null,
+    fullname: "Maria Santos", username: "staff", useremail: "staff@example.com",
+    contact_number: "09200000000", department: "BED",
+    userpassword: saPass, must_change_password: 0, role: "Staff", photo: null,
   });
 
   // ---- Categories ----
@@ -268,7 +268,7 @@ const tx = db.transaction(() => {
   const end = new Date(Date.now() + 3 * 86400000);
   const fmt = (d) => d.toISOString().slice(0, 16).replace("T", " ");
   const risId = insRis.run(
-    `RIS-${now.replace(/-/g, "")}-001`, "Dela Cruz", "Juan", "P", "09123456789", "Student Assistant",
+    `RIS-${now.replace(/-/g, "")}-001`, "Dela Cruz", "Juan", "P", "09123456789", "Faculty",
     "Audio Visual Orientation", now, fmt(start), fmt(end)
   ).lastInsertRowid;
   const insRisItem = db.prepare(
@@ -337,5 +337,5 @@ tx();
 
 console.log("Database seeded successfully.");
 console.log("  Admin login: superadmin / admin123");
-console.log("  Intern login: intern / intern123");
-console.log("  Student Assistant: assistant / assistant123");
+console.log("  Faculty login: faculty / intern123");
+console.log("  Staff login: staff / assistant123");

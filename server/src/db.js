@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS tbl_user (
   course         TEXT,
   major          TEXT,
   year_level     TEXT,
+  department     TEXT,
   userpassword   TEXT NOT NULL,
   must_change_password INTEGER DEFAULT 0,
   role           TEXT NOT NULL DEFAULT 'Admin',
@@ -332,6 +333,7 @@ if (!categoryCols.includes("description")) db.exec("ALTER TABLE tbl_category ADD
 
 const userCols = db.prepare("PRAGMA table_info(tbl_user)").all().map((c) => c.name);
 if (!userCols.includes("address")) db.exec("ALTER TABLE tbl_user ADD COLUMN address TEXT");
+if (!userCols.includes("department")) db.exec("ALTER TABLE tbl_user ADD COLUMN department TEXT");
 
 const settingsCols = db.prepare("PRAGMA table_info(settings)").all().map((c) => c.name);
 if (!settingsCols.includes("terms_of_service")) db.exec("ALTER TABLE settings ADD COLUMN terms_of_service TEXT");

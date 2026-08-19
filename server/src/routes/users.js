@@ -30,8 +30,8 @@ router.get("/instructors", (req, res) => {
 
 router.post("/", requireAdmin, (req, res) => {
   const {
-    fullname, username, useremail, contact_number, course, major,
-    year_level, password, role, photo,
+    fullname, username, useremail, contact_number, department,
+    password, role, photo,
   } = req.body || {};
   if (!fullname || !username || !useremail || !password || !role) {
     return res.status(400).json({ error: "Fullname, username, email, password and role are required." });
@@ -44,10 +44,10 @@ router.post("/", requireAdmin, (req, res) => {
   const hash = bcrypt.hashSync(password, 10);
   const info = db
     .prepare(
-      `INSERT INTO tbl_user (fullname, username, useremail, contact_number, course, major, year_level, userpassword, role, photo, is_archived)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`
+      `INSERT INTO tbl_user (fullname, username, useremail, contact_number, department, userpassword, role, photo, is_archived)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)`
     )
-    .run(fullname, username, useremail, contact_number || null, course || null, major || null, year_level || null, hash, role, photo || null);
+    .run(fullname, username, useremail, contact_number || null, department || null, hash, role, photo || null);
 
   db.prepare(
     "INSERT INTO activity_log (user_id, action, date_created) VALUES (?, ?, datetime('now','localtime'))"
@@ -60,18 +60,16 @@ router.put("/:id", requireAdmin, (req, res) => {
   const u = db.prepare("SELECT * FROM tbl_user WHERE userid = ?").get(req.params.id);
   if (!u) return res.status(404).json({ error: "User not found" });
 
-  const { fullname, username, useremail, contact_number, course, major, year_level, role, photo, password } = req.body || {};
+  const { fullname, username, useremail, contact_number, department, role, photo, password } = req.body || {};
   db.prepare(
-    `UPDATE tbl_user SET fullname = ?, username = ?, useremail = ?, contact_number = ?, course = ?, major = ?, year_level = ?, role = ?, photo = ?
+    `UPDATE tbl_user SET fullname = ?, username = ?, useremail = ?, contact_number = ?, department = ?, role = ?, photo = ?
      WHERE userid = ?`
   ).run(
     fullname || u.fullname,
     username || u.username,
     useremail || u.useremail,
     contact_number !== undefined ? contact_number : u.contact_number,
-    course !== undefined ? course : u.course,
-    major !== undefined ? major : u.major,
-    year_level !== undefined ? year_level : u.year_level,
+    department !== undefined ? department : u.department,
     role || u.role,
     photo !== undefined ? photo : u.photo,
     u.userid

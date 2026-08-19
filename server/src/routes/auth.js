@@ -96,9 +96,7 @@ router.get("/me", requireAuth, (req, res) => {
     photo: user.photo,
     contact_number: user.contact_number,
     address: user.address,
-    course: user.course,
-    major: user.major,
-    year_level: user.year_level,
+    department: user.department,
     must_change_password: user.must_change_password,
   });
 });
@@ -114,7 +112,7 @@ router.put("/profile", requireAuth, (req, res) => {
   const u = db.prepare("SELECT * FROM tbl_user WHERE userid = ? AND is_archived = 0").get(req.user.userid);
   if (!u) return res.status(404).json({ error: "User not found." });
 
-  const { fullname, useremail, contact_number, address, course, major, year_level, photo } = req.body || {};
+  const { fullname, useremail, contact_number, address, department, photo } = req.body || {};
 
   if (fullname !== undefined && !String(fullname).trim()) {
     return res.status(400).json({ error: "Full name cannot be empty." });
@@ -149,15 +147,13 @@ router.put("/profile", requireAuth, (req, res) => {
   }
 
   db.prepare(
-    `UPDATE tbl_user SET fullname = ?, useremail = ?, contact_number = ?, address = ?, course = ?, major = ?, year_level = ?, photo = ? WHERE userid = ?`
+    `UPDATE tbl_user SET fullname = ?, useremail = ?, contact_number = ?, address = ?, department = ?, photo = ? WHERE userid = ?`
   ).run(
     fullname !== undefined && String(fullname).trim() ? String(fullname).trim() : u.fullname,
     useremail !== undefined ? String(useremail).trim() : u.useremail,
     contact_number !== undefined ? contact_number : u.contact_number,
     address !== undefined ? address : u.address,
-    course !== undefined ? course : u.course,
-    major !== undefined ? major : u.major,
-    year_level !== undefined ? year_level : u.year_level,
+    department !== undefined ? department : u.department,
     photoPath,
     u.userid
   );
@@ -177,9 +173,7 @@ router.put("/profile", requireAuth, (req, res) => {
       photo: updated.photo,
       contact_number: updated.contact_number,
       address: updated.address,
-      course: updated.course,
-      major: updated.major,
-      year_level: updated.year_level,
+      department: updated.department,
       must_change_password: updated.must_change_password,
     },
   });

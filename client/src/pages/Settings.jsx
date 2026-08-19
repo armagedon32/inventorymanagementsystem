@@ -10,9 +10,7 @@ export default function Settings() {
     useremail: user?.useremail || "",
     contact_number: user?.contact_number || "",
     address: user?.address || "",
-    course: user?.course || "",
-    major: user?.major || "",
-    year_level: user?.year_level || "",
+    department: user?.department || "Admin/Staff",
   });
   const [photo, setPhoto] = useState(user?.photo || "");
   const [photoFile, setPhotoFile] = useState(null);
@@ -90,7 +88,7 @@ export default function Settings() {
     }
   }
 
-  const showStudentFields = user?.role === "Intern" || user?.role === "Student Assistant";
+  const showStudentFields = false;
 
   return (
     <div className="form-grid" style={{ alignItems: "start" }}>
@@ -127,26 +125,15 @@ export default function Settings() {
                 <label>Address</label>
                 <input className="form-control" value={profile.address} onChange={(e) => setP("address", e.target.value)} />
               </div>
-              {showStudentFields && (
-                <>
-                  <div className="form-group">
-                    <label>Course</label>
-                    <input className="form-control" value={profile.course} onChange={(e) => setP("course", e.target.value)} />
-                  </div>
-                  <div className="form-group">
-                    <label>Major</label>
-                    <input className="form-control" value={profile.major} onChange={(e) => setP("major", e.target.value)} />
-                  </div>
-                  <div className="form-group">
-                    <label>Year Level</label>
-                    <select className="form-select" value={profile.year_level} onChange={(e) => setP("year_level", e.target.value)}>
-                      <option value="">-- Select --</option>
-                      {["1st", "2nd", "3rd", "4th", "5th"].map((y) => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
-                    </select>
-                  </div>
-                </>
+              {!showStudentFields && (
+                <div className="form-group">
+                  <label>Department</label>
+                  <select className="form-select" value={profile.department} onChange={(e) => setP("department", e.target.value)}>
+                    {["Admin/Staff", "HM", "BED", "TED", "CSD"].map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
               )}
             </div>
             <div className="flex between mt-4">

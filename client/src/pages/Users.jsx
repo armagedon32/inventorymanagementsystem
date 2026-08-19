@@ -2,15 +2,15 @@ import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
+const DEPARTMENTS = ["Admin/Staff", "HM", "BED", "TED", "CSD"];
+
 const emptyForm = {
   fullname: "",
   username: "",
   useremail: "",
   contact_number: "",
-  course: "",
-  major: "",
-  year_level: "",
-  role: "Intern",
+  department: "Admin/Staff",
+  role: "Staff",
   password: "",
 };
 
@@ -42,9 +42,7 @@ export default function Users() {
       username: u.username,
       useremail: u.useremail,
       contact_number: u.contact_number || "",
-      course: u.course || "",
-      major: u.major || "",
-      year_level: u.year_level || "",
+      department: u.department || "Admin/Staff",
       role: u.role,
       password: "",
     });
@@ -104,8 +102,7 @@ export default function Users() {
                   <th>Username</th>
                   <th>Email</th>
                   <th>Contact</th>
-                  <th>Course</th>
-                  <th>Year</th>
+                  <th>Department</th>
                   <th>Role</th>
                   <th>Actions</th>
                 </tr>
@@ -117,8 +114,7 @@ export default function Users() {
                     <td>{u.username}</td>
                     <td>{u.useremail}</td>
                     <td>{u.contact_number || ""}</td>
-                    <td>{u.course || ""}</td>
-                    <td>{u.year_level || ""}</td>
+                    <td>{u.department || ""}</td>
                     <td><span className="badge badge-ok">{u.role}</span></td>
                     <td>
                       <div className="btn-group">
@@ -161,23 +157,19 @@ export default function Users() {
                   <input className="form-control" value={form.contact_number} onChange={(e) => set("contact_number", e.target.value)} />
                 </div>
                 <div className="form-group">
-                  <label>Course</label>
-                  <input className="form-control" value={form.course} onChange={(e) => set("course", e.target.value)} />
-                </div>
-                <div className="form-group">
-                  <label>Major</label>
-                  <input className="form-control" value={form.major} onChange={(e) => set("major", e.target.value)} />
-                </div>
-                <div className="form-group">
-                  <label>Year Level</label>
-                  <input className="form-control" value={form.year_level} onChange={(e) => set("year_level", e.target.value)} />
+                  <label>Department</label>
+                  <select className="form-select" value={form.department} onChange={(e) => set("department", e.target.value)}>
+                    {DEPARTMENTS.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group">
                   <label>Role *</label>
                   <select className="form-select" value={form.role} onChange={(e) => set("role", e.target.value)}>
                     <option>Admin</option>
-                    <option>Intern</option>
-                    <option>Student Assistant</option>
+                    <option>Staff</option>
+                    <option>Faculty</option>
                   </select>
                 </div>
                 <div className="form-group">
