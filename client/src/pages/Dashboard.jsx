@@ -116,6 +116,15 @@ export default function Dashboard() {
           </Link>
         </div>
         <div className="col">
+          <Link to="/asset-tracking">
+            <div className="card-box purple">
+              <i className="bg-icon">◉</i>
+              <h3>{data.assetUtilization ? `${data.assetUtilization.percent}%` : "—"}</h3>
+              <p>Asset Utilization ({data.assetUtilization ? `${data.assetUtilization.in_use_assets}/${data.assetUtilization.total_assets} in use` : "—"})</p>
+            </div>
+          </Link>
+        </div>
+        <div className="col">
           <Link to="/stock">
             <div className="card-box orange">
               <i className="bg-icon">⚑</i>

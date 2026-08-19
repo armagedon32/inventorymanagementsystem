@@ -28,6 +28,7 @@ import Ris from "./pages/Ris";
 import NewRis from "./pages/NewRis";
 import RisView from "./pages/RisView";
 import DepartmentReport from "./pages/DepartmentReport";
+import AssetTracking from "./pages/AssetTracking";
 import Ptrs from "./pages/Ptrs";
 import NewPtr from "./pages/NewPtr";
 import PtrView from "./pages/PtrView";
@@ -98,6 +99,7 @@ export default function App() {
         <Route path="/ris/new" element={<NewRis />} />
         <Route path="/ris/:id" element={<RisView />} />
         <Route path="/department-reports" element={<DepartmentReport />} />
+        <Route path="/asset-tracking" element={<AssetTracking />} />
         <Route path="/ptr" element={<Ptrs />} />
         <Route path="/ptr/new" element={<NewPtr />} />
         <Route path="/ptr/:id" element={<PtrView />} />

@@ -71,6 +71,39 @@ router.get("/summary", (req, res) => {
     )
     .all();
 
+  // ---- asset utilization (current snapshot) ----
+  const disposals = db.prepare("SELECT asset_id FROM tbl_disposal WHERE is_archived = 0").all();
+  const disposalSet = new Set(disposals.filter((d) => d.asset_id).map((d) => d.asset_id));
+  const risActiveRows = db
+    .prepare(
+      `SELECT i.asset_id, h.end_datetime
+       FROM tbl_ris_items i JOIN tbl_ris_header h ON h.id = i.ris_id
+       WHERE i.is_archived = 0 AND h.is_archived = 0 AND h.is_returned = 0`
+    )
+    .all();
+  const risActive = {};
+  for (const r of risActiveRows) if (!risActive[r.asset_id]) risActive[r.asset_id] = r;
+  const maintRows = db
+    .prepare("SELECT serial_number, next_maintenance_date FROM tbl_maintenance_reports WHERE is_archived = 0")
+    .all()
+    .filter((m) => m.serial_number && m.next_maintenance_date);
+  const maintBySerial = new Map(maintRows.map((m) => [m.serial_number, m]));
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const assetsAll = db
+    .prepare("SELECT pid, serial_number, assigned_to, office_id FROM tbl_product WHERE is_archived = 0 AND product_type = 'Asset'")
+    .all();
+  const assetInUse = assetsAll.filter((a) => {
+    if (disposalSet.has(a.pid)) return false;
+    if (risActive[a.pid]) return true;
+    const m = maintBySerial.get(a.serial_number);
+    if (m && m.next_maintenance_date <= todayStr) return true;
+    return Boolean(a.assigned_to || a.office_id);
+  }).length;
+  const assetUtilizationPercent = assetsAll.length
+    ? Math.round((assetInUse / assetsAll.length) * 10000) / 100
+    : 0;
+
   res.json({
     totalProducts,
     totalAssets,
@@ -86,6 +119,11 @@ router.get("/summary", (req, res) => {
     last7Stockout,
     monthlyIssuance,
     recentActivity,
+    assetUtilization: {
+      total_assets: assetsAll.length,
+      in_use_assets: assetInUse,
+      percent: assetUtilizationPercent,
+    },
   });
 });
 

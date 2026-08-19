@@ -350,6 +350,14 @@ tr.low-stock {
   background: #d1ecf1;
   color: #0c5460;
 }
+.badge-dark {
+  background: #343a40;
+  color: #fff;
+}
+.badge-light {
+  background: #e9ecef;
+  color: #495057;
+}
 
 /* ===== BUTTONS ===== */
 .btn {
