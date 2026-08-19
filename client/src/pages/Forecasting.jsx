@@ -22,10 +22,27 @@ export default function Forecasting() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
+  const [retraining, setRetraining] = useState(false);
+  const [msg, setMsg] = useState("");
 
   useEffect(() => {
     api.get("/forecasting").then(setData).catch((e) => setError(e.message));
   }, []);
+
+  async function retrain() {
+    setRetraining(true);
+    setError("");
+    setMsg("");
+    try {
+      const d = await api.post("/forecasting/retrain");
+      setData(d);
+      setMsg("Model retrained successfully.");
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setRetraining(false);
+    }
+  }
 
   if (error) return <div className="alert alert-error">{error}</div>;
   if (!data) return <div className="empty">Computing RNN-LSTM forecast...</div>;
@@ -54,16 +71,20 @@ export default function Forecasting() {
 
   return (
     <div>
+      {msg && <div className="alert alert-success">{msg}</div>}
       {/* ML Lab - model status card */}
       <div className="card">
         <div className="card-header">
           <h5>Machine Learning Lab — RNN-LSTM Demand Forecaster</h5>
-          <span className="text-muted" style={{ fontSize: "0.8rem" }}>
-            LSTM · {data.sequence_length}-month sequence · {data.hidden_size} hidden units ·{" "}
-            {data.epochs} epochs · generated {new Date(data.generated_at).toLocaleString()}
-          </span>
+          <button type="button" className="btn btn-primary btn-sm" onClick={retrain} disabled={retraining}>
+            {retraining ? "Retraining..." : "⟳ Retrain Model"}
+          </button>
         </div>
         <div className="card-body">
+          <div className="text-muted" style={{ fontSize: "0.8rem", marginBottom: 12 }}>
+            LSTM · {data.sequence_length}-month sequence · {data.hidden_size} hidden units ·{" "}
+            {data.epochs} epochs · generated {new Date(data.generated_at).toLocaleString()}
+          </div>
           <div className="row">
             <div className="col">
               <div className="card-box blue">

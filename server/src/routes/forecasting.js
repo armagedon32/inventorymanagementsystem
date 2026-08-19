@@ -15,6 +15,7 @@
 
 import db from "../db.js";
 import { LSTMForecaster } from "../ml/lstm.js";
+import { logActivity } from "../activity.js";
 
 const SEQUENCE_LENGTH = 12;      // "Previous 12 months -> Forecast Month 13"
 const MIN_HISTORY_MONTHS = 12;   // minimum monthly points to train
@@ -345,9 +346,16 @@ function build() {
 
 export default function forecasting(req, res) {
   const key = dataVersion();
-  if (!cache || cacheKey !== key) {
+  if (req.query.force === "1" || !cache || cacheKey !== key) {
     cache = build();
     cacheKey = key;
   }
-  res.json(cache);
+  res.json({ ...cache, retrained: req.query.force === "1" });
+}
+
+export function retrainForecasting(req, res) {
+  cache = build();
+  cacheKey = dataVersion();
+  logActivity(req, "Retrained Forecasting Model", "Manual retrain requested from the ML Lab");
+  res.json({ ...cache, retrained: true });
 }

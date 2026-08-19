@@ -11,7 +11,7 @@ import dashboardRoutes from "./src/routes/dashboard.js";
 import requisitionRoutes from "./src/routes/requisitions.js";
 import reservationRoutes from "./src/routes/reservations.js";
 import reportRoutes from "./src/routes/reports.js";
-import forecasting from "./src/routes/forecasting.js";
+import forecasting, { retrainForecasting } from "./src/routes/forecasting.js";
 import masterRoutes from "./src/routes/master.js";
 import ptrRoutes from "./src/routes/ptr.js";
 import risRoutes from "./src/routes/ris.js";
@@ -84,6 +84,7 @@ app.use("/api/facilities", facilityRoutes);
 app.use("/api/activity", activityRoutes);
 
 app.get("/api/forecasting", requireAuth, forecasting);
+app.post("/api/forecasting/retrain", requireAuth, retrainForecasting);
 
 // Serve the built React app in production
 const CLIENT_DIST = path.join(__dirname, "..", "client", "dist");
