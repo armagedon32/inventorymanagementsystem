@@ -48,6 +48,16 @@ router.post("/", (req, res) => {
   const { barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to, office_id, department } = req.body || {};
   if (!name || !category) return res.status(400).json({ error: "Name and category are required." });
 
+  const isAsset = (product_type || "Stock") === "Asset";
+  if (isAsset && (!serial_number || !String(serial_number).trim())) {
+    return res.status(400).json({ error: "Serial number is required for assets." });
+  }
+  if (isAsset) {
+    const sn = String(serial_number).trim();
+    const dup = db.prepare("SELECT pid FROM tbl_product WHERE serial_number = ? AND product_type = 'Asset' AND is_archived = 0").get(sn);
+    if (dup) return res.status(400).json({ error: `Serial number "${sn}" is already used by another asset.` });
+  }
+
   const code = barcode || nextBarcode();
   const info = db
     .prepare(
@@ -77,6 +87,14 @@ router.put("/:id", (req, res) => {
   if (!p) return res.status(404).json({ error: "Product not found" });
 
   const { barcode, name, brand, acquisition_type, category, description, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to, office_id, department } = req.body || {};
+
+  const isAsset = (p.product_type || "Stock") === "Asset";
+  if (isAsset) {
+    const sn = String(serial_number ?? p.serial_number ?? "").trim();
+    if (!sn) return res.status(400).json({ error: "Serial number is required for assets." });
+    const dup = db.prepare("SELECT pid FROM tbl_product WHERE serial_number = ? AND product_type = 'Asset' AND is_archived = 0 AND pid != ?").get(sn, p.pid);
+    if (dup) return res.status(400).json({ error: `Serial number "${sn}" is already used by another asset.` });
+  }
   db.prepare(
     `UPDATE tbl_product SET
        barcode = ?, name = ?, brand = ?, acquisition_type = ?, category = ?, description = ?,
@@ -179,9 +197,10 @@ router.get("/:id/history", (req, res) => {
 // ============ ASSET ASSIGNMENT ============
 
 router.post("/:id/assign", (req, res) => {
-  const { office_id, instructor_id, remarks } = req.body || {};
+  const { office_id, instructor_id, department, remarks } = req.body || {};
   const p = db.prepare("SELECT * FROM tbl_product WHERE pid = ? AND is_archived = 0").get(req.params.id);
   if (!p) return res.status(404).json({ error: "Asset not found" });
+  if (p.product_type !== "Asset") return res.status(400).json({ error: "Only assets can be assigned." });
 
   let assignedTo = "";
   if (office_id) {
@@ -198,21 +217,41 @@ router.post("/:id/assign", (req, res) => {
 
   db.transaction(() => {
     db.prepare(
-      "UPDATE tbl_product SET assigned_to = ?, assigned_remarks = ?, assigned_date = date('now','localtime'), office_id = ? WHERE pid = ?"
-    ).run(assignedTo, remarks || "", office_id || null, p.pid);
+      "UPDATE tbl_product SET assigned_to = ?, assigned_remarks = ?, assigned_date = date('now','localtime'), office_id = ?, department = ? WHERE pid = ?"
+    ).run(assignedTo, remarks || "", office_id || null, department || p.department, p.pid);
     db.prepare(
-      "INSERT INTO tbl_asset_assignments (asset_id, assigned_to, office_id, instructor_id, remarks) VALUES (?, ?, ?, ?, ?)"
-    ).run(p.pid, assignedTo, office_id || null, instructor_id || null, remarks || "");
-        logActivity(req, `Assigned Asset: ${p.name} to ${assignedTo}`, undefined, p.pid);
+      "INSERT INTO tbl_asset_assignments (asset_id, assigned_to, office_id, instructor_id, department, remarks) VALUES (?, ?, ?, ?, ?, ?)"
+    ).run(p.pid, assignedTo, office_id || null, instructor_id || null, department || p.department, remarks || "");
+    logActivity(req, `Assigned Asset: ${p.name} (${p.serial_number || ""}) to ${assignedTo}`, undefined, p.pid);
   })();
 
-  res.json({ success: true, assigned_to: assignedTo });
+  res.json({ success: true, assigned_to: assignedTo, department: department || p.department });
+});
+
+router.post("/:id/unassign", (req, res) => {
+  const p = db.prepare("SELECT * FROM tbl_product WHERE pid = ? AND is_archived = 0").get(req.params.id);
+  if (!p) return res.status(404).json({ error: "Asset not found" });
+  if (p.product_type !== "Asset") return res.status(400).json({ error: "Only assets can be unassigned." });
+  if (!p.assigned_to && !p.office_id) return res.status(400).json({ error: "This asset is not assigned." });
+
+  db.transaction(() => {
+    db.prepare(
+      "UPDATE tbl_product SET assigned_to = NULL, assigned_remarks = NULL, assigned_date = NULL, office_id = NULL WHERE pid = ?"
+    ).run(p.pid);
+    logActivity(req, `Unassigned Asset: ${p.name} (${p.serial_number || ""})`, undefined, p.pid);
+  })();
+
+  res.json({ success: true });
 });
 
 router.get("/:id/assignments", (req, res) => {
   const rows = db
     .prepare(
-      "SELECT * FROM tbl_asset_assignments WHERE asset_id = ? AND is_archived = 0 ORDER BY date_assigned DESC, id DESC"
+      `SELECT a.*, p.name AS asset_name, p.serial_number AS serial_number
+       FROM tbl_asset_assignments a
+       LEFT JOIN tbl_product p ON p.pid = a.asset_id
+       WHERE a.asset_id = ? AND a.is_archived = 0
+       ORDER BY a.date_assigned DESC, a.id DESC`
     )
     .all(req.params.id);
   res.json(rows);

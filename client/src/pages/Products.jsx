@@ -9,6 +9,7 @@ export default function Products({ type = "Stock" }) {
   const [products, setProducts] = useState([]);
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     load();
@@ -69,6 +70,14 @@ export default function Products({ type = "Stock" }) {
     ? products
     : products.map((p) => ({ ...p, __status: statusOf(p) }));
 
+  const visible = query.trim()
+    ? products.filter((p) =>
+        [p.name, p.brand, p.barcode, p.serial_number, p.assigned_to, p.category_name]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(query.toLowerCase()))
+      )
+    : products;
+
   function handleExport(format) {
     const title = isAsset ? "Asset Management List" : "Stock Inventory List";
     const filename = `${isAsset ? "assets" : "stock-inventory"}-${new Date().toISOString().slice(0, 10)}`;
@@ -84,6 +93,13 @@ export default function Products({ type = "Stock" }) {
           <span className="text-muted" style={{ fontSize: "0.85rem" }}>
             {products.length} item(s)
           </span>
+          <input
+            className="form-control"
+            style={{ maxWidth: 260 }}
+            placeholder={isAsset ? "Search serial / tag / assigned..." : "Search name / barcode..."}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
           <button className="btn btn-sm" title="Export to Excel (CSV)" onClick={() => handleExport("excel")}>
             ⤓ Excel
           </button>
@@ -120,7 +136,7 @@ export default function Products({ type = "Stock" }) {
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => {
+              {visible.map((p) => {
                 const low = p.stock > 0 && p.stock <= p.reorder_level;
                 const out = p.stock === 0;
                 return (

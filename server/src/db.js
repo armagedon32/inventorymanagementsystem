@@ -120,6 +120,7 @@ CREATE TABLE IF NOT EXISTS tbl_asset_assignments (
   assigned_to   TEXT NOT NULL,
   office_id     INTEGER,
   instructor_id INTEGER,
+  department    TEXT,
   remarks       TEXT,
   date_assigned TEXT DEFAULT (datetime('now','localtime')),
   is_archived   INTEGER DEFAULT 0
@@ -358,5 +359,8 @@ if (!risHCols.includes("department")) db.exec("ALTER TABLE tbl_ris_header ADD CO
 
 const risICols = db.prepare("PRAGMA table_info(tbl_ris_items)").all().map((c) => c.name);
 if (!risICols.includes("condition")) db.exec("ALTER TABLE tbl_ris_items ADD COLUMN condition TEXT DEFAULT 'Good'");
+
+const asgCols = db.prepare("PRAGMA table_info(tbl_asset_assignments)").all().map((c) => c.name);
+if (!asgCols.includes("department")) db.exec("ALTER TABLE tbl_asset_assignments ADD COLUMN department TEXT");
 
 export default db;

@@ -110,8 +110,8 @@ export default function EditProduct({ type = "Stock" }) {
             {isAsset ? (
               <>
                 <div className="form-group">
-                  <label>Serial Number</label>
-                  <input className="form-control" value={form.serial_number} onChange={(e) => set("serial_number", e.target.value)} />
+                  <label>Serial Number *</label>
+                  <input className="form-control" value={form.serial_number} onChange={(e) => set("serial_number", e.target.value)} required />
                 </div>
                 <div className="form-group">
                   <label>Condition</label>

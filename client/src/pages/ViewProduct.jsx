@@ -36,12 +36,14 @@ export default function ViewProduct({ type = "Stock" }) {
     rows.splice(6, 0, ["Serial Number", product.serial_number || "—"]);
     rows.splice(6, 0, ["Condition", product.condition || "Good"]);
     rows.splice(6, 0, ["Quantity", product.stock]);
+    rows.splice(6, 0, ["Department", product.department || "—"]);
     rows.splice(6, 0, ["Assigned To", product.assigned_to || "—"]);
     rows.splice(9, 0, ["Assigned Remarks", product.assigned_remarks || "—"]);
     rows.splice(10, 0, ["Date Assigned", product.assigned_date || "—"]);
   } else {
-    rows.splice(6, 0, ["Current Stock", product.stock]);
-    rows.splice(7, 0, ["Reorder Level", product.reorder_level]);
+    rows.splice(6, 0, ["Department", product.department || "—"]);
+    rows.splice(7, 0, ["Current Stock", product.stock]);
+    rows.splice(8, 0, ["Reorder Level", product.reorder_level]);
   }
 
   return (
@@ -80,7 +82,9 @@ export default function ViewProduct({ type = "Stock" }) {
                 <thead>
                   <tr>
                     <th>#</th>
+                    <th>Serial No.</th>
                     <th>Assigned To</th>
+                    <th>Department</th>
                     <th>Remarks</th>
                     <th>Date</th>
                   </tr>
@@ -89,14 +93,16 @@ export default function ViewProduct({ type = "Stock" }) {
                   {assignments.map((a, i) => (
                     <tr key={a.id}>
                       <td>{i + 1}</td>
+                      <td>{a.serial_number || product.serial_number || "—"}</td>
                       <td><strong>{a.assigned_to}</strong></td>
+                      <td>{a.department || "—"}</td>
                       <td>{a.remarks || "—"}</td>
                       <td>{a.date_assigned}</td>
                     </tr>
                   ))}
                   {assignments.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="empty">No assignments yet.</td>
+                      <td colSpan={6} className="empty">No assignments yet.</td>
                     </tr>
                   )}
                 </tbody>
