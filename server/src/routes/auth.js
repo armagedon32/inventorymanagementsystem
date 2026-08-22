@@ -3,6 +3,7 @@ import { logActivity } from "../activity.js";
 import svgCaptcha from "svg-captcha";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
