@@ -572,6 +572,14 @@ router.put("/:id", requireAdmin, (req, res) => {
   res.json({ success: true });
 });
 
+router.delete("/all", requireAdmin, (req, res) => {
+  const type = req.query.type;
+  if (!type) return res.status(400).json({ error: "type query param is required (Asset or Stock)" });
+  const info = db.prepare("UPDATE tbl_product SET is_archived = 1 WHERE product_type = ? AND is_archived = 0").run(type);
+  logActivity(req, `Deleted all ${info.changes} ${type}(s)`, undefined, undefined, req.user.userid);
+  res.json({ deleted: info.changes });
+});
+
 router.delete("/:id", (req, res) => {
   const p = db.prepare("SELECT * FROM tbl_product WHERE pid = ?").get(req.params.id);
   if (!p) return res.status(404).json({ error: "Product not found" });

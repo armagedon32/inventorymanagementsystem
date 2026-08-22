@@ -70,6 +70,17 @@ export default function Products({ type = "Stock" }) {
     }
   }
 
+  async function handleDeleteAll() {
+    if (!window.confirm(`Delete ALL ${isAsset ? "assets" : "supplies"}? This cannot be undone.`)) return;
+    try {
+      const result = await api.del(`/products/all?type=${type}`);
+      setMsg(`Deleted ${result.deleted} item(s).`);
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
   async function handleDelete(p) {
     if (!window.confirm(`Archive "${p.name}"?`)) return;
     try {
@@ -165,6 +176,11 @@ export default function Products({ type = "Stock" }) {
           <button className="btn btn-sm" title="Export to PDF (print)" onClick={() => handleExport("pdf")}>
             ⤓ PDF
           </button>
+          {products.length > 0 && (
+            <button className="btn btn-danger btn-sm" title="Delete All" onClick={handleDeleteAll}>
+              🗑 Delete All
+            </button>
+          )}
           <Link to={`${base}/add`} className="btn btn-primary btn-sm">
             ✚ {isAsset ? "New Asset" : "New Supply"}
           </Link>
