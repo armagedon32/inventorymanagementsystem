@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../api/client";
+import { api, API_URL } from "../api/client";
 
 const DEPARTMENTS = ["Admin/Staff", "HM", "BED", "TED", "CSD"];
 
@@ -10,6 +10,8 @@ export default function AddProduct({ type = "Stock" }) {
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [importMsg, setImportMsg] = useState("");
+  const [importResult, setImportResult] = useState(null);
   const [form, setForm] = useState({
     barcode: "",
     name: "",
@@ -50,13 +52,55 @@ export default function AddProduct({ type = "Stock" }) {
     }
   }
 
+  function downloadTemplate() {
+    window.open(`${API_URL}/products/import-template`, "_blank");
+  }
+
+  async function handleBulkImport(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError("");
+    setImportMsg("Importing...");
+    setImportResult(null);
+    try {
+      const csv = await file.text();
+      const result = await api.post("/products/import", { csv });
+      setImportResult(result);
+      setImportMsg(`Imported: ${result.imported}, Skipped: ${result.skipped}`);
+      if (result.errors?.length) {
+        setImportMsg((m) => m + "\n" + result.errors.join("\n"));
+      }
+    } catch (err) {
+      setError(err.message);
+      setImportMsg("");
+    }
+  }
+
   return (
     <div className="card">
       <div className="card-header">
         <h5>{isAsset ? "Asset Registration" : "Supply Registration"}</h5>
+        {isAsset && (
+          <div className="flex" style={{ gap: "8px" }}>
+            <button type="button" className="btn btn-light btn-sm" onClick={downloadTemplate}>
+              ⬇ Download CSV Template
+            </button>
+            <label className="btn btn-primary btn-sm" style={{ cursor: "pointer" }}>
+              ⬆ Import CSV
+              <input type="file" accept=".csv" style={{ display: "none" }} onChange={handleBulkImport} />
+            </label>
+          </div>
+        )}
       </div>
       <div className="card-body">
         {error && <div className="alert alert-error">{error}</div>}
+        {importMsg && <div className="alert alert-success" style={{ whiteSpace: "pre-wrap" }}>{importMsg}</div>}
+        {importResult && importResult.imported > 0 && (
+          <div className="alert alert-success">
+            Successfully imported {importResult.imported} asset(s).
+            {importResult.skipped > 0 && ` ${importResult.skipped} row(s) skipped.`}
+          </div>
+        )}
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             <div className="form-group">
