@@ -81,14 +81,16 @@ export default function AddProduct({ type = "Stock" }) {
 
   async function downloadTemplate() {
     try {
-      const res = await fetch(`${API_URL}/products/import-template/stock`, {
+      const endpoint = isAsset ? "/products/import-template" : "/products/import-template/stock";
+      const filename = isAsset ? "asset-import-template.xlsx" : "supply-import-template.xlsx";
+      const res = await fetch(`${API_URL}${endpoint}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("custodian_token")}` },
       });
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "supply-import-template.xlsx";
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
@@ -109,7 +111,8 @@ export default function AddProduct({ type = "Stock" }) {
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
-      const result = await api.post("/products/import/stock", { csv: base64 });
+      const endpoint = isAsset ? "/products/import" : "/products/import/stock";
+      const result = await api.post(endpoint, { csv: base64 });
       setImportResult(result);
       setImportMsg(`Imported: ${result.imported}, Skipped: ${result.skipped}`);
       if (result.errors?.length) {
@@ -124,7 +127,7 @@ export default function AddProduct({ type = "Stock" }) {
   return (
     <div className="card">
       <div className="card-header">
-        <h5>Supply Registration</h5>
+        <h5>{isAsset ? "Asset Registration" : "Supply Registration"}</h5>
         <div className="flex" style={{ gap: "8px" }}>
           <button type="button" className="btn btn-light btn-sm" onClick={downloadTemplate}>
             ⬇ Download Excel Template
