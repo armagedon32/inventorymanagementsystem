@@ -107,15 +107,6 @@ export default function Dashboard() {
           </Link>
         </div>
         <div className="col">
-          <Link to="/stock">
-            <div className="card-box green">
-              <i className="bg-icon">₱</i>
-              <h3 style={{ fontSize: "1.5rem" }}>{peso(data.totalValue)}</h3>
-              <p>Inventory Value</p>
-            </div>
-          </Link>
-        </div>
-        <div className="col">
           <Link to="/asset-tracking">
             <div className="card-box purple">
               <i className="bg-icon">◉</i>
