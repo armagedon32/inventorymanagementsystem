@@ -108,9 +108,9 @@ export default function Login() {
               <div className="captcha-question">{captcha ? captcha.question : "Loading..."}</div>
               <input
                 type="text"
-                inputMode="numeric"
+                inputMode="text"
                 className="captcha-input"
-                placeholder="Enter answer"
+                placeholder="K7P4X"
                 value={captchaAnswer}
                 onChange={(e) => setCaptchaAnswer(e.target.value)}
               />
