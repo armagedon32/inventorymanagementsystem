@@ -256,6 +256,194 @@ router.post("/import", requireAdmin, async (req, res) => {
   }
 });
 
+router.get("/import-template/stock", requireAdmin, async (req, res) => {
+  try {
+    const categories = db.prepare("SELECT category FROM tbl_category WHERE is_archived = 0 ORDER BY category").all().map((c) => c.category);
+    const units = ["pcs", "box", "ream", "pack", "bottle", "set", "unit", "liter", "kg", "pair"];
+    const acquisitionTypes = ["Purchased", "Donated", "Created"];
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Supplies", { views: [{ state: "frozen", ySplit: 1 }] });
+
+    ws.columns = [
+      { header: "Name *", key: "name", width: 30 },
+      { header: "Brand", key: "brand", width: 20 },
+      { header: "Acquisition Type", key: "acquisition_type", width: 18 },
+      { header: "Category", key: "category", width: 22 },
+      { header: "Description", key: "description", width: 35 },
+      { header: "Unit", key: "unit", width: 12 },
+      { header: "Initial Stock", key: "stock", width: 14 },
+      { header: "Reorder Level", key: "reorder_level", width: 14 },
+    ];
+
+    const headerRow = ws.getRow(1);
+    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF333333" } };
+    headerRow.alignment = { horizontal: "center" };
+
+    ws.addRow({
+      name: "Bond Paper A4",
+      brand: "Plus",
+      acquisition_type: "Purchased",
+      category: categories[0] || "",
+      description: "500 sheets per ream",
+      unit: "ream",
+      stock: 10,
+      reorder_level: 5,
+    });
+
+    const maxRows = 500;
+
+    if (acquisitionTypes.length) {
+      ws.dataValidations.add(`C2:C${maxRows}`, {
+        type: "list",
+        allowBlank: true,
+        formulae: [`"${acquisitionTypes.join(",")}"`],
+        showErrorMessage: true,
+        errorTitle: "Invalid",
+        error: `Please select: ${acquisitionTypes.join(", ")}`,
+      });
+    }
+
+    if (categories.length) {
+      ws.dataValidations.add(`D2:D${maxRows}`, {
+        type: "list",
+        allowBlank: true,
+        formulae: [`"${categories.join(",")}"`],
+        showErrorMessage: true,
+        errorTitle: "Invalid Category",
+        error: `Please select a valid category`,
+      });
+    }
+
+    if (units.length) {
+      ws.dataValidations.add(`F2:F${maxRows}`, {
+        type: "list",
+        allowBlank: true,
+        formulae: [`"${units.join(",")}"`],
+        showErrorMessage: true,
+        errorTitle: "Invalid",
+        error: `Please select: ${units.join(", ")}`,
+      });
+    }
+
+    ws.dataValidations.add(`G2:G${maxRows}`, {
+      type: "whole",
+      operator: "greaterThanOrEqual",
+      formulae: ["0"],
+      showErrorMessage: true,
+      errorTitle: "Invalid Stock",
+      error: "Must be a non-negative whole number",
+    });
+
+    ws.dataValidations.add(`H2:H${maxRows}`, {
+      type: "whole",
+      operator: "greaterThanOrEqual",
+      formulae: ["0"],
+      showErrorMessage: true,
+      errorTitle: "Invalid Reorder Level",
+      error: "Must be a non-negative whole number",
+    });
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", 'attachment; filename="supply-import-template.xlsx"');
+    await wb.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    res.status(500).json({ error: "Failed to generate template: " + err.message });
+  }
+});
+
+router.post("/import/stock", requireAdmin, async (req, res) => {
+  try {
+    const { csv } = req.body || {};
+    if (!csv || !String(csv).trim()) {
+      return res.status(400).json({ error: "Excel data is required." });
+    }
+
+    const base64 = String(csv).trim();
+    const buffer = Buffer.from(base64, "base64");
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(buffer);
+    const ws = wb.getWorksheet(1) || wb.getWorksheet("Supplies");
+    if (!ws || ws.rowCount < 2) {
+      return res.status(400).json({ error: "Excel file must have a header row and at least one data row." });
+    }
+
+    const headerRow = ws.getRow(1);
+    const headers = [];
+    headerRow.eachCell((cell, colNumber) => {
+      headers[colNumber] = String(cell.value || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
+    });
+
+    const required = ["name", "category"];
+    for (const r of required) {
+      if (!headers.includes(r)) {
+        return res.status(400).json({ error: `Missing required column: ${r}` });
+      }
+    }
+
+    const catMap = {};
+    db.prepare("SELECT catid, category FROM tbl_category WHERE is_archived = 0").all().forEach((c) => {
+      catMap[c.category.toLowerCase()] = c.catid;
+    });
+
+    let imported = 0;
+    let skipped = 0;
+    const errors = [];
+
+    const insert = db.prepare(
+      `INSERT INTO tbl_product (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to, office_id, department, date_added, is_archived)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 'Stock', NULL, NULL, NULL, NULL, NULL, date('now','localtime'), 0)`
+    );
+
+    db.transaction(() => {
+      for (let i = 2; i <= ws.rowCount; i++) {
+        const rowValues = ws.getRow(i).values || [];
+        const row = {};
+        headers.forEach((h, colIdx) => {
+          if (h) {
+            const val = rowValues[colIdx];
+            row[h] = val != null ? String(val).trim() : "";
+          }
+        });
+
+        if (!row.name) {
+          skipped++;
+          errors.push(`Row ${i}: Missing name`);
+          continue;
+        }
+
+        const catId = catMap[row.category?.toLowerCase()];
+        let categoryId = catId || null;
+        if (!categoryId && row.category) {
+          const newCat = db.prepare("INSERT INTO tbl_category (category, description, is_archived) VALUES (?, '', 0)").run(row.category);
+          categoryId = newCat.lastInsertRowid;
+        }
+
+        const code = nextBarcode();
+
+        try {
+          insert.run(
+            code, row.name, row.brand || "", row.acquisition_type || "Purchased",
+            categoryId, row.description || "", Number(row.stock) || 0,
+            Number(row.reorder_level) || 0, row.unit || "pcs"
+          );
+          imported++;
+        } catch (err) {
+          skipped++;
+          errors.push(`Row ${i}: ${err.message}`);
+        }
+      }
+    })();
+
+    logActivity(req, `Bulk imported ${imported} supply item(s)`, undefined, undefined, req.user.userid);
+    res.json({ imported, skipped, errors });
+  } catch (err) {
+    res.status(500).json({ error: "Import failed: " + err.message });
+  }
+});
+
 router.get("/:id", (req, res) => {
   const p = db
     .prepare(
