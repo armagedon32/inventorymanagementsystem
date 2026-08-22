@@ -243,18 +243,21 @@ a {
 
 /* ===== SUMMARY CARDS ===== */
 .card-box {
-  border-radius: 20px;
+  background: #fff;
+  border-radius: 14px;
   padding: 22px;
-  color: #fff;
+  color: #333;
   margin-bottom: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   position: relative;
   overflow: hidden;
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.3s ease;
+  border-left: 4px solid #e9ecef;
 }
 
 .card-box:hover {
-  transform: translateY(-6px) scale(1.02);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
 }
 
 .card-box .bg-icon {
@@ -262,34 +265,36 @@ a {
   right: -10px;
   bottom: -10px;
   font-size: 72px;
-  opacity: 0.2;
+  opacity: 0.08;
+  color: #333;
 }
 
 .card-box h3 {
   font-size: 2rem;
+  color: #333;
 }
 
 .card-box p {
-  opacity: 0.95;
+  color: #6c757d;
 }
 
 .blue {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  border-left-color: #2563eb;
 }
 .green {
-  background: linear-gradient(135deg, #059669, #10b981);
+  border-left-color: #10b981;
 }
 .orange {
-  background: linear-gradient(135deg, #d97706, #f59e0b);
+  border-left-color: #f59e0b;
 }
 .red {
-  background: linear-gradient(135deg, #dc2626, #ef4444);
+  border-left-color: #dc2626;
 }
 .gray {
-  background: linear-gradient(135deg, #475569, #64748b);
+  border-left-color: #64748b;
 }
 .purple {
-  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  border-left-color: #6366f1;
 }
 
 .row {
