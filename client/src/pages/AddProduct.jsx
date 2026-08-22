@@ -52,8 +52,21 @@ export default function AddProduct({ type = "Stock" }) {
     }
   }
 
-  function downloadTemplate() {
-    window.open(`${API_URL}/products/import-template`, "_blank");
+  async function downloadTemplate() {
+    try {
+      const res = await fetch(`${API_URL}/products/import-template`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("custodian_token")}` },
+      });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "asset-import-template.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError("Failed to download template.");
+    }
   }
 
   async function handleBulkImport(e) {
