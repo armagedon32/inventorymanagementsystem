@@ -209,6 +209,7 @@ export default function Products({ type = "Stock" }) {
                 {isAsset && <th>Serial No.</th>}
                 {isAsset && <th>Condition</th>}
                 {isAsset && <th>Assigned To</th>}
+                {isAsset && <th>Office</th>}
                 {!isAsset && <th>Description</th>}
                 {!isAsset && <th>Stock</th>}
                 {!isAsset && <th>Reorder</th>}
@@ -236,6 +237,7 @@ export default function Products({ type = "Stock" }) {
                       </td>
                     )}
                     {isAsset && <td>{p.assigned_to || "—"}</td>}
+                    {isAsset && <td>{p.department || "—"}</td>}
                     {!isAsset && <td>{p.description}</td>}
                     {!isAsset && <td><strong>{p.stock}</strong></td>}
                     {!isAsset && <td>{p.reorder_level}</td>}
@@ -283,7 +285,7 @@ export default function Products({ type = "Stock" }) {
               })}
               {products.length === 0 && (
                 <tr>
-                  <td colSpan={isAsset ? 9 : 11} className="empty">
+                  <td colSpan={isAsset ? 10 : 11} className="empty">
                     No {isAsset ? "assets" : "supplies"} yet. Click "{isAsset ? "New Asset" : "New Supply"}".
                   </td>
                 </tr>
