@@ -105,17 +105,18 @@ export default function Login() {
             </div>
 
             <div className="captcha-box">
-              <div className="captcha-question">{captcha ? captcha.question : "Loading..."}</div>
-              <input
-                type="text"
-                inputMode="text"
-                className="captcha-input"
-                placeholder="K7P4X"
-                value={captchaAnswer}
-                onChange={(e) => setCaptchaAnswer(e.target.value)}
+              <img
+                src={captchaUrl}
+                alt="CAPTCHA"
+                className="captcha-image"
               />
-              <button type="button" className="captcha-refresh" title="New question" onClick={loadCaptcha}>
-                ⟳
+              <button
+                type="button"
+                className="captcha-refresh"
+                title="Refresh CAPTCHA"
+                onClick={loadCaptcha}
+              >
+                ↻
               </button>
             </div>
 
