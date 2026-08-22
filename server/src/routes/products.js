@@ -72,6 +72,10 @@ router.get("/import-template", requireAdmin, async (req, res) => {
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet("Assets", { views: [{ state: "frozen", ySplit: 1 }] });
 
+    const hiddenWs = wb.addWorksheet("Data");
+    departments.forEach((d, i) => { hiddenWs.getCell(`A${i + 1}`).value = d; });
+    hiddenWs.state = "hidden";
+
     ws.columns = [
       { header: "Barcode (blank=auto)", key: "barcode", width: 22 },
       { header: "Name *", key: "name", width: 30 },
@@ -158,7 +162,7 @@ router.get("/import-template", requireAdmin, async (req, res) => {
       ws.dataValidations.add(`L2:L${maxRows}`, {
         type: "list",
         allowBlank: true,
-        formulae: [`"${departments.join(",")}"`],
+        formulae: [`Data!$A$1:$A$${departments.length}`],
         showErrorMessage: true,
         errorTitle: "Invalid Office",
         error: `Please select a valid office`,
