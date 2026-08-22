@@ -129,10 +129,12 @@ export default function AddProduct({ type = "Stock" }) {
               <label>Brand</label>
               <input className="form-control" value={form.brand} onChange={(e) => set("brand", e.target.value)} />
             </div>
+            {isAsset && (
             <div className="form-group">
-              <label>{isAsset ? "Asset Tag / Barcode (blank = auto)" : "Barcode (blank = auto)"}</label>
+              <label>Asset Tag / Barcode (blank = auto)</label>
               <input className="form-control" value={form.barcode} onChange={(e) => set("barcode", e.target.value)} />
             </div>
+            )}
             <div className="form-group">
               <label>Category *</label>
               <select
@@ -227,6 +229,7 @@ export default function AddProduct({ type = "Stock" }) {
               </>
             )}
 
+            {isAsset && (
             <div className="form-group">
               <label>Department *</label>
               <select className="form-select" value={form.department} onChange={(e) => set("department", e.target.value)} required>
@@ -236,6 +239,7 @@ export default function AddProduct({ type = "Stock" }) {
                 ))}
               </select>
             </div>
+            )}
           </div>
 
           <div className="flex between mt-4">
