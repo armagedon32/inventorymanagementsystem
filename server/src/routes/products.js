@@ -86,7 +86,7 @@ router.get("/import-template", requireAdmin, async (req, res) => {
     const maxRows = 500;
 
     if (acquisitionTypes.length) {
-      ws.dataValidations.add(`C2:C${maxRows}`, {
+      ws.dataValidations.add(`D2:D${maxRows}`, {
         type: "list",
         allowBlank: true,
         formulae: [`"${acquisitionTypes.join(",")}"`],
