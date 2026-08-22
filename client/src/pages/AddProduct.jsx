@@ -156,6 +156,7 @@ export default function AddProduct({ type = "Stock" }) {
               >
                 <option>Purchased</option>
                 <option>Donated</option>
+                <option>Created</option>
               </select>
             </div>
             <div className="form-group">

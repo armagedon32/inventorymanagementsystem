@@ -39,7 +39,7 @@ router.get("/import-template", requireAdmin, async (req, res) => {
     const categories = db.prepare("SELECT category FROM tbl_category WHERE is_archived = 0 ORDER BY category").all().map((c) => c.category);
     const departments = ["Admin/Staff", "HM", "BED", "TED", "CSD"];
     const units = ["pcs", "box", "ream", "pack", "bottle", "set", "unit", "liter", "kg", "pair"];
-    const acquisitionTypes = ["Purchased", "Donated"];
+    const acquisitionTypes = ["Purchased", "Donated", "Created"];
     const conditions = ["Good", "Fair", "Needs Repair", "For Disposal"];
 
     const wb = new ExcelJS.Workbook();
