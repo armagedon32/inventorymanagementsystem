@@ -174,9 +174,25 @@ router.post("/import", requireAdmin, async (req, res) => {
 
     const headerRow = ws.getRow(1);
     const headers = [];
+    const headerMap = {
+      barcode: "barcode", barcodeblankauto: "barcode",
+      name: "name", itemname: "name",
+      brand: "brand",
+      acquisition_type: "acquisition_type", acquisitiontype: "acquisition_type", acqtype: "acquisition_type",
+      category: "category",
+      description: "description",
+      unit: "unit",
+      stock: "stock", initialstock: "stock", quantity: "stock", qty: "stock",
+      reorder_level: "reorder_level", reorderlevel: "reorder_level", reorder: "reorder_level",
+      serial_number: "serial_number", serialnumber: "serial_number", serial: "serial_number", serialno: "serial_number",
+      condition: "condition",
+      assigned_to: "assigned_to", assignedto: "assigned_to", assigned: "assigned_to",
+      department: "department",
+      unit_cost: "unit_cost", unitcost: "unit_cost",
+    };
     headerRow.eachCell((cell, colNumber) => {
-      const raw = String(cell.value || "").trim().toLowerCase();
-      headers[colNumber] = raw.replace(/[^a-z0-9_]/g, "").replace(/_+$/, "");
+      const raw = String(cell.value || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "").replace(/_+$/, "");
+      headers[colNumber] = headerMap[raw] || raw;
     });
 
     const required = ["name", "category"];
@@ -373,9 +389,25 @@ router.post("/import/stock", requireAdmin, async (req, res) => {
 
     const headerRow = ws.getRow(1);
     const headers = [];
+    const headerMap = {
+      barcode: "barcode", barcodeblankauto: "barcode",
+      name: "name", itemname: "name",
+      brand: "brand",
+      acquisition_type: "acquisition_type", acquisitiontype: "acquisition_type", acqtype: "acquisition_type",
+      category: "category",
+      description: "description",
+      unit: "unit",
+      stock: "stock", initialstock: "stock", quantity: "stock", qty: "stock",
+      reorder_level: "reorder_level", reorderlevel: "reorder_level", reorder: "reorder_level",
+      serial_number: "serial_number", serialnumber: "serial_number", serial: "serial_number", serialno: "serial_number",
+      condition: "condition",
+      assigned_to: "assigned_to", assignedto: "assigned_to", assigned: "assigned_to",
+      department: "department",
+      unit_cost: "unit_cost", unitcost: "unit_cost",
+    };
     headerRow.eachCell((cell, colNumber) => {
-      const raw = String(cell.value || "").trim().toLowerCase();
-      headers[colNumber] = raw.replace(/[^a-z0-9_]/g, "").replace(/_+$/, "");
+      const raw = String(cell.value || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "").replace(/_+$/, "");
+      headers[colNumber] = headerMap[raw] || raw;
     });
 
     const required = ["name", "category"];
