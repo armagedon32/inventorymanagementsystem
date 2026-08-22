@@ -1,7 +1,7 @@
 import { Router } from "express";
 import db from "../db.js";
 import { logActivity } from "../activity.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
 const router = Router();
 router.use(requireAuth);
@@ -44,7 +44,7 @@ router.get("/:id", (req, res) => {
   res.json(p);
 });
 
-router.post("/", (req, res) => {
+router.post("/", requireAdmin, (req, res) => {
   const { barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to, office_id, department } = req.body || {};
   if (!name || !category) return res.status(400).json({ error: "Name and category are required." });
 
@@ -82,7 +82,7 @@ router.post("/", (req, res) => {
   res.status(201).json({ pid: Number(info.lastInsertRowid) });
 });
 
-router.put("/:id", (req, res) => {
+router.put("/:id", requireAdmin, (req, res) => {
   const p = db.prepare("SELECT * FROM tbl_product WHERE pid = ?").get(req.params.id);
   if (!p) return res.status(404).json({ error: "Product not found" });
 
