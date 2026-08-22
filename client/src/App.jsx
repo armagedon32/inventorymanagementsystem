@@ -44,6 +44,7 @@ import FacilityView from "./pages/FacilityView";
 import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
 import AuditLogs from "./pages/AuditLogs";
+import Archive from "./pages/Archive";
 
 function StockRedirect() {
   const location = useLocation();
@@ -69,6 +70,7 @@ export default function App() {
       >
         <Route path="/" element={<Dashboard />} />
         <Route path="/stock" element={<Products type="Stock" />} />
+        <Route path="/stock/archive" element={<Archive type="Stock" />} />
         <Route path="/stock/add" element={<AddProduct type="Stock" />} />
         <Route path="/stock/:id/edit" element={<EditProduct type="Stock" />} />
         <Route path="/stock/:id" element={<ViewProduct type="Stock" />} />
@@ -76,6 +78,7 @@ export default function App() {
         <Route path="/stock/:id/stock-out" element={<StockOut />} />
         <Route path="/stock/:id/history" element={<StockHistory />} />
         <Route path="/assets" element={<Products type="Asset" />} />
+        <Route path="/assets/archive" element={<Archive type="Asset" />} />
         <Route path="/assets/add" element={<AddProduct type="Asset" />} />
         <Route path="/assets/:id/edit" element={<EditProduct type="Asset" />} />
         <Route path="/assets/:id/assign" element={<AssignAsset />} />

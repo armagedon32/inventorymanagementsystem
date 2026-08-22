@@ -34,6 +34,7 @@ export default function Layout() {
       items: [
         { to: "/stock", label: "Supplies / Stock In", icon: "▤" },
         { to: "/stock/add", label: "Supply Registration", icon: "✚" },
+        { to: "/stock/archive", label: "Supply Archive", icon: "◁" },
         { to: "/categories", label: "Categories", icon: "☰" },
       ],
     },
@@ -42,6 +43,7 @@ export default function Layout() {
       items: [
         { to: "/assets", label: "Assets", icon: "◉" },
         { to: "/assets/add", label: "Asset Registration", icon: "✚" },
+        { to: "/assets/archive", label: "Asset Archive", icon: "◁" },
       ],
     },
     {
