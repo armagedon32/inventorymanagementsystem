@@ -30,6 +30,104 @@ router.get("/", (req, res) => {
   res.json(rows);
 });
 
+// ============ BULK IMPORT / EXPORT ============
+
+router.get("/import-template", requireAdmin, (req, res) => {
+  const csv = [
+    "barcode,name,brand,acquisition_type,category,description,stock,reorder_level,unit_cost,unit,serial_number,condition,assigned_to,department",
+    "AST-2026-0001,Desktop Computer,Dell,Purchased,ICT Equipment,Core i5 8GB RAM,1,0,25000,unit,DELL-8Y7KD33,Good,Comlab 1,Admin/Staff",
+  ].join("\n");
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", 'attachment; filename="asset-import-template.csv"');
+  res.send(csv);
+});
+
+router.post("/import", requireAdmin, (req, res) => {
+  try {
+    const { csv } = req.body || {};
+    if (!csv || !String(csv).trim()) {
+      return res.status(400).json({ error: "CSV data is required." });
+    }
+
+    const lines = String(csv).trim().split("\n").map((l) => l.trim()).filter(Boolean);
+    if (lines.length < 2) {
+      return res.status(400).json({ error: "CSV must have a header row and at least one data row." });
+    }
+
+    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+    const required = ["name", "category"];
+    for (const r of required) {
+      if (!headers.includes(r)) {
+        return res.status(400).json({ error: `Missing required column: ${r}` });
+      }
+    }
+
+    const catMap = {};
+    db.prepare("SELECT catid, category FROM tbl_category WHERE is_archived = 0").all().forEach((c) => {
+      catMap[c.category.toLowerCase()] = c.catid;
+    });
+
+    let imported = 0;
+    let skipped = 0;
+    const errors = [];
+
+    const insert = db.prepare(
+      `INSERT INTO tbl_product (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to, office_id, department, date_added, is_archived)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Asset', ?, ?, ?, NULL, ?, date('now','localtime'), 0)`
+    );
+
+    db.transaction(() => {
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(",").map((v) => v.trim());
+        const row = {};
+        headers.forEach((h, idx) => { row[h] = values[idx] || ""; });
+
+        if (!row.name) {
+          skipped++;
+          errors.push(`Row ${i + 1}: Missing name`);
+          continue;
+        }
+
+        const catId = catMap[row.category?.toLowerCase()];
+        if (!catId && row.category) {
+          const newCat = db.prepare("INSERT INTO tbl_category (category, description, is_archived) VALUES (?, '', 0)").run(row.category);
+          row._catid = newCat.lastInsertRowid;
+        }
+        const categoryId = row._catid || catId || null;
+
+        const code = row.barcode || nextBarcode();
+        const serial = row.serial_number || null;
+        if (serial) {
+          const dup = db.prepare("SELECT pid FROM tbl_product WHERE serial_number = ? AND product_type = 'Asset' AND is_archived = 0").get(serial);
+          if (dup) {
+            skipped++;
+            errors.push(`Row ${i + 1}: Duplicate serial "${serial}"`);
+            continue;
+          }
+        }
+
+        try {
+          insert.run(
+            code, row.name, row.brand || "", row.acquisition_type || "Purchased",
+            categoryId, row.description || "", Number(row.stock) || 0,
+            Number(row.reorder_level) || 0, Number(row.unit_cost) || 0, row.unit || "unit",
+            serial, row.condition || "Good", row.assigned_to || null, row.department || null
+          );
+          imported++;
+        } catch (err) {
+          skipped++;
+          errors.push(`Row ${i + 1}: ${err.message}`);
+        }
+      }
+    })();
+
+    logActivity(req, `Bulk imported ${imported} asset(s)`, undefined, undefined, req.user.userid);
+    res.json({ imported, skipped, errors });
+  } catch (err) {
+    res.status(500).json({ error: "Import failed: " + err.message });
+  }
+});
+
 router.get("/:id", (req, res) => {
   const p = db
     .prepare(
@@ -255,104 +353,6 @@ router.get("/:id/assignments", (req, res) => {
     )
     .all(req.params.id);
   res.json(rows);
-});
-
-// ============ BULK IMPORT / EXPORT ============
-
-router.get("/import-template", requireAdmin, (req, res) => {
-  const csv = [
-    "barcode,name,brand,acquisition_type,category,description,stock,reorder_level,unit_cost,unit,serial_number,condition,assigned_to,department",
-    "AST-2026-0001,Desktop Computer,Dell,Purchased,ICT Equipment,Core i5 8GB RAM,1,0,25000,unit,DELL-8Y7KD33,Good,Comlab 1,Admin/Staff",
-  ].join("\n");
-  res.setHeader("Content-Type", "text/csv");
-  res.setHeader("Content-Disposition", 'attachment; filename="asset-import-template.csv"');
-  res.send(csv);
-});
-
-router.post("/import", requireAdmin, (req, res) => {
-  try {
-    const { csv } = req.body || {};
-    if (!csv || !String(csv).trim()) {
-      return res.status(400).json({ error: "CSV data is required." });
-    }
-
-    const lines = String(csv).trim().split("\n").map((l) => l.trim()).filter(Boolean);
-    if (lines.length < 2) {
-      return res.status(400).json({ error: "CSV must have a header row and at least one data row." });
-    }
-
-    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
-    const required = ["name", "category"];
-    for (const r of required) {
-      if (!headers.includes(r)) {
-        return res.status(400).json({ error: `Missing required column: ${r}` });
-      }
-    }
-
-    const catMap = {};
-    db.prepare("SELECT catid, category FROM tbl_category WHERE is_archived = 0").all().forEach((c) => {
-      catMap[c.category.toLowerCase()] = c.catid;
-    });
-
-    let imported = 0;
-    let skipped = 0;
-    const errors = [];
-
-    const insert = db.prepare(
-      `INSERT INTO tbl_product (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to, office_id, department, date_added, is_archived)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Asset', ?, ?, ?, NULL, ?, date('now','localtime'), 0)`
-    );
-
-    db.transaction(() => {
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(",").map((v) => v.trim());
-        const row = {};
-        headers.forEach((h, idx) => { row[h] = values[idx] || ""; });
-
-        if (!row.name) {
-          skipped++;
-          errors.push(`Row ${i + 1}: Missing name`);
-          continue;
-        }
-
-        const catId = catMap[row.category?.toLowerCase()];
-        if (!catId && row.category) {
-          const newCat = db.prepare("INSERT INTO tbl_category (category, description, is_archived) VALUES (?, '', 0)").run(row.category);
-          row._catid = newCat.lastInsertRowid;
-        }
-        const categoryId = row._catid || catId || null;
-
-        const code = row.barcode || nextBarcode();
-        const serial = row.serial_number || null;
-        if (serial) {
-          const dup = db.prepare("SELECT pid FROM tbl_product WHERE serial_number = ? AND product_type = 'Asset' AND is_archived = 0").get(serial);
-          if (dup) {
-            skipped++;
-            errors.push(`Row ${i + 1}: Duplicate serial "${serial}"`);
-            continue;
-          }
-        }
-
-        try {
-          insert.run(
-            code, row.name, row.brand || "", row.acquisition_type || "Purchased",
-            categoryId, row.description || "", Number(row.stock) || 0,
-            Number(row.reorder_level) || 0, Number(row.unit_cost) || 0, row.unit || "unit",
-            serial, row.condition || "Good", row.assigned_to || null, row.department || null
-          );
-          imported++;
-        } catch (err) {
-          skipped++;
-          errors.push(`Row ${i + 1}: ${err.message}`);
-        }
-      }
-    })();
-
-    logActivity(req, `Bulk imported ${imported} asset(s)`, undefined, undefined, req.user.userid);
-    res.json({ imported, skipped, errors });
-  } catch (err) {
-    res.status(500).json({ error: "Import failed: " + err.message });
-  }
 });
 
 // ============ CATEGORIES ============
