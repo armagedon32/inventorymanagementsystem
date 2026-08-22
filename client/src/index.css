@@ -1,8 +1,8 @@
 :root {
   --primary: #2563eb;
   --primary-dark: #1e40af;
-  --sidebar-bg: #1e293b;
-  --sidebar-hover: #334155;
+  --sidebar-bg: #ffffff;
+  --sidebar-hover: #f1f5f9;
   --bg: #f1f5f9;
   --green: #10b981;
   --danger: #dc2626;
@@ -42,10 +42,12 @@ a {
   width: 260px;
   min-width: 260px;
   background: var(--sidebar-bg);
-  color: #fff;
+  color: #333;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  border-right: 1px solid #e9ecef;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
 }
 
 .brand {
@@ -74,27 +76,27 @@ a {
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  border-bottom: 1px solid #e9ecef;
 }
 
 .user-panel .avatar {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: 2px solid #fff;
+  border: 2px solid #e9ecef;
   object-fit: cover;
   background: #fff;
 }
 
 .user-panel .info span {
-  color: #f8fafc;
+  color: #333;
   font-weight: 700;
   font-size: 0.95rem;
   display: block;
 }
 
 .user-panel .info small {
-  color: #cbd5e1;
+  color: #6c757d;
   text-transform: uppercase;
   font-size: 0.65rem;
   font-weight: 600;
@@ -107,7 +109,7 @@ a {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #94a3b8;
+  color: #6c757d;
 }
 
 .nav-links {
@@ -120,19 +122,19 @@ a {
   align-items: center;
   gap: 12px;
   padding: 11px 18px;
-  color: #fff;
+  color: #333;
   font-size: 0.92rem;
   transition: background 0.2s;
 }
 
 .nav-links a:hover {
   background: var(--sidebar-hover);
-  color: #fff;
+  color: #333;
 }
 
 .nav-links a.active {
-  background: var(--primary);
-  color: #fff;
+  background: #e8f0fe;
+  color: var(--primary);
   font-weight: 600;
 }
 
@@ -143,7 +145,7 @@ a {
 
 .nav-header {
   padding: 12px 18px;
-  color: #94a3b8;
+  color: #6c757d;
   font-weight: 800;
   font-size: 0.68rem;
   text-transform: uppercase;
@@ -153,7 +155,7 @@ a {
 
 .account-actions {
   padding: 8px 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  border-top: 1px solid #e9ecef;
 }
 
 .account-actions a {
@@ -163,18 +165,23 @@ a {
   padding: 9px 10px;
   border-radius: 8px;
   margin-bottom: 6px;
-  color: #fff;
+  color: #333;
   font-size: 0.85rem;
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.15);
+  background: #f8f9fa;
 }
 
 .account-actions a:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: #e9ecef;
 }
 
 .account-actions a.logout {
-  background: var(--danger);
+  background: #fee2e2;
+  color: var(--danger);
+}
+
+.account-actions a.logout:hover {
+  background: #fecaca;
 }
 
 .main {
@@ -191,6 +198,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .navbar .page-title {
@@ -203,14 +211,14 @@ a {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
-  background: #fff;
+  background: #f8f9fa;
 }
 
 /* ===== CARDS ===== */
 .card {
   background: #fff;
   border-radius: 14px;
-  box-shadow: 0 0.15rem 1.75rem rgba(58, 59, 69, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   border: none;
   margin-bottom: 20px;
@@ -239,7 +247,7 @@ a {
   padding: 22px;
   color: #fff;
   margin-bottom: 20px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
   position: relative;
   overflow: hidden;
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -700,7 +708,7 @@ textarea.form-control {
   background: #fff;
   border-radius: 20px;
   padding: 24px;
-  box-shadow: 0 0.15rem 1.75rem rgba(58, 59, 69, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   margin-bottom: 20px;
 }
 
@@ -764,7 +772,7 @@ textarea.form-control {
 .modal-box {
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   width: 540px;
   max-width: 94vw;
   max-height: 88vh;
