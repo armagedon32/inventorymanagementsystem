@@ -1,10 +1,11 @@
 import db from "../db.js";
 import { logActivity } from "../activity.js";
-import svgCaptcha from "svg-captcha";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { Router } from "express";
+import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
+import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
