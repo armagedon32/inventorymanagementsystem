@@ -6,7 +6,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { Router } from "express";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, JWT_SECRET } from "../middleware/auth.js";
 
 const router = Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
