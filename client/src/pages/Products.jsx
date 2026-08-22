@@ -201,10 +201,9 @@ export default function Products({ type = "Stock" }) {
           <table>
             <thead>
               <tr>
-                <th>{isAsset ? "Asset Tag" : "Barcode"}</th>
+                {isAsset && <th>Asset Tag</th>}
                 <th>Name</th>
                 <th>Brand</th>
-                {!isAsset && <th>Acq. Type</th>}
                 <th>Category</th>
                 <th>Unit</th>
                 {isAsset && <th>Serial No.</th>}
@@ -223,10 +222,9 @@ export default function Products({ type = "Stock" }) {
                 const out = p.stock === 0;
                 return (
                   <tr key={p.pid} className={!isAsset && (low || out) ? "low-stock" : ""}>
-                    <td>{p.barcode || "—"}</td>
+                    {isAsset && <td>{p.barcode || "—"}</td>}
                     <td><strong>{p.name}</strong></td>
                     <td>{p.brand}</td>
-                    {!isAsset && <td>{p.acquisition_type}</td>}
                     <td>{p.category_name}</td>
                     <td>{p.unit || "pcs"}</td>
                     {isAsset && <td>{p.serial_number || "—"}</td>}

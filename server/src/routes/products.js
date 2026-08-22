@@ -277,7 +277,6 @@ router.get("/import-template/stock", requireAdmin, async (req, res) => {
   try {
     const categories = db.prepare("SELECT category FROM tbl_category WHERE is_archived = 0 ORDER BY category").all().map((c) => c.category);
     const units = ["pcs", "box", "ream", "pack", "bottle", "set", "unit", "liter", "kg", "pair"];
-    const acquisitionTypes = ["Purchased", "Donated", "Created"];
 
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet("Supplies", { views: [{ state: "frozen", ySplit: 1 }] });
@@ -285,7 +284,6 @@ router.get("/import-template/stock", requireAdmin, async (req, res) => {
     ws.columns = [
       { header: "Name *", key: "name", width: 30 },
       { header: "Brand", key: "brand", width: 20 },
-      { header: "Acquisition Type", key: "acquisition_type", width: 18 },
       { header: "Category", key: "category", width: 22 },
       { header: "Description", key: "description", width: 35 },
       { header: "Unit", key: "unit", width: 12 },
@@ -301,7 +299,6 @@ router.get("/import-template/stock", requireAdmin, async (req, res) => {
     ws.addRow({
       name: "Bond Paper A4",
       brand: "Plus",
-      acquisition_type: "Purchased",
       category: categories[0] || "",
       description: "500 sheets per ream",
       unit: "ream",
@@ -311,19 +308,8 @@ router.get("/import-template/stock", requireAdmin, async (req, res) => {
 
     const maxRows = 500;
 
-    if (acquisitionTypes.length) {
-      ws.dataValidations.add(`C2:C${maxRows}`, {
-        type: "list",
-        allowBlank: true,
-        formulae: [`"${acquisitionTypes.join(",")}"`],
-        showErrorMessage: true,
-        errorTitle: "Invalid",
-        error: `Please select: ${acquisitionTypes.join(", ")}`,
-      });
-    }
-
     if (categories.length) {
-      ws.dataValidations.add(`D2:D${maxRows}`, {
+      ws.dataValidations.add(`C2:C${maxRows}`, {
         type: "list",
         allowBlank: true,
         formulae: [`"${categories.join(",")}"`],
@@ -334,7 +320,7 @@ router.get("/import-template/stock", requireAdmin, async (req, res) => {
     }
 
     if (units.length) {
-      ws.dataValidations.add(`F2:F${maxRows}`, {
+      ws.dataValidations.add(`E2:E${maxRows}`, {
         type: "list",
         allowBlank: true,
         formulae: [`"${units.join(",")}"`],
@@ -344,7 +330,7 @@ router.get("/import-template/stock", requireAdmin, async (req, res) => {
       });
     }
 
-    ws.dataValidations.add(`G2:G${maxRows}`, {
+    ws.dataValidations.add(`F2:F${maxRows}`, {
       type: "whole",
       operator: "greaterThanOrEqual",
       formulae: ["0"],
@@ -353,7 +339,7 @@ router.get("/import-template/stock", requireAdmin, async (req, res) => {
       error: "Must be a non-negative whole number",
     });
 
-    ws.dataValidations.add(`H2:H${maxRows}`, {
+    ws.dataValidations.add(`G2:G${maxRows}`, {
       type: "whole",
       operator: "greaterThanOrEqual",
       formulae: ["0"],
@@ -428,7 +414,7 @@ router.post("/import/stock", requireAdmin, async (req, res) => {
 
     const insert = db.prepare(
       `INSERT INTO tbl_product (barcode, name, brand, acquisition_type, category, description, stock, reorder_level, unit_cost, unit, product_type, serial_number, condition, assigned_to, office_id, department, date_added, is_archived)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 'Stock', NULL, NULL, NULL, NULL, NULL, date('now','localtime'), 0)`
+       VALUES (?, ?, ?, 'Purchased', ?, ?, ?, ?, 0, ?, 'Stock', NULL, NULL, NULL, NULL, NULL, date('now','localtime'), 0)`
     );
 
     db.transaction(() => {
@@ -459,7 +445,7 @@ router.post("/import/stock", requireAdmin, async (req, res) => {
 
         try {
           insert.run(
-            code, row.name, row.brand || "", row.acquisition_type || "Purchased",
+            code, row.name, row.brand || "",
             categoryId, row.description || "", Number(row.stock) || 0,
             Number(row.reorder_level) || 0, row.unit || "pcs"
           );

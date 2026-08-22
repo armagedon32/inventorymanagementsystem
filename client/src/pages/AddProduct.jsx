@@ -147,6 +147,7 @@ export default function AddProduct({ type = "Stock" }) {
                 ))}
               </select>
             </div>
+            {isAsset && (
             <div className="form-group">
               <label>Acquisition Type</label>
               <select
@@ -159,6 +160,7 @@ export default function AddProduct({ type = "Stock" }) {
                 <option>Created</option>
               </select>
             </div>
+            )}
             <div className="form-group">
               <label>Description</label>
               <input className="form-control" value={form.description} onChange={(e) => set("description", e.target.value)} />
