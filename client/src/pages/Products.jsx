@@ -148,13 +148,17 @@ export default function Products({ type = "Stock" }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <button type="button" className="btn btn-sm" onClick={downloadTemplate}>
-            ⬇ Template
-          </button>
-          <label className="btn btn-sm" style={{ cursor: "pointer" }}>
-            ⬆ Import
-            <input type="file" accept=".xlsx,.xls" style={{ display: "none" }} onChange={handleBulkImport} />
-          </label>
+          {isAsset && (
+            <>
+              <button type="button" className="btn btn-sm" onClick={downloadTemplate}>
+                ⬇ Template
+              </button>
+              <label className="btn btn-sm" style={{ cursor: "pointer" }}>
+                ⬆ Import
+                <input type="file" accept=".xlsx,.xls" style={{ display: "none" }} onChange={handleBulkImport} />
+              </label>
+            </>
+          )}
           <button className="btn btn-sm" title="Export to Excel (CSV)" onClick={() => handleExport("excel")}>
             ⤓ Excel
           </button>
