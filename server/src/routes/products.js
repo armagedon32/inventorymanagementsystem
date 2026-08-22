@@ -175,12 +175,13 @@ router.post("/import", requireAdmin, async (req, res) => {
     const headerRow = ws.getRow(1);
     const headers = [];
     headerRow.eachCell((cell, colNumber) => {
-      headers[colNumber] = String(cell.value || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
+      const raw = String(cell.value || "").trim().toLowerCase();
+      headers[colNumber] = raw.replace(/[^a-z0-9_]/g, "").replace(/_+$/, "");
     });
 
     const required = ["name", "category"];
     for (const r of required) {
-      if (!headers.includes(r)) {
+      if (!headers.includes(r) && !Object.values(headers).some((h) => h && h.startsWith(r))) {
         return res.status(400).json({ error: `Missing required column: ${r}` });
       }
     }
@@ -373,12 +374,13 @@ router.post("/import/stock", requireAdmin, async (req, res) => {
     const headerRow = ws.getRow(1);
     const headers = [];
     headerRow.eachCell((cell, colNumber) => {
-      headers[colNumber] = String(cell.value || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
+      const raw = String(cell.value || "").trim().toLowerCase();
+      headers[colNumber] = raw.replace(/[^a-z0-9_]/g, "").replace(/_+$/, "");
     });
 
     const required = ["name", "category"];
     for (const r of required) {
-      if (!headers.includes(r)) {
+      if (!headers.includes(r) && !Object.values(headers).some((h) => h && h.startsWith(r))) {
         return res.status(400).json({ error: `Missing required column: ${r}` });
       }
     }
