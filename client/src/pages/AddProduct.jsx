@@ -61,7 +61,7 @@ export default function AddProduct({ type = "Stock" }) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "asset-import-template.csv";
+      a.download = "asset-import-template.xlsx";
       a.click();
       URL.revokeObjectURL(url);
     } catch {
@@ -76,8 +76,13 @@ export default function AddProduct({ type = "Stock" }) {
     setImportMsg("Importing...");
     setImportResult(null);
     try {
-      const csv = await file.text();
-      const result = await api.post("/products/import", { csv });
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const result = await api.post("/products/import", { csv: base64 });
       setImportResult(result);
       setImportMsg(`Imported: ${result.imported}, Skipped: ${result.skipped}`);
       if (result.errors?.length) {
@@ -96,11 +101,11 @@ export default function AddProduct({ type = "Stock" }) {
         {isAsset && (
           <div className="flex" style={{ gap: "8px" }}>
             <button type="button" className="btn btn-light btn-sm" onClick={downloadTemplate}>
-              ⬇ Download CSV Template
+              ⬇ Download Excel Template
             </button>
             <label className="btn btn-primary btn-sm" style={{ cursor: "pointer" }}>
-              ⬆ Import CSV
-              <input type="file" accept=".csv" style={{ display: "none" }} onChange={handleBulkImport} />
+              ⬆ Import Excel
+              <input type="file" accept=".xlsx,.xls" style={{ display: "none" }} onChange={handleBulkImport} />
             </label>
           </div>
         )}

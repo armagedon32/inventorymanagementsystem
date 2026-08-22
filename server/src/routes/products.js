@@ -32,29 +32,163 @@ router.get("/", (req, res) => {
 
 // ============ BULK IMPORT / EXPORT ============
 
-router.get("/import-template", requireAdmin, (req, res) => {
-  const csv = [
-    "barcode,name,brand,acquisition_type,category,description,stock,reorder_level,unit_cost,unit,serial_number,condition,assigned_to,department",
-    "AST-2026-0001,Desktop Computer,Dell,Purchased,ICT Equipment,Core i5 8GB RAM,1,0,25000,unit,DELL-8Y7KD33,Good,Comlab 1,Admin/Staff",
-  ].join("\n");
-  res.setHeader("Content-Type", "text/csv");
-  res.setHeader("Content-Disposition", 'attachment; filename="asset-import-template.csv"');
-  res.send(csv);
+import ExcelJS from "exceljs";
+
+router.get("/import-template", requireAdmin, async (req, res) => {
+  try {
+    const categories = db.prepare("SELECT category FROM tbl_category WHERE is_archived = 0 ORDER BY category").all().map((c) => c.category);
+    const departments = ["Admin/Staff", "HM", "BED", "TED", "CSD"];
+    const units = ["pcs", "box", "ream", "pack", "bottle", "set", "unit", "liter", "kg", "pair"];
+    const acquisitionTypes = ["Purchased", "Donated"];
+    const conditions = ["Good", "Fair", "Needs Repair", "For Disposal"];
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Assets", { views: [{ state: "frozen", ySplit: 1 }] });
+
+    ws.columns = [
+      { header: "Barcode (blank=auto)", key: "barcode", width: 22 },
+      { header: "Name *", key: "name", width: 30 },
+      { header: "Brand", key: "brand", width: 20 },
+      { header: "Acquisition Type", key: "acquisition_type", width: 18 },
+      { header: "Category", key: "category", width: 22 },
+      { header: "Description", key: "description", width: 35 },
+      { header: "Unit", key: "unit", width: 12 },
+      { header: "Quantity", key: "stock", width: 12 },
+      { header: "Unit Cost", key: "unit_cost", width: 15 },
+      { header: "Serial Number", key: "serial_number", width: 25 },
+      { header: "Condition", key: "condition", width: 16 },
+      { header: "Assigned To", key: "assigned_to", width: 25 },
+      { header: "Department", key: "department", width: 18 },
+    ];
+
+    const headerRow = ws.getRow(1);
+    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF333333" } };
+    headerRow.alignment = { horizontal: "center" };
+
+    const sampleRow = {
+      barcode: "AST-2026-0001",
+      name: "Desktop Computer",
+      brand: "Dell",
+      acquisition_type: "Purchased",
+      category: categories[0] || "",
+      description: "Core i5 8GB RAM",
+      unit: "pcs",
+      stock: 1,
+      unit_cost: 25000,
+      serial_number: "DELL-8Y7KD33",
+      condition: "Good",
+      assigned_to: "Comlab 1",
+      department: "Admin/Staff",
+    };
+    ws.addRow(sampleRow);
+
+    const maxRows = 500;
+
+    if (acquisitionTypes.length) {
+      ws.dataValidations.add(`C2:C${maxRows}`, {
+        type: "list",
+        allowBlank: true,
+        formulae: [`"${acquisitionTypes.join(",")}"`],
+        showErrorMessage: true,
+        errorTitle: "Invalid",
+        error: `Please select: ${acquisitionTypes.join(", ")}`,
+      });
+    }
+
+    if (categories.length) {
+      ws.dataValidations.add(`E2:E${maxRows}`, {
+        type: "list",
+        allowBlank: true,
+        formulae: [`"${categories.join(",")}"`],
+        showErrorMessage: true,
+        errorTitle: "Invalid Category",
+        error: `Please select a valid category`,
+      });
+    }
+
+    if (units.length) {
+      ws.dataValidations.add(`G2:G${maxRows}`, {
+        type: "list",
+        allowBlank: true,
+        formulae: [`"${units.join(",")}"`],
+        showErrorMessage: true,
+        errorTitle: "Invalid",
+        error: `Please select: ${units.join(", ")}`,
+      });
+    }
+
+    if (conditions.length) {
+      ws.dataValidations.add(`K2:K${maxRows}`, {
+        type: "list",
+        allowBlank: true,
+        formulae: [`"${conditions.join(",")}"`],
+        showErrorMessage: true,
+        errorTitle: "Invalid",
+        error: `Please select: ${conditions.join(", ")}`,
+      });
+    }
+
+    if (departments.length) {
+      ws.dataValidations.add(`M2:M${maxRows}`, {
+        type: "list",
+        allowBlank: true,
+        formulae: [`"${departments.join(",")}"`],
+        showErrorMessage: true,
+        errorTitle: "Invalid Department",
+        error: `Please select: ${departments.join(", ")}`,
+      });
+    }
+
+    ws.dataValidations.add(`H2:H${maxRows}`, {
+      type: "whole",
+      operator: "greaterThanOrEqual",
+      formulae: ["0"],
+      showErrorMessage: true,
+      errorTitle: "Invalid Quantity",
+      error: "Must be a non-negative whole number",
+    });
+
+    ws.dataValidations.add(`I2:I${maxRows}`, {
+      type: "decimal",
+      operator: "greaterThanOrEqual",
+      formulae: ["0"],
+      showErrorMessage: true,
+      errorTitle: "Invalid Cost",
+      error: "Must be a non-negative number",
+    });
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", 'attachment; filename="asset-import-template.xlsx"');
+    await wb.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    res.status(500).json({ error: "Failed to generate template: " + err.message });
+  }
 });
 
-router.post("/import", requireAdmin, (req, res) => {
+router.post("/import", requireAdmin, async (req, res) => {
   try {
     const { csv } = req.body || {};
     if (!csv || !String(csv).trim()) {
-      return res.status(400).json({ error: "CSV data is required." });
+      return res.status(400).json({ error: "Excel data is required." });
     }
 
-    const lines = String(csv).trim().split("\n").map((l) => l.trim()).filter(Boolean);
-    if (lines.length < 2) {
-      return res.status(400).json({ error: "CSV must have a header row and at least one data row." });
+    const base64 = String(csv).trim();
+    const buffer = Buffer.from(base64, "base64");
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(buffer);
+    const ws = wb.getWorksheet(1) || wb.getWorksheet("Assets");
+    if (!ws || ws.rowCount < 2) {
+      return res.status(400).json({ error: "Excel file must have a header row and at least one data row." });
     }
 
-    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+    const headerRow = ws.getRow(1);
+    const headers = [];
+    headerRow.eachCell((cell, colNumber) => {
+      headers[colNumber] = String(cell.value || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
+    });
+
     const required = ["name", "category"];
     for (const r of required) {
       if (!headers.includes(r)) {
@@ -77,23 +211,28 @@ router.post("/import", requireAdmin, (req, res) => {
     );
 
     db.transaction(() => {
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(",").map((v) => v.trim());
+      for (let i = 2; i <= ws.rowCount; i++) {
+        const rowValues = ws.getRow(i).values || [];
         const row = {};
-        headers.forEach((h, idx) => { row[h] = values[idx] || ""; });
+        headers.forEach((h, colIdx) => {
+          if (h) {
+            const val = rowValues[colIdx];
+            row[h] = val != null ? String(val).trim() : "";
+          }
+        });
 
         if (!row.name) {
           skipped++;
-          errors.push(`Row ${i + 1}: Missing name`);
+          errors.push(`Row ${i}: Missing name`);
           continue;
         }
 
         const catId = catMap[row.category?.toLowerCase()];
-        if (!catId && row.category) {
+        let categoryId = catId || null;
+        if (!categoryId && row.category) {
           const newCat = db.prepare("INSERT INTO tbl_category (category, description, is_archived) VALUES (?, '', 0)").run(row.category);
-          row._catid = newCat.lastInsertRowid;
+          categoryId = newCat.lastInsertRowid;
         }
-        const categoryId = row._catid || catId || null;
 
         const code = row.barcode || nextBarcode();
         const serial = row.serial_number || null;
@@ -101,7 +240,7 @@ router.post("/import", requireAdmin, (req, res) => {
           const dup = db.prepare("SELECT pid FROM tbl_product WHERE serial_number = ? AND product_type = 'Asset' AND is_archived = 0").get(serial);
           if (dup) {
             skipped++;
-            errors.push(`Row ${i + 1}: Duplicate serial "${serial}"`);
+            errors.push(`Row ${i}: Duplicate serial "${serial}"`);
             continue;
           }
         }
@@ -110,13 +249,13 @@ router.post("/import", requireAdmin, (req, res) => {
           insert.run(
             code, row.name, row.brand || "", row.acquisition_type || "Purchased",
             categoryId, row.description || "", Number(row.stock) || 0,
-            Number(row.reorder_level) || 0, Number(row.unit_cost) || 0, row.unit || "unit",
+            0, Number(row.unit_cost) || 0, row.unit || "unit",
             serial, row.condition || "Good", row.assigned_to || null, row.department || null
           );
           imported++;
         } catch (err) {
           skipped++;
-          errors.push(`Row ${i + 1}: ${err.message}`);
+          errors.push(`Row ${i}: ${err.message}`);
         }
       }
     })();
