@@ -11,25 +11,22 @@ const UPLOADS_DIR = path.join(__dirname, "..", "..", "uploads");
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 function makeCaptcha() {
-    const captcha = svgCaptcha.create({
-        fontSize: 55,
-        background: "#f4f8f5",
-        width: 300,
-        height: 90,
-        noise: 3,
-        color: true,
-    });
-    const token = jwt.sign({ code: captcha.text }, JWT_SECRET, { expiresIn: "5m" });
-    return { question: captcha.text, token };
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789';
+  let captchaCode = '';
+  for (let i = 0; i < 5; i++) {
+    captchaCode += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  const token = jwt.sign({ code: captchaCode }, JWT_SECRET, { expiresIn: "5m" });
+  return { question: captchaCode, token };
 }
 
 function verifyCaptcha(token, answer) {
-    try {
-        const payload = jwt.verify(token, JWT_SECRET);
-        return payload.code === answer;
-    } catch {
-        return false;
-    }
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    return payload.code === answer;
+  } catch {
+    return false;
+  }
 }
 
 router.get("/captcha", (req, res) => {
