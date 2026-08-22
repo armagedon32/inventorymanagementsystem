@@ -165,17 +165,6 @@ export default function AddProduct({ type = "Stock" }) {
             )}
 
             <div className="form-group">
-              <label>Unit Cost (₱)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                className="form-control"
-                value={form.unit_cost}
-                onChange={(e) => set("unit_cost", Number(e.target.value))}
-              />
-            </div>
-            <div className="form-group">
               <label>Department *</label>
               <select className="form-select" value={form.department} onChange={(e) => set("department", e.target.value)} required>
                 <option value="">-- Select --</option>
