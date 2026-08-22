@@ -37,48 +37,53 @@ router.get("/captcha", (req, res) => {
 });
 
 router.post("/login", (req, res) => {
-  const { identifier, password, captchaToken, captchaAnswer } = req.body;
-  if (!identifier || !password) {
-    return res.status(400).json({ error: "Email/Username and password are required." });
+  try {
+    const { identifier, password, captchaToken, captchaAnswer } = req.body;
+    if (!identifier || !password) {
+      return res.status(400).json({ error: "Email/Username and password are required." });
+    }
+
+    if (!verifyCaptcha(captchaToken, captchaAnswer)) {
+      return res.status(400).json({ error: "Incorrect CAPTCHA answer. Please try again." });
+    }
+
+    const user = db
+      .prepare(
+        `SELECT * FROM tbl_user
+         WHERE (useremail = ? OR username = ? OR fullname = ?)
+           AND is_archived = 0
+         LIMIT 1`
+      )
+      .get(identifier, identifier, identifier);
+
+    if (!user) {
+      return res.status(401).json({ error: "User not found." });
+    }
+
+    const ok = bcrypt.compareSync(password, user.userpassword);
+    if (!ok) {
+      return res.status(401).json({ error: "Incorrect Password." });
+    }
+
+    logActivity(req, `${user.role} Logged In`, undefined, undefined, user.userid);
+
+    const token = signToken(user);
+    res.json({
+      token,
+      user: {
+        userid: user.userid,
+        fullname: user.fullname,
+        username: user.username,
+        useremail: user.useremail,
+        role: user.role,
+        photo: user.photo,
+        must_change_password: user.must_change_password,
+      },
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ error: "Login failed: " + err.message });
   }
-
-  if (!verifyCaptcha(captchaToken, captchaAnswer)) {
-    return res.status(400).json({ error: "Incorrect CAPTCHA answer. Please try again." });
-  }
-
-  const user = db
-    .prepare(
-      `SELECT * FROM tbl_user
-       WHERE (useremail = ? OR username = ? OR fullname = ?)
-         AND is_archived = 0
-       LIMIT 1`
-    )
-    .get(identifier, identifier, identifier);
-
-  if (!user) {
-    return res.status(401).json({ error: "User not found." });
-  }
-
-  const ok = bcrypt.compareSync(password, user.userpassword);
-  if (!ok) {
-    return res.status(401).json({ error: "Incorrect Password." });
-  }
-
-  logActivity(req, `${user.role} Logged In`, undefined, undefined, user.userid);
-
-  const token = signToken(user);
-  res.json({
-    token,
-    user: {
-      userid: user.userid,
-      fullname: user.fullname,
-      username: user.username,
-      useremail: user.useremail,
-      role: user.role,
-      photo: user.photo,
-      must_change_password: user.must_change_password,
-    },
-  });
 });
 
 router.get("/me", requireAuth, (req, res) => {
