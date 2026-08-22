@@ -478,6 +478,29 @@ router.post("/import/stock", requireAdmin, async (req, res) => {
   }
 });
 
+// ============ ARCHIVE ============
+
+router.get("/archived", requireAdmin, (req, res) => {
+  const type = req.query.type;
+  const base = `SELECT p.*, c.category AS category_name, o.office_name AS office_name
+                FROM tbl_product p
+                LEFT JOIN tbl_category c ON p.category = c.catid
+                LEFT JOIN tbl_office o ON o.id = p.office_id
+                WHERE p.is_archived = 1`;
+  const rows = type
+    ? db.prepare(`${base} AND p.product_type = ? ORDER BY p.pid DESC`).all(type)
+    : db.prepare(`${base} ORDER BY p.pid DESC`).all();
+  res.json(rows);
+});
+
+router.delete("/archived/all", requireAdmin, (req, res) => {
+  const type = req.query.type;
+  if (!type) return res.status(400).json({ error: "type query param is required" });
+  const info = db.prepare("DELETE FROM tbl_product WHERE product_type = ? AND is_archived = 1").run(type);
+  logActivity(req, `Permanently deleted all ${info.changes} archived ${type}(s)`, undefined, undefined, req.user.userid);
+  res.json({ deleted: info.changes });
+});
+
 router.get("/:id", (req, res) => {
   const p = db
     .prepare(
@@ -580,29 +603,6 @@ router.delete("/all", requireAdmin, (req, res) => {
   res.json({ deleted: info.changes });
 });
 
-router.delete("/:id", (req, res) => {
-  const p = db.prepare("SELECT * FROM tbl_product WHERE pid = ?").get(req.params.id);
-  if (!p) return res.status(404).json({ error: "Product not found" });
-  db.prepare("UPDATE tbl_product SET is_archived = 1 WHERE pid = ?").run(p.pid);
-    logActivity(req, `Deleted Product: ${p.name}`, undefined, p.pid);
-  res.json({ success: true });
-});
-
-// ============ ARCHIVE ============
-
-router.get("/archived", requireAdmin, (req, res) => {
-  const type = req.query.type;
-  const base = `SELECT p.*, c.category AS category_name, o.office_name AS office_name
-                FROM tbl_product p
-                LEFT JOIN tbl_category c ON p.category = c.catid
-                LEFT JOIN tbl_office o ON o.id = p.office_id
-                WHERE p.is_archived = 1`;
-  const rows = type
-    ? db.prepare(`${base} AND p.product_type = ? ORDER BY p.pid DESC`).all(type)
-    : db.prepare(`${base} ORDER BY p.pid DESC`).all();
-  res.json(rows);
-});
-
 router.put("/:id/restore", requireAdmin, (req, res) => {
   const p = db.prepare("SELECT * FROM tbl_product WHERE pid = ? AND is_archived = 1").get(req.params.id);
   if (!p) return res.status(404).json({ error: "Archived product not found." });
@@ -619,12 +619,12 @@ router.delete("/:id/permanent", requireAdmin, (req, res) => {
   res.json({ success: true });
 });
 
-router.delete("/archived/all", requireAdmin, (req, res) => {
-  const type = req.query.type;
-  if (!type) return res.status(400).json({ error: "type query param is required" });
-  const info = db.prepare("DELETE FROM tbl_product WHERE product_type = ? AND is_archived = 1").run(type);
-  logActivity(req, `Permanently deleted all ${info.changes} archived ${type}(s)`, undefined, undefined, req.user.userid);
-  res.json({ deleted: info.changes });
+router.delete("/:id", (req, res) => {
+  const p = db.prepare("SELECT * FROM tbl_product WHERE pid = ?").get(req.params.id);
+  if (!p) return res.status(404).json({ error: "Product not found" });
+  db.prepare("UPDATE tbl_product SET is_archived = 1 WHERE pid = ?").run(p.pid);
+    logActivity(req, `Deleted Product: ${p.name}`, undefined, p.pid);
+  res.json({ success: true });
 });
 
 // ============ STOCK IN / RESTOCK ============
