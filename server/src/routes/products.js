@@ -54,7 +54,6 @@ router.get("/import-template", requireAdmin, async (req, res) => {
       { header: "Description", key: "description", width: 35 },
       { header: "Unit", key: "unit", width: 12 },
       { header: "Quantity", key: "stock", width: 12 },
-      { header: "Unit Cost", key: "unit_cost", width: 15 },
       { header: "Serial Number", key: "serial_number", width: 25 },
       { header: "Condition", key: "condition", width: 16 },
       { header: "Assigned To", key: "assigned_to", width: 25 },
@@ -75,7 +74,6 @@ router.get("/import-template", requireAdmin, async (req, res) => {
       description: "Core i5 8GB RAM",
       unit: "pcs",
       stock: 1,
-      unit_cost: 25000,
       serial_number: "DELL-8Y7KD33",
       condition: "Good",
       assigned_to: "Comlab 1",
@@ -119,7 +117,7 @@ router.get("/import-template", requireAdmin, async (req, res) => {
     }
 
     if (conditions.length) {
-      ws.dataValidations.add(`K2:K${maxRows}`, {
+      ws.dataValidations.add(`J2:J${maxRows}`, {
         type: "list",
         allowBlank: true,
         formulae: [`"${conditions.join(",")}"`],
@@ -130,7 +128,7 @@ router.get("/import-template", requireAdmin, async (req, res) => {
     }
 
     if (departments.length) {
-      ws.dataValidations.add(`M2:M${maxRows}`, {
+      ws.dataValidations.add(`L2:L${maxRows}`, {
         type: "list",
         allowBlank: true,
         formulae: [`"${departments.join(",")}"`],
@@ -147,15 +145,6 @@ router.get("/import-template", requireAdmin, async (req, res) => {
       showErrorMessage: true,
       errorTitle: "Invalid Quantity",
       error: "Must be a non-negative whole number",
-    });
-
-    ws.dataValidations.add(`I2:I${maxRows}`, {
-      type: "decimal",
-      operator: "greaterThanOrEqual",
-      formulae: ["0"],
-      showErrorMessage: true,
-      errorTitle: "Invalid Cost",
-      error: "Must be a non-negative number",
     });
 
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
