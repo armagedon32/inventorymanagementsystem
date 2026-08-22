@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "../api/client";
+import { api, API_URL } from "../api/client";
 import { exportCSV, exportPDF } from "../utils/export";
 
 export default function Products({ type = "Stock" }) {
@@ -10,6 +10,8 @@ export default function Products({ type = "Stock" }) {
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
   const [query, setQuery] = useState("");
+  const [importMsg, setImportMsg] = useState("");
+  const [importResult, setImportResult] = useState(null);
 
   useEffect(() => {
     load();
@@ -20,6 +22,52 @@ export default function Products({ type = "Stock" }) {
       .get(`/products?type=${type}`)
       .then(setProducts)
       .catch((e) => setError(e.message));
+  }
+
+  async function downloadTemplate() {
+    try {
+      const endpoint = isAsset ? "/products/import-template" : "/products/import-template/stock";
+      const filename = isAsset ? "asset-import-template.xlsx" : "supply-import-template.xlsx";
+      const res = await fetch(`${API_URL}${endpoint}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("custodian_token")}` },
+      });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError("Failed to download template.");
+    }
+  }
+
+  async function handleBulkImport(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError("");
+    setImportMsg("Importing...");
+    setImportResult(null);
+    try {
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const endpoint = isAsset ? "/products/import" : "/products/import/stock";
+      const result = await api.post(endpoint, { csv: base64 });
+      setImportResult(result);
+      setImportMsg(`Imported: ${result.imported}, Skipped: ${result.skipped}`);
+      if (result.errors?.length) {
+        setImportMsg((m) => m + "\n" + result.errors.join("\n"));
+      }
+      load();
+    } catch (err) {
+      setError(err.message);
+      setImportMsg("");
+    }
   }
 
   async function handleDelete(p) {
@@ -100,6 +148,13 @@ export default function Products({ type = "Stock" }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
+          <button type="button" className="btn btn-sm" onClick={downloadTemplate}>
+            ⬇ Template
+          </button>
+          <label className="btn btn-sm" style={{ cursor: "pointer" }}>
+            ⬆ Import
+            <input type="file" accept=".xlsx,.xls" style={{ display: "none" }} onChange={handleBulkImport} />
+          </label>
           <button className="btn btn-sm" title="Export to Excel (CSV)" onClick={() => handleExport("excel")}>
             ⤓ Excel
           </button>
@@ -114,6 +169,13 @@ export default function Products({ type = "Stock" }) {
       <div className="card-body">
         {error && <div className="alert alert-error">{error}</div>}
         {msg && <div className="alert alert-success">{msg}</div>}
+        {importMsg && <div className="alert alert-success" style={{ whiteSpace: "pre-wrap" }}>{importMsg}</div>}
+        {importResult && importResult.imported > 0 && (
+          <div className="alert alert-success">
+            Successfully imported {importResult.imported} item(s).
+            {importResult.skipped > 0 && ` ${importResult.skipped} row(s) skipped.`}
+          </div>
+        )}
 
         <div className="table-wrap">
           <table>

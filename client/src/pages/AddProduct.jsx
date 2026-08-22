@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api, API_URL } from "../api/client";
+import { api } from "../api/client";
 
 const DEPARTMENTS = ["Admin/Staff", "HM", "BED", "TED", "CSD"];
 
@@ -10,8 +10,6 @@ export default function AddProduct({ type = "Stock" }) {
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [importMsg, setImportMsg] = useState("");
-  const [importResult, setImportResult] = useState(null);
   const [form, setForm] = useState({
     barcode: "",
     name: "",
@@ -52,74 +50,13 @@ export default function AddProduct({ type = "Stock" }) {
     }
   }
 
-  async function downloadTemplate() {
-    try {
-      const endpoint = isAsset ? "/products/import-template" : "/products/import-template/stock";
-      const filename = isAsset ? "asset-import-template.xlsx" : "supply-import-template.xlsx";
-      const res = await fetch(`${API_URL}${endpoint}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("custodian_token")}` },
-      });
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      setError("Failed to download template.");
-    }
-  }
-
-  async function handleBulkImport(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setError("");
-    setImportMsg("Importing...");
-    setImportResult(null);
-    try {
-      const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(",")[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      const endpoint = isAsset ? "/products/import" : "/products/import/stock";
-      const result = await api.post(endpoint, { csv: base64 });
-      setImportResult(result);
-      setImportMsg(`Imported: ${result.imported}, Skipped: ${result.skipped}`);
-      if (result.errors?.length) {
-        setImportMsg((m) => m + "\n" + result.errors.join("\n"));
-      }
-    } catch (err) {
-      setError(err.message);
-      setImportMsg("");
-    }
-  }
-
   return (
     <div className="card">
       <div className="card-header">
         <h5>{isAsset ? "Asset Registration" : "Supply Registration"}</h5>
-        <div className="flex" style={{ gap: "8px" }}>
-          <button type="button" className="btn btn-light btn-sm" onClick={downloadTemplate}>
-            ⬇ Download Excel Template
-          </button>
-          <label className="btn btn-primary btn-sm" style={{ cursor: "pointer" }}>
-            ⬆ Import Excel
-            <input type="file" accept=".xlsx,.xls" style={{ display: "none" }} onChange={handleBulkImport} />
-          </label>
-        </div>
       </div>
       <div className="card-body">
         {error && <div className="alert alert-error">{error}</div>}
-        {importMsg && <div className="alert alert-success" style={{ whiteSpace: "pre-wrap" }}>{importMsg}</div>}
-        {importResult && importResult.imported > 0 && (
-          <div className="alert alert-success">
-            Successfully imported {importResult.imported} asset(s).
-            {importResult.skipped > 0 && ` ${importResult.skipped} row(s) skipped.`}
-          </div>
-        )}
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             <div className="form-group">
