@@ -2,7 +2,34 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, API_URL } from "../api/client";
 
-const DEPARTMENTS = ["Admin/Staff", "HM", "BED", "TED", "CSD"];
+const OFFICES = [
+  "Library Office",
+  "Registrar Office",
+  "College President/MIS Office",
+  "Faculty Office",
+  "Deans Office",
+  "Clinic Office",
+  "NSTP Office",
+  "OSA ADMISSION & SCHOLARSHIP Office",
+  "Guidance Office",
+  "Academic Affairs Office",
+  "Property Custodian Office",
+  "Research Office",
+  "Planning Office",
+  "Maintenance Office",
+  "Head Sports Athletics Office",
+  "Utility Office",
+  "AVR Internet Laboratory Office",
+  "Guard House",
+  "Computer Laboratory",
+  "Administrator Office",
+  "Kitchen Laboratory",
+  "Bartending",
+  "Tourism",
+  "Housekeeping",
+  "Front Office",
+  "Food and Beverage",
+];
 
 export default function AddProduct({ type = "Stock" }) {
   const isAsset = type === "Asset";
@@ -231,10 +258,10 @@ export default function AddProduct({ type = "Stock" }) {
 
             {isAsset && (
             <div className="form-group">
-              <label>Department *</label>
+              <label>Office *</label>
               <select className="form-select" value={form.department} onChange={(e) => set("department", e.target.value)} required>
                 <option value="">-- Select --</option>
-                {DEPARTMENTS.map((d) => (
+                {OFFICES.map((d) => (
                   <option key={d}>{d}</option>
                 ))}
               </select>

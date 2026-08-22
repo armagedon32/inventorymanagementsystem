@@ -37,7 +37,34 @@ import ExcelJS from "exceljs";
 router.get("/import-template", requireAdmin, async (req, res) => {
   try {
     const categories = db.prepare("SELECT category FROM tbl_category WHERE is_archived = 0 ORDER BY category").all().map((c) => c.category);
-    const departments = ["Admin/Staff", "HM", "BED", "TED", "CSD"];
+    const departments = [
+      "Library Office",
+      "Registrar Office",
+      "College President/MIS Office",
+      "Faculty Office",
+      "Deans Office",
+      "Clinic Office",
+      "NSTP Office",
+      "OSA ADMISSION & SCHOLARSHIP Office",
+      "Guidance Office",
+      "Academic Affairs Office",
+      "Property Custodian Office",
+      "Research Office",
+      "Planning Office",
+      "Maintenance Office",
+      "Head Sports Athletics Office",
+      "Utility Office",
+      "AVR Internet Laboratory Office",
+      "Guard House",
+      "Computer Laboratory",
+      "Administrator Office",
+      "Kitchen Laboratory",
+      "Bartending",
+      "Tourism",
+      "Housekeeping",
+      "Front Office",
+      "Food and Beverage",
+    ];
     const units = ["pcs", "box", "ream", "pack", "bottle", "set", "unit", "liter", "kg", "pair"];
     const acquisitionTypes = ["Purchased", "Donated", "Created"];
     const conditions = ["Good", "Fair", "Needs Repair", "For Disposal"];
@@ -57,7 +84,7 @@ router.get("/import-template", requireAdmin, async (req, res) => {
       { header: "Serial Number", key: "serial_number", width: 25 },
       { header: "Condition", key: "condition", width: 16 },
       { header: "Assigned To", key: "assigned_to", width: 25 },
-      { header: "Department", key: "department", width: 18 },
+      { header: "Office", key: "department", width: 25 },
     ];
 
     const headerRow = ws.getRow(1);
@@ -77,7 +104,7 @@ router.get("/import-template", requireAdmin, async (req, res) => {
       serial_number: "DELL-8Y7KD33",
       condition: "Good",
       assigned_to: "Comlab 1",
-      department: "Admin/Staff",
+      department: "Computer Laboratory",
     };
     ws.addRow(sampleRow);
 
@@ -133,8 +160,8 @@ router.get("/import-template", requireAdmin, async (req, res) => {
         allowBlank: true,
         formulae: [`"${departments.join(",")}"`],
         showErrorMessage: true,
-        errorTitle: "Invalid Department",
-        error: `Please select: ${departments.join(", ")}`,
+        errorTitle: "Invalid Office",
+        error: `Please select a valid office`,
       });
     }
 

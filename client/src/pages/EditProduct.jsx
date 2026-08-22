@@ -162,10 +162,10 @@ export default function EditProduct({ type = "Stock" }) {
               />
             </div>
             <div className="form-group">
-              <label>Department</label>
+              <label>Office</label>
               <select className="form-select" value={form.department} onChange={(e) => set("department", e.target.value)}>
                 <option value="">-- Select --</option>
-                {["Admin/Staff", "HM", "BED", "TED", "CSD"].map((d) => (
+                {["Library Office","Registrar Office","College President/MIS Office","Faculty Office","Deans Office","Clinic Office","NSTP Office","OSA ADMISSION & SCHOLARSHIP Office","Guidance Office","Academic Affairs Office","Property Custodian Office","Research Office","Planning Office","Maintenance Office","Head Sports Athletics Office","Utility Office","AVR Internet Laboratory Office","Guard House","Computer Laboratory","Administrator Office","Kitchen Laboratory","Bartending","Tourism","Housekeeping","Front Office","Food and Beverage"].map((d) => (
                   <option key={d}>{d}</option>
                 ))}
               </select>

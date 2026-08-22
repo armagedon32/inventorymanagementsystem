@@ -2,7 +2,34 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
 
-const DEPARTMENTS = ["Admin/Staff", "HM", "BED", "TED", "CSD"];
+const OFFICES = [
+  "Library Office",
+  "Registrar Office",
+  "College President/MIS Office",
+  "Faculty Office",
+  "Deans Office",
+  "Clinic Office",
+  "NSTP Office",
+  "OSA ADMISSION & SCHOLARSHIP Office",
+  "Guidance Office",
+  "Academic Affairs Office",
+  "Property Custodian Office",
+  "Research Office",
+  "Planning Office",
+  "Maintenance Office",
+  "Head Sports Athletics Office",
+  "Utility Office",
+  "AVR Internet Laboratory Office",
+  "Guard House",
+  "Computer Laboratory",
+  "Administrator Office",
+  "Kitchen Laboratory",
+  "Bartending",
+  "Tourism",
+  "Housekeeping",
+  "Front Office",
+  "Food and Beverage",
+];
 
 export default function AssignAsset() {
   const { id } = useParams();
@@ -101,10 +128,10 @@ export default function AssignAsset() {
               </select>
             </div>
             <div className="form-group">
-              <label>Department *</label>
+              <label>Office *</label>
               <select className="form-select" value={department} onChange={(e) => setDepartment(e.target.value)} required>
                 <option value="">-- Select --</option>
-                {DEPARTMENTS.map((d) => (
+                {OFFICES.map((d) => (
                   <option key={d}>{d}</option>
                 ))}
               </select>

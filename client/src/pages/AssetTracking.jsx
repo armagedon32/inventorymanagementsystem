@@ -73,7 +73,7 @@ export default function AssetTracking() {
       { label: "Asset Tag", key: "barcode" },
       { label: "Name", key: "name" },
       { label: "Serial No.", key: "serial_number" },
-      { label: "Department", key: "department" },
+      { label: "Office", key: "department" },
       { label: "Category", key: "category_name" },
       { label: "Condition", key: "condition" },
       { label: "Status", key: "status" },

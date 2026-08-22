@@ -36,7 +36,7 @@ export default function ViewProduct({ type = "Stock" }) {
     rows.splice(6, 0, ["Serial Number", product.serial_number || "—"]);
     rows.splice(6, 0, ["Condition", product.condition || "Good"]);
     rows.splice(6, 0, ["Quantity", product.stock]);
-    rows.splice(6, 0, ["Department", product.department || "—"]);
+    rows.splice(6, 0, ["Office", product.department || "—"]);
     rows.splice(6, 0, ["Assigned To", product.assigned_to || "—"]);
     rows.splice(9, 0, ["Assigned Remarks", product.assigned_remarks || "—"]);
     rows.splice(10, 0, ["Date Assigned", product.assigned_date || "—"]);
