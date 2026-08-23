@@ -50,13 +50,11 @@ export default function Reports() {
         return [
           { label: "Total Items", value: s.totalItems, cls: "blue" },
           { label: "Total Stock Qty", value: s.totalStock, cls: "green" },
-          { label: "Inventory Value", value: peso(s.totalValue), cls: "purple" },
           { label: "Low / Out of Stock", value: `${s.low} / ${s.outOfStock}`, cls: "orange" },
         ];
       case "assets":
         return [
           { label: "Total Assets", value: s.totalAssets, cls: "purple" },
-          { label: "Asset Value", value: peso(s.totalValue), cls: "green" },
           { label: "Assigned", value: s.assigned, cls: "blue" },
           { label: "Unassigned", value: s.unassigned, cls: "orange" },
         ];
