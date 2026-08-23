@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
+import { useAuth } from "../context/AuthContext";
 import {
   LineChart,
   Line,
@@ -19,6 +20,8 @@ import {
 const PIE_COLORS = ["#2563eb", "#f59e0b", "#ef4444", "#0ea5e9", "#64748b"];
 
 export default function Forecasting() {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.username === "superadmin";
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
@@ -96,9 +99,11 @@ export default function Forecasting() {
         <div className="card-header">
           <h5>Machine Learning Lab — RNN-LSTM Demand Forecaster</h5>
           <div className="flex" style={{ gap: 8 }}>
-            <button type="button" className="btn btn-warning btn-sm" onClick={seedData} disabled={seeding || retraining}>
-              {seeding ? "Seeding..." : "📊 Seed Sample Data"}
-            </button>
+            {isSuperAdmin && (
+              <button type="button" className="btn btn-warning btn-sm" onClick={seedData} disabled={seeding || retraining}>
+                {seeding ? "Seeding..." : "📊 Seed Sample Data"}
+              </button>
+            )}
             <button type="button" className="btn btn-primary btn-sm" onClick={retrain} disabled={retraining || seeding}>
               {retraining ? "Retraining..." : "⟳ Retrain Model"}
             </button>
