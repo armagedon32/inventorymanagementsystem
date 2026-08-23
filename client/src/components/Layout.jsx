@@ -46,14 +46,6 @@ export default function Layout() {
         { to: "/assets/archive", label: "Asset Archive", icon: "◁" },
       ],
     },
-    {
-      section: "Master Data",
-      items: [
-        { to: "/organizations", label: "Organizations", icon: "◈" },
-        { to: "/offices", label: "Offices / Sections", icon: "▣" },
-        { to: "/instructors", label: "Instructors", icon: "◍" },
-      ],
-    },
     { to: "/settings", label: "Account Settings", icon: "⚙" },
   ];
 

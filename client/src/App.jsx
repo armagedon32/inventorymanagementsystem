@@ -21,9 +21,6 @@ import NewReservation from "./pages/NewReservation";
 import ReservationView from "./pages/ReservationView";
 import Reports from "./pages/Reports";
 import Forecasting from "./pages/Forecasting";
-import Organizations from "./pages/Organizations";
-import Offices from "./pages/Offices";
-import Instructors from "./pages/Instructors";
 import DepartmentReport from "./pages/DepartmentReport";
 import AssetTracking from "./pages/AssetTracking";
 import Settings from "./pages/Settings";
@@ -80,9 +77,6 @@ export default function App() {
         <Route path="/reservations/:id" element={<ReservationView />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/forecasting" element={<Forecasting />} />
-        <Route path="/organizations" element={<Organizations />} />
-        <Route path="/offices" element={<Offices />} />
-        <Route path="/instructors" element={<Instructors />} />
         <Route path="/department-reports" element={<DepartmentReport />} />
         <Route path="/asset-tracking" element={<AssetTracking />} />
         <Route path="/settings" element={<Settings />} />
