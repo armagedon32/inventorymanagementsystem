@@ -207,8 +207,8 @@ export default function AddProduct({ type = "Stock" }) {
             {isAsset ? (
               <>
                 <div className="form-group">
-                  <label>Serial Number *</label>
-                  <input className="form-control" value={form.serial_number} onChange={(e) => set("serial_number", e.target.value)} required />
+                  <label>Serial Number</label>
+                  <input className="form-control" value={form.serial_number} onChange={(e) => set("serial_number", e.target.value)} />
                 </div>
                 <div className="form-group">
                   <label>Condition</label>

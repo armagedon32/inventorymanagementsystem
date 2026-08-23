@@ -537,9 +537,6 @@ router.post("/", requireAdmin, (req, res) => {
   if (!name || !category) return res.status(400).json({ error: "Name and category are required." });
 
   const isAsset = (product_type || "Stock") === "Asset";
-  if (isAsset && (!serial_number || !String(serial_number).trim())) {
-    return res.status(400).json({ error: "Serial number is required for assets." });
-  }
   if (isAsset) {
     const sn = String(serial_number).trim();
     const dup = db.prepare("SELECT pid FROM tbl_product WHERE serial_number = ? AND product_type = 'Asset' AND is_archived = 0").get(sn);
