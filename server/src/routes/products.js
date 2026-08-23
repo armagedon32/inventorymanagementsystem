@@ -526,7 +526,7 @@ router.get("/seed-forecast-data", requireAdmin, (req, res) => {
     if (products.length === 0) return res.status(400).json({ error: "No stock products found." });
 
     let inserted = 0;
-    const months = 15;
+    const months = 20;
 
     db.transaction(() => {
       for (const p of products) {

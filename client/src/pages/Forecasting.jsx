@@ -46,7 +46,7 @@ export default function Forecasting() {
   }
 
   async function seedData() {
-    if (!confirm("This will generate 15 months of sample stockout data for all stock products. Continue?")) return;
+    if (!confirm("This will generate 20 months of sample stockout data for all stock products. Continue?")) return;
     setSeeding(true);
     setError("");
     setMsg("");
