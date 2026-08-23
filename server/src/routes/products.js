@@ -218,7 +218,7 @@ router.post("/import", requireAdmin, async (req, res) => {
       serial_number: "serial_number", serialnumber: "serial_number", serial: "serial_number", serialno: "serial_number",
       condition: "condition",
       assigned_to: "assigned_to", assignedto: "assigned_to", assigned: "assigned_to",
-      department: "department",
+      department: "department", office: "department",
       unit_cost: "unit_cost", unitcost: "unit_cost",
     };
     headerRow.eachCell((cell, colNumber) => {
@@ -419,7 +419,7 @@ router.post("/import/stock", requireAdmin, async (req, res) => {
       serial_number: "serial_number", serialnumber: "serial_number", serial: "serial_number", serialno: "serial_number",
       condition: "condition",
       assigned_to: "assigned_to", assignedto: "assigned_to", assigned: "assigned_to",
-      department: "department",
+      department: "department", office: "department",
       unit_cost: "unit_cost", unitcost: "unit_cost",
     };
     headerRow.eachCell((cell, colNumber) => {
