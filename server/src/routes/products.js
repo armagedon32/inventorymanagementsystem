@@ -530,8 +530,16 @@ router.get("/fix-duplicate-barcodes", requireAdmin, (req, res) => {
   const dupes = db.prepare(`
     SELECT barcode, COUNT(*) AS count, GROUP_CONCAT(pid) AS pids
     FROM tbl_product
-    WHERE product_type = 'Asset' AND is_archived = 0 AND barcode IS NOT NULL AND barcode != ''
-    GROUP BY barcode
+    WHERE product_type = 'Asset' AND is_archived = 0 AND barcode IS NOT NULL AND TRIM(barcode) != ''
+    GROUP BY TRIM(barcode)
+    HAVING COUNT(*) > 1
+  `).all();
+
+  const snDupes = db.prepare(`
+    SELECT serial_number, COUNT(*) AS count, GROUP_CONCAT(pid) AS pids
+    FROM tbl_product
+    WHERE product_type = 'Asset' AND is_archived = 0 AND serial_number IS NOT NULL AND TRIM(serial_number) != ''
+    GROUP BY TRIM(serial_number)
     HAVING COUNT(*) > 1
   `).all();
 
@@ -539,16 +547,23 @@ router.get("/fix-duplicate-barcodes", requireAdmin, (req, res) => {
   db.transaction(() => {
     for (const d of dupes) {
       const pids = d.pids.split(",").map(Number);
-      const toDelete = pids.slice(1);
-      for (const pid of toDelete) {
+      for (const pid of pids.slice(1)) {
+        db.prepare("UPDATE tbl_product SET is_archived = 1 WHERE pid = ?").run(pid);
+        deleted++;
+      }
+    }
+    for (const d of snDupes) {
+      const pids = d.pids.split(",").map(Number);
+      for (const pid of pids.slice(1)) {
         db.prepare("UPDATE tbl_product SET is_archived = 1 WHERE pid = ?").run(pid);
         deleted++;
       }
     }
   })();
 
-  logActivity(req, `Fixed ${dupes.length} duplicate groups, archived ${deleted} assets`, undefined, undefined, req.user.userid);
-  res.json({ success: true, duplicatesFound: dupes.length, deleted });
+  const totalGroups = dupes.length + snDupes.length;
+  logActivity(req, `Fixed ${totalGroups} duplicate groups, archived ${deleted} assets`, undefined, undefined, req.user.userid);
+  res.json({ success: true, barcodeDupes: dupes.length, serialDupes: snDupes.length, deleted });
 });
 
 // ============ SEED FORECAST DATA ============
