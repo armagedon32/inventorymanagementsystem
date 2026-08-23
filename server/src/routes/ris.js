@@ -66,7 +66,7 @@ router.get("/seed", (req, res) => {
     const users = db.prepare("SELECT fullname, contact_number, department, role FROM tbl_user WHERE is_archived = 0").all();
     if (users.length === 0) return res.status(400).json({ error: "No users found in User Management." });
 
-    const assets = db.prepare("SELECT pid, name, serial_number, barcode, stock FROM tbl_product WHERE product_type = 'Asset' AND is_archived = 0 AND (office_id IS NULL OR office_id = 0) AND stock > 0").all();
+    const assets = db.prepare("SELECT pid, name, serial_number, barcode, stock FROM tbl_product WHERE product_type = 'Asset' AND is_archived = 0 AND stock > 0").all();
     if (assets.length === 0) return res.status(400).json({ error: "No available assets found (need assets with stock and no office assignment)." });
 
     let created = 0;
