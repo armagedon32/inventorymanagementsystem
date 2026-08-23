@@ -158,6 +158,17 @@ export default function Products({ type = "Stock" }) {
     }
   }
 
+  async function fixDuplicateBarcodes() {
+    if (!confirm("Fix duplicate Asset Tags? Duplicates will get a suffix like -A, -B.")) return;
+    try {
+      const r = await api.get("/products/fix-duplicate-barcodes");
+      alert(`Found ${r.duplicatesFound} duplicate group(s). Fixed ${r.fixed} barcode(s).`);
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
   return (
     <div className="card">
       <div className="card-header">
@@ -195,9 +206,14 @@ export default function Products({ type = "Stock" }) {
             </>
           )}
           {isAdmin && products.length > 0 && isAsset && (
-            <button className="btn btn-warning btn-sm" title="Set stock=1 for all assets with stock=0" onClick={fixAssetStock}>
-              🔧 Fix Stock
-            </button>
+            <>
+              <button className="btn btn-warning btn-sm" title="Set stock=1 for all assets with stock=0" onClick={fixAssetStock}>
+                🔧 Fix Stock
+              </button>
+              <button className="btn btn-warning btn-sm" title="Fix duplicate barcodes" onClick={fixDuplicateBarcodes}>
+                🔧 Fix Dupes
+              </button>
+            </>
           )}
           {isAdmin && products.length > 0 && (
             <button className="btn btn-danger btn-sm" title="Delete All" onClick={handleDeleteAll}>
