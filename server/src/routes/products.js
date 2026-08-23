@@ -526,6 +526,17 @@ router.get("/fix-asset-stock", requireAdmin, (req, res) => {
   res.json({ success: true, updated: info.changes });
 });
 
+router.get("/check-duplicate-barcodes", requireAdmin, (req, res) => {
+  const dupes = db.prepare(`
+    SELECT barcode, COUNT(*) AS count, GROUP_CONCAT(pid) AS pids
+    FROM tbl_product
+    WHERE product_type = 'Asset' AND is_archived = 0 AND barcode IS NOT NULL AND barcode != ''
+    GROUP BY barcode
+    HAVING COUNT(*) > 1
+  `).all();
+  res.json({ duplicates: dupes, total: dupes.length });
+});
+
 // ============ SEED FORECAST DATA ============
 
 router.get("/seed-forecast-data", requireAdmin, (req, res) => {
