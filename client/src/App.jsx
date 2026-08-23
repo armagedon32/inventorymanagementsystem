@@ -24,9 +24,6 @@ import Forecasting from "./pages/Forecasting";
 import Organizations from "./pages/Organizations";
 import Offices from "./pages/Offices";
 import Instructors from "./pages/Instructors";
-import Ris from "./pages/Ris";
-import NewRis from "./pages/NewRis";
-import RisView from "./pages/RisView";
 import DepartmentReport from "./pages/DepartmentReport";
 import AssetTracking from "./pages/AssetTracking";
 import Ptrs from "./pages/Ptrs";
@@ -98,9 +95,6 @@ export default function App() {
         <Route path="/organizations" element={<Organizations />} />
         <Route path="/offices" element={<Offices />} />
         <Route path="/instructors" element={<Instructors />} />
-        <Route path="/ris" element={<Ris />} />
-        <Route path="/ris/new" element={<NewRis />} />
-        <Route path="/ris/:id" element={<RisView />} />
         <Route path="/department-reports" element={<DepartmentReport />} />
         <Route path="/asset-tracking" element={<AssetTracking />} />
         <Route path="/ptr" element={<Ptrs />} />

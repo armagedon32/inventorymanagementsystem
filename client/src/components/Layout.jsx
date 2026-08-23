@@ -49,7 +49,6 @@ export default function Layout() {
     {
       section: "Documents & Records",
       items: [
-        { to: "/ris", label: "RIS / Borrowed Property", icon: "⇄" },
         { to: "/ptr", label: "PTR (Transfer)", icon: "⇔" },
         { to: "/disposal", label: "Property Disposal", icon: "▽" },
         { to: "/incidents", label: "Incident Reports", icon: "⚠" },
