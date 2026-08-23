@@ -131,7 +131,7 @@ export default function AssetTracking() {
             <div className="col">
               <div className="card-box blue">
                 <h3>{u.time_based.percent}%</h3>
-                <p>Time-Based Utilization ({u.time_based.in_use_days}/{u.time_based.total_asset_days} asset-days)</p>
+                <p style={{ textAlign: 'left' }}>Time-Based Utilization ({u.time_based.in_use_days}/{u.time_based.total_asset_days} asset-days)</p>
               </div>
             </div>
             <div className="col">
