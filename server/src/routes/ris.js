@@ -67,7 +67,7 @@ router.get("/seed", (req, res) => {
     if (users.length === 0) return res.status(400).json({ error: "No users found in User Management." });
 
     const assets = db.prepare("SELECT pid, name, serial_number, barcode, stock FROM tbl_product WHERE product_type = 'Asset' AND is_archived = 0 AND stock > 0").all();
-    if (assets.length === 0) return res.status(400).json({ error: "No available assets found (need assets with stock and no office assignment)." });
+    if (assets.length === 0) return res.status(400).json({ error: "No assets with available stock found. Make sure assets have stock > 0." });
 
     let created = 0;
     const count = Math.min(50, users.length * 3);
