@@ -66,8 +66,11 @@ router.get("/seed", (req, res) => {
     const users = db.prepare("SELECT fullname, contact_number, department, role FROM tbl_user WHERE is_archived = 0").all();
     if (users.length === 0) return res.status(400).json({ error: "No users found in User Management." });
 
-    const assets = db.prepare("SELECT pid, name, serial_number, barcode, stock FROM tbl_product WHERE product_type = 'Asset' AND is_archived = 0 AND stock > 0").all();
-    if (assets.length === 0) return res.status(400).json({ error: "No assets with available stock found. Make sure assets have stock > 0." });
+    const assets = db.prepare("SELECT pid, name, serial_number, barcode, stock, office_id, is_archived, product_type FROM tbl_product WHERE product_type = 'Asset' AND is_archived = 0").all();
+    if (assets.length === 0) return res.status(400).json({ error: "No assets found at all." });
+
+    const available = assets.filter((a) => a.stock > 0);
+    if (available.length === 0) return res.status(400).json({ error: `Found ${assets.length} assets but all have stock = 0.`, debug: assets.map((a) => ({ name: a.name, stock: a.stock })) });
 
     let created = 0;
     const count = Math.min(50, users.length * 3);
