@@ -518,6 +518,39 @@ router.delete("/archived/all", requireAdmin, (req, res) => {
   res.json({ deleted: info.changes });
 });
 
+// ============ SEED FORECAST DATA ============
+
+router.get("/seed-forecast-data", requireAdmin, (req, res) => {
+  try {
+    const products = db.prepare("SELECT pid, stock, reorder_level FROM tbl_product WHERE product_type = 'Stock' AND is_archived = 0").all();
+    if (products.length === 0) return res.status(400).json({ error: "No stock products found." });
+
+    let inserted = 0;
+    const months = 15;
+
+    db.transaction(() => {
+      for (const p of products) {
+        for (let m = 0; m < months; m++) {
+          const d = new Date();
+          d.setMonth(d.getMonth() - m);
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(Math.floor(Math.random() * 28) + 1).padStart(2, "0");
+          const date = `${year}-${month}-${day}`;
+          const qty = Math.floor(Math.random() * 8) + 1;
+          db.prepare("INSERT INTO tbl_stockout (product_id, quantity, stockout_date, remarks) VALUES (?, ?, ?, ?)").run(p.pid, qty, date, "Seed data for forecasting");
+          inserted++;
+        }
+      }
+    })();
+
+    logActivity(req, `Seeded ${inserted} stockout transactions for ${products.length} products`, undefined, undefined, req.user.userid);
+    res.json({ success: true, inserted, products: products.length });
+  } catch (err) {
+    res.status(500).json({ error: "Seed failed: " + err.message });
+  }
+});
+
 router.get("/:id", (req, res) => {
   const p = db
     .prepare(
@@ -817,39 +850,6 @@ router.delete("/meta/categories/:id", (req, res) => {
   db.prepare("UPDATE tbl_category SET is_archived = 1 WHERE catid = ?").run(c.catid);
     logActivity(req, `Deleted Category: ${c.category}`, undefined, c.catid);
   res.json({ success: true });
-});
-
-// ============ SEED FORECAST DATA ============
-
-router.get("/seed-forecast-data", requireAdmin, (req, res) => {
-  try {
-    const products = db.prepare("SELECT pid, stock, reorder_level FROM tbl_product WHERE product_type = 'Stock' AND is_archived = 0").all();
-    if (products.length === 0) return res.status(400).json({ error: "No stock products found." });
-
-    let inserted = 0;
-    const months = 15;
-
-    db.transaction(() => {
-      for (const p of products) {
-        for (let m = 0; m < months; m++) {
-          const d = new Date();
-          d.setMonth(d.getMonth() - m);
-          const year = d.getFullYear();
-          const month = String(d.getMonth() + 1).padStart(2, "0");
-          const day = String(Math.floor(Math.random() * 28) + 1).padStart(2, "0");
-          const date = `${year}-${month}-${day}`;
-          const qty = Math.floor(Math.random() * 8) + 1;
-          db.prepare("INSERT INTO tbl_stockout (product_id, quantity, stockout_date, remarks) VALUES (?, ?, ?, ?)").run(p.pid, qty, date, "Seed data for forecasting");
-          inserted++;
-        }
-      }
-    })();
-
-    logActivity(req, `Seeded ${inserted} stockout transactions for ${products.length} products`, undefined, undefined, req.user.userid);
-    res.json({ success: true, inserted, products: products.length });
-  } catch (err) {
-    res.status(500).json({ error: "Seed failed: " + err.message });
-  }
 });
 
 export default router;
