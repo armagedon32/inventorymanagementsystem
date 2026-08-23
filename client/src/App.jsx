@@ -33,6 +33,12 @@ function StockRedirect() {
   return <Navigate to={location.pathname.replace(/^\/products/, "/stock") + location.search} replace />;
 }
 
+function AdminRoute({ children }) {
+  const { user } = useAuth();
+  if (user?.role !== "Admin") return <Navigate to="/" replace />;
+  return children;
+}
+
 export default function App() {
   const { user } = useAuth();
 
@@ -51,37 +57,37 @@ export default function App() {
         }
       >
         <Route path="/" element={<Dashboard />} />
-        <Route path="/stock" element={<Products type="Stock" />} />
-        <Route path="/stock/archive" element={<Archive type="Stock" />} />
-        <Route path="/stock/add" element={<AddProduct type="Stock" />} />
-        <Route path="/stock/:id/edit" element={<EditProduct type="Stock" />} />
-        <Route path="/stock/:id" element={<ViewProduct type="Stock" />} />
-        <Route path="/stock/:id/stock-in" element={<StockIn />} />
-        <Route path="/stock/:id/stock-out" element={<StockOut />} />
-        <Route path="/stock/:id/history" element={<StockHistory />} />
-        <Route path="/assets" element={<Products type="Asset" />} />
-        <Route path="/assets/archive" element={<Archive type="Asset" />} />
-        <Route path="/assets/add" element={<AddProduct type="Asset" />} />
-        <Route path="/assets/:id/edit" element={<EditProduct type="Asset" />} />
-        <Route path="/assets/:id/assign" element={<AssignAsset />} />
-        <Route path="/assets/:id" element={<ViewProduct type="Asset" />} />
+        <Route path="/stock" element={<AdminRoute><Products type="Stock" /></AdminRoute>} />
+        <Route path="/stock/archive" element={<AdminRoute><Archive type="Stock" /></AdminRoute>} />
+        <Route path="/stock/add" element={<AdminRoute><AddProduct type="Stock" /></AdminRoute>} />
+        <Route path="/stock/:id/edit" element={<AdminRoute><EditProduct type="Stock" /></AdminRoute>} />
+        <Route path="/stock/:id" element={<AdminRoute><ViewProduct type="Stock" /></AdminRoute>} />
+        <Route path="/stock/:id/stock-in" element={<AdminRoute><StockIn /></AdminRoute>} />
+        <Route path="/stock/:id/stock-out" element={<AdminRoute><StockOut /></AdminRoute>} />
+        <Route path="/stock/:id/history" element={<AdminRoute><StockHistory /></AdminRoute>} />
+        <Route path="/assets" element={<AdminRoute><Products type="Asset" /></AdminRoute>} />
+        <Route path="/assets/archive" element={<AdminRoute><Archive type="Asset" /></AdminRoute>} />
+        <Route path="/assets/add" element={<AdminRoute><AddProduct type="Asset" /></AdminRoute>} />
+        <Route path="/assets/:id/edit" element={<AdminRoute><EditProduct type="Asset" /></AdminRoute>} />
+        <Route path="/assets/:id/assign" element={<AdminRoute><AssignAsset /></AdminRoute>} />
+        <Route path="/assets/:id" element={<AdminRoute><ViewProduct type="Asset" /></AdminRoute>} />
         <Route path="/products" element={<Navigate to="/stock" replace />} />
         <Route path="/products/*" element={<StockRedirect />} />
-        <Route path="/users" element={<Users />} />
-        <Route path="/categories" element={<Categories />} />
+        <Route path="/users" element={<AdminRoute><Users /></AdminRoute>} />
+        <Route path="/categories" element={<AdminRoute><Categories /></AdminRoute>} />
         <Route path="/requisitions" element={<Requisitions />} />
         <Route path="/requisitions/new" element={<NewRequisition />} />
         <Route path="/requisitions/:id" element={<RequisitionView />} />
         <Route path="/reservations" element={<Reservations />} />
         <Route path="/reservations/new" element={<NewReservation />} />
         <Route path="/reservations/:id" element={<ReservationView />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/forecasting" element={<Forecasting />} />
-        <Route path="/department-reports" element={<DepartmentReport />} />
-        <Route path="/asset-tracking" element={<AssetTracking />} />
+        <Route path="/reports" element={<AdminRoute><Reports /></AdminRoute>} />
+        <Route path="/forecasting" element={<AdminRoute><Forecasting /></AdminRoute>} />
+        <Route path="/department-reports" element={<AdminRoute><DepartmentReport /></AdminRoute>} />
+        <Route path="/asset-tracking" element={<AdminRoute><AssetTracking /></AdminRoute>} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/audit-logs" element={<AuditLogs />} />
+        <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+        <Route path="/audit-logs" element={<AdminRoute><AuditLogs /></AdminRoute>} />
         <Route path="/change-password" element={<Navigate to="/settings" replace />} />
       </Route>
 

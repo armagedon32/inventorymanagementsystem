@@ -14,38 +14,36 @@ export default function Layout() {
 
   const navItems = [
     { to: "/", label: "Dashboard", icon: "▤", end: true },
-    { to: "/forecasting", label: "Demand Forecasting", icon: "△" },
     { to: "/requisitions", label: "Requisitions", icon: "◫" },
     { to: "/reservations", label: "Reservations", icon: "⛾" },
-    { to: "/reports", label: "Reports", icon: "≡" },
-    { to: "/department-reports", label: "Department Reports", icon: "▦" },
-    { to: "/asset-tracking", label: "Asset Tracking", icon: "◉" },
     ...(isAdmin(user)
-      ? [{ to: "/admin", label: "Admin Settings", icon: "⚙" }]
+      ? [
+          { to: "/forecasting", label: "Demand Forecasting", icon: "△" },
+          { to: "/reports", label: "Reports", icon: "≡" },
+          { to: "/department-reports", label: "Department Reports", icon: "▦" },
+          { to: "/asset-tracking", label: "Asset Tracking", icon: "◉" },
+          { to: "/admin", label: "Admin Settings", icon: "⚙" },
+          { to: "/audit-logs", label: "Audit Logs", icon: "≡" },
+          { to: "/users", label: "User Management", icon: "◈" },
+          {
+            section: "Stock Inventory",
+            items: [
+              { to: "/stock", label: "Supplies / Stock In", icon: "▤" },
+              { to: "/stock/add", label: "Supply Registration", icon: "✚" },
+              { to: "/stock/archive", label: "Supply Archive", icon: "◁" },
+              { to: "/categories", label: "Categories", icon: "☰" },
+            ],
+          },
+          {
+            section: "Asset Management",
+            items: [
+              { to: "/assets", label: "Assets", icon: "◉" },
+              { to: "/assets/add", label: "Asset Registration", icon: "✚" },
+              { to: "/assets/archive", label: "Asset Archive", icon: "◁" },
+            ],
+          },
+        ]
       : []),
-    ...(isAdmin(user)
-      ? [{ to: "/audit-logs", label: "Audit Logs", icon: "≡" }]
-      : []),
-    ...(isAdmin(user)
-      ? [{ to: "/users", label: "User Management", icon: "◈" }]
-      : []),
-    {
-      section: "Stock Inventory",
-      items: [
-        { to: "/stock", label: "Supplies / Stock In", icon: "▤" },
-        { to: "/stock/add", label: "Supply Registration", icon: "✚" },
-        { to: "/stock/archive", label: "Supply Archive", icon: "◁" },
-        { to: "/categories", label: "Categories", icon: "☰" },
-      ],
-    },
-    {
-      section: "Asset Management",
-      items: [
-        { to: "/assets", label: "Assets", icon: "◉" },
-        { to: "/assets/add", label: "Asset Registration", icon: "✚" },
-        { to: "/assets/archive", label: "Asset Archive", icon: "◁" },
-      ],
-    },
     { to: "/settings", label: "Account Settings", icon: "⚙" },
   ];
 
