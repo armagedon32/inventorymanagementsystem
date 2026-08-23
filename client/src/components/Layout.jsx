@@ -47,16 +47,6 @@ export default function Layout() {
       ],
     },
     {
-      section: "Documents & Records",
-      items: [
-        { to: "/ptr", label: "PTR (Transfer)", icon: "⇔" },
-        { to: "/disposal", label: "Property Disposal", icon: "▽" },
-        { to: "/incidents", label: "Incident Reports", icon: "⚠" },
-        { to: "/maintenance", label: "Maintenance Records", icon: "☑" },
-        { to: "/facilities", label: "Facilities & Borrowed", icon: "⌂" },
-      ],
-    },
-    {
       section: "Master Data",
       items: [
         { to: "/organizations", label: "Organizations", icon: "◈" },
