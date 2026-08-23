@@ -273,6 +273,14 @@ router.post("/import", requireAdmin, async (req, res) => {
 
         const code = row.barcode || nextBarcode();
         const serial = row.serial_number || null;
+        if (code) {
+          const dupCode = db.prepare("SELECT pid FROM tbl_product WHERE barcode = ? AND product_type = 'Asset' AND is_archived = 0").get(code);
+          if (dupCode) {
+            skipped++;
+            errors.push(`Row ${i}: Duplicate Asset Tag "${code}"`);
+            continue;
+          }
+        }
         if (serial) {
           const dup = db.prepare("SELECT pid FROM tbl_product WHERE serial_number = ? AND product_type = 'Asset' AND is_archived = 0").get(serial);
           if (dup) {
@@ -628,9 +636,16 @@ router.post("/", requireAdmin, (req, res) => {
 
   const isAsset = (product_type || "Stock") === "Asset";
   if (isAsset) {
-    const sn = String(serial_number).trim();
-    const dup = db.prepare("SELECT pid FROM tbl_product WHERE serial_number = ? AND product_type = 'Asset' AND is_archived = 0").get(sn);
-    if (dup) return res.status(400).json({ error: `Serial number "${sn}" is already used by another asset.` });
+    const sn = String(serial_number || "").trim();
+    if (sn) {
+      const dup = db.prepare("SELECT pid FROM tbl_product WHERE serial_number = ? AND product_type = 'Asset' AND is_archived = 0").get(sn);
+      if (dup) return res.status(400).json({ error: `Serial number "${sn}" is already used by another asset.` });
+    }
+    const code = barcode || nextBarcode();
+    if (code) {
+      const dupCode = db.prepare("SELECT pid FROM tbl_product WHERE barcode = ? AND product_type = 'Asset' AND is_archived = 0").get(code);
+      if (dupCode) return res.status(400).json({ error: `Asset Tag "${code}" is already used by another asset.` });
+    }
   }
 
   const code = barcode || nextBarcode();
@@ -669,6 +684,11 @@ router.put("/:id", requireAdmin, (req, res) => {
     if (sn) {
       const dup = db.prepare("SELECT pid FROM tbl_product WHERE serial_number = ? AND product_type = 'Asset' AND is_archived = 0 AND pid != ?").get(sn, p.pid);
       if (dup) return res.status(400).json({ error: `Serial number "${sn}" is already used by another asset.` });
+    }
+    const bc = String(barcode ?? p.barcode ?? "").trim();
+    if (bc) {
+      const dupCode = db.prepare("SELECT pid FROM tbl_product WHERE barcode = ? AND product_type = 'Asset' AND is_archived = 0 AND pid != ?").get(bc, p.pid);
+      if (dupCode) return res.status(400).json({ error: `Asset Tag "${bc}" is already used by another asset.` });
     }
   }
   db.prepare(
