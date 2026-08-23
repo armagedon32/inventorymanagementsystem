@@ -518,6 +518,14 @@ router.delete("/archived/all", requireAdmin, (req, res) => {
   res.json({ deleted: info.changes });
 });
 
+// ============ BULK FIX ASSET STOCK ============
+
+router.get("/fix-asset-stock", requireAdmin, (req, res) => {
+  const info = db.prepare("UPDATE tbl_product SET stock = 1 WHERE product_type = 'Asset' AND is_archived = 0 AND (stock IS NULL OR stock = 0)").run();
+  logActivity(req, `Bulk fixed ${info.changes} assets with stock = 0 → 1`, undefined, undefined, req.user.userid);
+  res.json({ success: true, updated: info.changes });
+});
+
 // ============ SEED FORECAST DATA ============
 
 router.get("/seed-forecast-data", requireAdmin, (req, res) => {

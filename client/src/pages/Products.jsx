@@ -144,6 +144,17 @@ export default function Products({ type = "Stock" }) {
     else exportCSV({ filename: `${filename}.csv`, headers: exportColumns, rows: exportRows });
   }
 
+  async function fixAssetStock() {
+    if (!confirm("Set stock = 1 for all assets with stock = 0?")) return;
+    try {
+      const r = await api.get("/products/fix-asset-stock");
+      alert(`Fixed ${r.updated} asset(s).`);
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
   return (
     <div className="card">
       <div className="card-header">
@@ -176,6 +187,11 @@ export default function Products({ type = "Stock" }) {
           <button className="btn btn-sm" title="Export to PDF (print)" onClick={() => handleExport("pdf")}>
             ⤓ PDF
           </button>
+          {products.length > 0 && isAsset && (
+            <button className="btn btn-warning btn-sm" title="Set stock=1 for all assets with stock=0" onClick={fixAssetStock}>
+              🔧 Fix Stock
+            </button>
+          )}
           {products.length > 0 && (
             <button className="btn btn-danger btn-sm" title="Delete All" onClick={handleDeleteAll}>
               🗑 Delete All
