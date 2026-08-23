@@ -92,6 +92,7 @@ export default function EditProduct({ type = "Stock" }) {
               <select className="form-select" value={form.acquisition_type} onChange={(e) => set("acquisition_type", e.target.value)}>
                 <option>Purchased</option>
                 <option>Donated</option>
+                <option>Created</option>
               </select>
             </div>
             <div className="form-group">
@@ -110,8 +111,8 @@ export default function EditProduct({ type = "Stock" }) {
             {isAsset ? (
               <>
                 <div className="form-group">
-                  <label>Serial Number *</label>
-                  <input className="form-control" value={form.serial_number} onChange={(e) => set("serial_number", e.target.value)} required />
+                  <label>Serial Number</label>
+                  <input className="form-control" value={form.serial_number} onChange={(e) => set("serial_number", e.target.value)} />
                 </div>
                 <div className="form-group">
                   <label>Condition</label>
@@ -150,17 +151,6 @@ export default function EditProduct({ type = "Stock" }) {
               </div>
             )}
 
-            <div className="form-group">
-              <label>Unit Cost (₱)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                className="form-control"
-                value={form.unit_cost}
-                onChange={(e) => set("unit_cost", Number(e.target.value))}
-              />
-            </div>
             <div className="form-group">
               <label>Office</label>
               <select className="form-select" value={form.department} onChange={(e) => set("department", e.target.value)}>
