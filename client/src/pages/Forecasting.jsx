@@ -23,6 +23,7 @@ export default function Forecasting() {
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
   const [retraining, setRetraining] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
@@ -41,6 +42,24 @@ export default function Forecasting() {
       setError(e.message);
     } finally {
       setRetraining(false);
+    }
+  }
+
+  async function seedData() {
+    if (!confirm("This will generate 15 months of sample stockout data for all stock products. Continue?")) return;
+    setSeeding(true);
+    setError("");
+    setMsg("");
+    try {
+      const r = await api.get("/products/seed-forecast-data");
+      setMsg(`Seeded ${r.inserted} transactions for ${r.products} products. Retraining model...`);
+      const d = await api.post("/forecasting/retrain");
+      setData(d);
+      setMsg(`Seeded ${r.inserted} transactions. Model retrained.`);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSeeding(false);
     }
   }
 
@@ -76,9 +95,14 @@ export default function Forecasting() {
       <div className="card">
         <div className="card-header">
           <h5>Machine Learning Lab — RNN-LSTM Demand Forecaster</h5>
-          <button type="button" className="btn btn-primary btn-sm" onClick={retrain} disabled={retraining}>
-            {retraining ? "Retraining..." : "⟳ Retrain Model"}
-          </button>
+          <div className="flex" style={{ gap: 8 }}>
+            <button type="button" className="btn btn-warning btn-sm" onClick={seedData} disabled={seeding || retraining}>
+              {seeding ? "Seeding..." : "📊 Seed Sample Data"}
+            </button>
+            <button type="button" className="btn btn-primary btn-sm" onClick={retrain} disabled={retraining || seeding}>
+              {retraining ? "Retraining..." : "⟳ Retrain Model"}
+            </button>
+          </div>
         </div>
         <div className="card-body">
           <div className="text-muted" style={{ fontSize: "0.8rem", marginBottom: 12 }}>
