@@ -535,20 +535,20 @@ router.get("/fix-duplicate-barcodes", requireAdmin, (req, res) => {
     HAVING COUNT(*) > 1
   `).all();
 
-  let fixed = 0;
+  let deleted = 0;
   db.transaction(() => {
     for (const d of dupes) {
       const pids = d.pids.split(",").map(Number);
-      for (let i = 1; i < pids.length; i++) {
-        const newTag = `${d.barcode}-${String.fromCharCode(64 + i)}`;
-        db.prepare("UPDATE tbl_product SET barcode = ? WHERE pid = ?").run(newTag, pids[i]);
-        fixed++;
+      const toDelete = pids.slice(1);
+      for (const pid of toDelete) {
+        db.prepare("UPDATE tbl_product SET is_archived = 1 WHERE pid = ?").run(pid);
+        deleted++;
       }
     }
   })();
 
-  logActivity(req, `Fixed ${fixed} duplicate barcodes`, undefined, undefined, req.user.userid);
-  res.json({ success: true, duplicatesFound: dupes.length, fixed });
+  logActivity(req, `Fixed ${dupes.length} duplicate groups, archived ${deleted} assets`, undefined, undefined, req.user.userid);
+  res.json({ success: true, duplicatesFound: dupes.length, deleted });
 });
 
 // ============ SEED FORECAST DATA ============

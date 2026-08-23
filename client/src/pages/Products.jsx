@@ -159,10 +159,10 @@ export default function Products({ type = "Stock" }) {
   }
 
   async function fixDuplicateBarcodes() {
-    if (!confirm("Fix duplicate Asset Tags? Duplicates will get a suffix like -A, -B.")) return;
+    if (!confirm("Archive all duplicate assets? Only 1 copy per Asset Tag will remain.")) return;
     try {
       const r = await api.get("/products/fix-duplicate-barcodes");
-      alert(`Found ${r.duplicatesFound} duplicate group(s). Fixed ${r.fixed} barcode(s).`);
+      alert(`Found ${r.duplicatesFound} duplicate group(s). Archived ${r.deleted} duplicate asset(s).`);
       load();
     } catch (e) {
       setError(e.message);
