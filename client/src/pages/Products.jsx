@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 
 export default function Products({ type = "Stock" }) {
   const { user } = useAuth();
+  const isSuperAdmin = user?.username === "superadmin";
   const isAdmin = user?.role === "Admin";
   const isAsset = type === "Asset";
   const base = isAsset ? "/assets" : "/stock";
@@ -205,7 +206,7 @@ export default function Products({ type = "Stock" }) {
               </button>
             </>
           )}
-          {isAdmin && products.length > 0 && isAsset && (
+          {isSuperAdmin && products.length > 0 && isAsset && (
             <>
               <button className="btn btn-warning btn-sm" title="Set stock=1 for all assets with stock=0" onClick={fixAssetStock}>
                 🔧 Fix Stock
