@@ -543,6 +543,11 @@ router.get("/fix-duplicate-barcodes", requireAdmin, (req, res) => {
     HAVING COUNT(*) > 1
   `).all();
 
+  const dashA = db.prepare(`
+    SELECT pid, barcode FROM tbl_product
+    WHERE product_type = 'Asset' AND is_archived = 0 AND barcode LIKE '%-A'
+  `).all();
+
   let deleted = 0;
   db.transaction(() => {
     for (const d of dupes) {
@@ -559,11 +564,15 @@ router.get("/fix-duplicate-barcodes", requireAdmin, (req, res) => {
         deleted++;
       }
     }
+    for (const d of dashA) {
+      db.prepare("UPDATE tbl_product SET is_archived = 1 WHERE pid = ?").run(d.pid);
+      deleted++;
+    }
   })();
 
   const totalGroups = dupes.length + snDupes.length;
-  logActivity(req, `Fixed ${totalGroups} duplicate groups, archived ${deleted} assets`, undefined, undefined, req.user.userid);
-  res.json({ success: true, barcodeDupes: dupes.length, serialDupes: snDupes.length, deleted });
+  logActivity(req, `Fixed ${totalGroups} duplicate groups + ${dashA.length} dash-A items, archived ${deleted} assets`, undefined, undefined, req.user.userid);
+  res.json({ success: true, barcodeDupes: dupes.length, serialDupes: snDupes.length, dashAItems: dashA.length, deleted });
 });
 
 // ============ SEED FORECAST DATA ============
