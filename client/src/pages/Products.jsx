@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, API_URL } from "../api/client";
 import { exportCSV, exportPDF } from "../utils/export";
+import { useAuth } from "../context/AuthContext";
 
 export default function Products({ type = "Stock" }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "Admin";
   const isAsset = type === "Asset";
   const base = isAsset ? "/assets" : "/stock";
   const [products, setProducts] = useState([]);
@@ -170,7 +173,7 @@ export default function Products({ type = "Stock" }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          {isAsset && (
+          {isAdmin && isAsset && (
             <>
               <button type="button" className="btn btn-sm" onClick={downloadTemplate}>
                 ⬇ Template
@@ -181,25 +184,31 @@ export default function Products({ type = "Stock" }) {
               </label>
             </>
           )}
-          <button className="btn btn-sm" title="Export to Excel (CSV)" onClick={() => handleExport("excel")}>
-            ⤓ Excel
-          </button>
-          <button className="btn btn-sm" title="Export to PDF (print)" onClick={() => handleExport("pdf")}>
-            ⤓ PDF
-          </button>
-          {products.length > 0 && isAsset && (
+          {isAdmin && (
+            <>
+              <button className="btn btn-sm" title="Export to Excel (CSV)" onClick={() => handleExport("excel")}>
+                ⤓ Excel
+              </button>
+              <button className="btn btn-sm" title="Export to PDF (print)" onClick={() => handleExport("pdf")}>
+                ⤓ PDF
+              </button>
+            </>
+          )}
+          {isAdmin && products.length > 0 && isAsset && (
             <button className="btn btn-warning btn-sm" title="Set stock=1 for all assets with stock=0" onClick={fixAssetStock}>
               🔧 Fix Stock
             </button>
           )}
-          {products.length > 0 && (
+          {isAdmin && products.length > 0 && (
             <button className="btn btn-danger btn-sm" title="Delete All" onClick={handleDeleteAll}>
               🗑 Delete All
             </button>
           )}
-          <Link to={`${base}/add`} className="btn btn-primary btn-sm">
-            ✚ {isAsset ? "New Asset" : "New Supply"}
-          </Link>
+          {isAdmin && (
+            <Link to={`${base}/add`} className="btn btn-primary btn-sm">
+              ✚ {isAsset ? "New Asset" : "New Supply"}
+            </Link>
+          )}
         </div>
       </div>
       <div className="card-body">
@@ -273,27 +282,31 @@ export default function Products({ type = "Stock" }) {
                         <Link to={`${base}/${p.pid}`} className="btn btn-warning btn-sm" title="View">
                           👁
                         </Link>
-                        <Link to={`${base}/${p.pid}/edit`} className="btn btn-success btn-sm" title="Edit">
-                          ✎
-                        </Link>
-                        {isAsset && (
-                          <Link to={`${base}/${p.pid}/assign`} className="btn btn-dark btn-sm" title="Assign">
-                            ⇄ Assign
-                          </Link>
-                        )}
-                        {!isAsset && (
+                        {isAdmin && (
                           <>
-                            <Link to={`${base}/${p.pid}/stock-in`} className="btn btn-info btn-sm" title="Restock">
-                              ⬆ Stock In
+                            <Link to={`${base}/${p.pid}/edit`} className="btn btn-success btn-sm" title="Edit">
+                              ✎
                             </Link>
-                            <Link to={`${base}/${p.pid}/stock-out`} className="btn btn-primary btn-sm" title="Issue">
-                              ⬇ Issue
-                            </Link>
+                            {isAsset && (
+                              <Link to={`${base}/${p.pid}/assign`} className="btn btn-dark btn-sm" title="Assign">
+                                ⇄ Assign
+                              </Link>
+                            )}
+                            {!isAsset && (
+                              <>
+                                <Link to={`${base}/${p.pid}/stock-in`} className="btn btn-info btn-sm" title="Restock">
+                                  ⬆ Stock In
+                                </Link>
+                                <Link to={`${base}/${p.pid}/stock-out`} className="btn btn-primary btn-sm" title="Issue">
+                                  ⬇ Issue
+                                </Link>
+                              </>
+                            )}
+                            <button className="btn btn-danger btn-sm" title="Archive" onClick={() => handleDelete(p)}>
+                              🗑
+                            </button>
                           </>
                         )}
-                        <button className="btn btn-danger btn-sm" title="Archive" onClick={() => handleDelete(p)}>
-                          🗑
-                        </button>
                       </div>
                     </td>
                   </tr>
