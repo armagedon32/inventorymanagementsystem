@@ -135,4 +135,95 @@ router.delete("/:id", (req, res) => {
   res.json({ success: true });
 });
 
+// ============ SEED RIS DATA ============
+
+const RIS_EVENTS = [
+  "Sports Day", "Orientation Week", "Faculty Meeting", "Seminar Workshop",
+  "Graduation Rehearsal", "School Program", "Foundation Day", "Science Fair",
+  "Annual Concert", "Board Meeting", "Training Session", "Community Outreach",
+  "Academic Week", "Career Day", "Cultural Night", "Registration Day",
+  "Parents Conference", "Film Showing", "Club Assembly", "Leadership Training",
+];
+
+const RIS_POSITIONS = [
+  "Faculty", "Staff", "Student", "Coordinator", "Director",
+  "Manager", "Supervisor", "Officer", "Assistant", "Head",
+];
+
+function splitName(fullname) {
+  const parts = (fullname || "").trim().split(/\s+/);
+  if (parts.length === 0) return { last_name: "Unknown", first_name: "User", mi_name: "" };
+  if (parts.length === 1) return { last_name: parts[0], first_name: "", mi_name: "" };
+  if (parts.length === 2) return { last_name: parts[1], first_name: parts[0], mi_name: "" };
+  return { last_name: parts[parts.length - 1], first_name: parts[0], mi_name: parts.slice(1, -1).map((p) => p.charAt(0).toUpperCase() + ".").join(" ") };
+}
+
+router.get("/seed", (req, res) => {
+  try {
+    const users = db.prepare("SELECT fullname, contact_number, department, role FROM tbl_user WHERE is_archived = 0").all();
+    if (users.length === 0) return res.status(400).json({ error: "No users found in User Management." });
+
+    const assets = db.prepare("SELECT pid, name, serial_number, barcode, stock FROM tbl_product WHERE product_type = 'Asset' AND is_archived = 0 AND (office_id IS NULL OR office_id = 0) AND stock > 0").all();
+    if (assets.length === 0) return res.status(400).json({ error: "No available assets found (need assets with stock and no office assignment)." });
+
+    let created = 0;
+    const count = Math.min(50, users.length * 3);
+
+    db.transaction(() => {
+      for (let i = 0; i < count; i++) {
+        const user = users[Math.floor(Math.random() * users.length)];
+        const { last_name, first_name, mi_name } = splitName(user.fullname);
+        const event = RIS_EVENTS[Math.floor(Math.random() * RIS_EVENTS.length)];
+        const position = RIS_POSITIONS[Math.floor(Math.random() * RIS_POSITIONS.length)];
+
+        const d = new Date();
+        d.setDate(d.getDate() - Math.floor(Math.random() * 90));
+        const eventDate = d.toISOString().slice(0, 10);
+        const startD = new Date(d);
+        startD.setHours(8 + Math.floor(Math.random() * 4), 0, 0, 0);
+        const endD = new Date(d);
+        endD.setDate(endD.getDate() + Math.floor(Math.random() * 7) + 1);
+        endD.setHours(17, 0, 0, 0);
+
+        const isReturned = Math.random() > 0.4;
+        const risNo = nextRisNo();
+
+        const newId = db
+          .prepare(
+            `INSERT INTO tbl_ris_header (ris_no, last_name, first_name, mi_name, cp_number, position, department, event_name, event_date, start_datetime, end_datetime, is_returned, return_date, is_archived)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`
+          )
+          .run(
+            risNo, last_name, first_name, mi_name,
+            user.contact_number || "", position,
+            user.department || null, event, eventDate,
+            startD.toISOString().slice(0, 16).replace("T", " "),
+            endD.toISOString().slice(0, 16).replace("T", " "),
+            isReturned ? 1 : 0,
+            isReturned ? endD.toISOString().slice(0, 10) : null
+          ).lastInsertRowid;
+
+        const itemCount = Math.floor(Math.random() * Math.min(3, assets.length)) + 1;
+        const shuffled = [...assets].sort(() => Math.random() - 0.5).slice(0, itemCount);
+        const conditions = ["Excellent", "Good", "Slightly Damaged"];
+        const insItem = db.prepare("INSERT INTO tbl_ris_items (ris_id, asset_id, quantity, borrowed_from, condition) VALUES (?, ?, ?, ?, ?)");
+
+        for (const a of shuffled) {
+          const qty = Math.min(Math.floor(Math.random() * 2) + 1, a.stock);
+          insItem.run(newId, a.pid, qty, null, conditions[Math.floor(Math.random() * conditions.length)]);
+          if (!isReturned) {
+            db.prepare("UPDATE tbl_product SET stock = stock - ? WHERE pid = ?").run(qty, a.pid);
+          }
+        }
+        created++;
+      }
+    })();
+
+    logActivity(req, `Seeded ${created} RIS transactions`, undefined, undefined, req.user?.userid);
+    res.json({ success: true, created, users: users.length, assets: assets.length });
+  } catch (err) {
+    res.status(500).json({ error: "Seed failed: " + err.message });
+  }
+});
+
 export default router;

@@ -15,11 +15,28 @@ export default function Ris() {
   const [rows, setRows] = useState([]);
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
+  const [seeding, setSeeding] = useState(false);
 
   useEffect(() => { load(); }, []);
 
   function load() {
     api.get("/ris").then(setRows).catch((e) => setError(e.message));
+  }
+
+  async function seedRis() {
+    if (!confirm("Generate 50 sample RIS transactions using users from User Management?")) return;
+    setSeeding(true);
+    setError("");
+    setMsg("");
+    try {
+      const r = await api.get("/ris/seed");
+      setMsg(`Created ${r.created} RIS transactions from ${r.users} users and ${r.assets} assets.`);
+      load();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSeeding(false);
+    }
   }
 
   async function handleReturn(r) {
@@ -54,6 +71,11 @@ export default function Ris() {
         <h5>RIS / Borrowed Property</h5>
         <div className="flex">
           <span className="text-muted" style={{ fontSize: "0.85rem" }}>{rows.length} record(s)</span>
+          {isAdmin && (
+            <button className="btn btn-warning btn-sm" onClick={seedRis} disabled={seeding}>
+              {seeding ? "Seeding..." : "📊 Seed Data"}
+            </button>
+          )}
           <Link to="/ris/new" className="btn btn-primary btn-sm">✚ New RIS</Link>
         </div>
       </div>
