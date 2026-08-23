@@ -576,14 +576,15 @@ router.put("/:id", requireAdmin, (req, res) => {
   const isAsset = (p.product_type || "Stock") === "Asset";
   if (isAsset) {
     const sn = String(serial_number ?? p.serial_number ?? "").trim();
-    if (!sn) return res.status(400).json({ error: "Serial number is required for assets." });
-    const dup = db.prepare("SELECT pid FROM tbl_product WHERE serial_number = ? AND product_type = 'Asset' AND is_archived = 0 AND pid != ?").get(sn, p.pid);
-    if (dup) return res.status(400).json({ error: `Serial number "${sn}" is already used by another asset.` });
+    if (sn) {
+      const dup = db.prepare("SELECT pid FROM tbl_product WHERE serial_number = ? AND product_type = 'Asset' AND is_archived = 0 AND pid != ?").get(sn, p.pid);
+      if (dup) return res.status(400).json({ error: `Serial number "${sn}" is already used by another asset.` });
+    }
   }
   db.prepare(
     `UPDATE tbl_product SET
        barcode = ?, name = ?, brand = ?, acquisition_type = ?, category = ?, description = ?,
-       reorder_level = ?, unit_cost = ?, unit = ?, product_type = ?, serial_number = ?, condition = ?, assigned_to = ?, office_id = ?, department = ?
+       reorder_level = ?, unit = ?, product_type = ?, serial_number = ?, condition = ?, assigned_to = ?, office_id = ?, department = ?
      WHERE pid = ?`
   ).run(
     barcode || p.barcode,
@@ -593,7 +594,6 @@ router.put("/:id", requireAdmin, (req, res) => {
     category || p.category,
     description !== undefined ? description : p.description,
     reorder_level !== undefined ? reorder_level : p.reorder_level,
-    unit_cost !== undefined ? unit_cost : p.unit_cost,
     unit !== undefined ? unit : p.unit || "pcs",
     product_type || p.product_type || "Stock",
     serial_number !== undefined ? serial_number : p.serial_number,
