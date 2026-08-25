@@ -48,7 +48,7 @@ export default function Admin() {
     setBackupError("");
     setMsg("");
     try {
-      const res = await fetch(`${API_URL}/api/backup`, {
+      const res = await fetch(`${API_URL}/backup`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("custodian_token")}` },
       });
       if (!res.ok) {
@@ -94,7 +94,7 @@ export default function Admin() {
     try {
       const formData = new FormData();
       formData.append("backup", selectedFile);
-      const res = await fetch(`${API_URL}/api/restore`, {
+      const res = await fetch(`${API_URL}/restore`, {
         method: "POST",
         body: formData,
         headers: {
