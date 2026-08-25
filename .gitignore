@@ -10,3 +10,7 @@ dist/
 npm-debug.log*
 *.log
 *.err.log
+db_export.json
+export_db.js
+import_to_mysql.js
+mysql_schema_migration.sql
