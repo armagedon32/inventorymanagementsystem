@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { api } from "../api/client";
+import { api, API_URL } from "../api/client";
 
 export default function Admin() {
   const { user } = useAuth();
@@ -46,12 +46,23 @@ export default function Admin() {
   const handleBackup = async () => {
     setBackupLoading(true);
     setBackupError("");
+    setMsg("");
     try {
-      api.initiateBackup();
-      // The backup will trigger a file download, show success message after short delay
-      setBackupLoading(false);
-      // We'll rely on the browser download, but could show a message
-      setMsg("Backup download started - check your downloads folder.");
+      const res = await fetch(`${API_URL}/api/backup`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("custodian_token")}` },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Backup failed");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `custodian_backup-${new Date().toISOString().slice(0, 10)}.db`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setMsg("Backup downloaded successfully. Check your downloads folder.");
     } catch (err) {
       setBackupError(err.message);
     } finally {
@@ -61,9 +72,15 @@ export default function Admin() {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file && (file.type === "application/x-sqlite3" || file.name.endsWith(".db"))) {
+    if (!file) return;
+    if (file.name.endsWith(".db")) {
       setSelectedFile(file);
+      setRestoreError("");
+    } else {
+      setSelectedFile(null);
+      setRestoreError("Invalid file. Please select a .db backup file.");
     }
+    e.target.value = "";
   };
 
   const handleRestore = async () => {
@@ -109,30 +126,56 @@ export default function Admin() {
 
         {/* Backup/Restore Section */}
         <div className="mt-4 p-3 bg-light rounded">
-          <h6><i className="fas fa-database me-2"></i> Database Backup & Restore</h6>
-          <p className="text-muted small mb-2">Create backups of your database before making major changes.</p>
+          <h6>Database Backup &amp; Restore</h6>
+          <p className="text-muted" style={{ fontSize: "0.85rem", marginBottom: 8 }}>
+            Create backups of your database before making major changes.
+          </p>
           
           <div className="row g-2">
             <div className="col-6">
               <button 
+                type="button"
                 onClick={handleBackup} 
-                className={`btn btn-outline-secondary w-100 ${backupLoading ? "disabled" : ""}`}
+                className={`btn btn-light btn-sm w-100 ${backupLoading ? "disabled" : ""}`}
                 disabled={backupLoading}
               >
-                <i className="fas fa-download me-2"></i> Backup Database
-                {backupLoading && <span className="spinner-border spinner-border-sm align-bottom"></span>}
+                ⬇ Backup Database
+                {backupLoading && " ..."}
               </button>
             </div>
             <div className="col-6">
               <button 
+                type="button"
                 onClick={() => document.getElementById('restoreFile').click()} 
-                className={`btn btn-outline-secondary w-100 ${restoreLoading ? "disabled" : ""}`}
+                className={`btn btn-light btn-sm w-100 ${restoreLoading ? "disabled" : ""}`}
                 disabled={restoreLoading}
               >
-                <i className="fas fa-upload me-2"></i> Restore Database
+                ⬆ Restore Database
+                {restoreLoading && " ..."}
               </button>
             </div>
           </div>
+
+          {/* Selected file + confirm restore */}
+          {selectedFile && (
+            <div className="mt-3 p-2" style={{ background: "#fff", border: "1px solid #ddd", borderRadius: 6 }}>
+              <div style={{ fontSize: "0.85rem", marginBottom: 8 }}>
+                Selected file: <strong>{selectedFile.name}</strong>
+              </div>
+              <button onClick={handleRestore} disabled={restoreLoading} className="btn btn-danger btn-sm">
+                {restoreLoading ? "Restoring..." : "⚠ Confirm Restore (replaces current database)"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-light btn-sm"
+                style={{ marginLeft: 8 }}
+                onClick={() => setSelectedFile(null)}
+                disabled={restoreLoading}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
 
           {/* Restore file input (hidden) */}
           <input 
@@ -146,14 +189,12 @@ export default function Admin() {
           {/* Restore result */}
           {restoreSuccess && (
             <div className="alert alert-success mt-3">
-              <i className="fas fa-check-circle me-2"></i>
-              <strong>Success:</strong> Database restored! Please restart the application.
+              <strong>Success:</strong> Database restored! Please restart the application (redeploy in Railway).
             </div>
           )}
 
           {restoreError && (
             <div className="alert alert-error mt-3">
-              <i className="fas fa-exclamation-triangle me-2"></i>
               <strong>Error:</strong> {restoreError}
             </div>
           )}
