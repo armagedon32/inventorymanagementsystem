@@ -92,19 +92,23 @@ export default function Admin() {
     setRestoreError("");
     setRestoreSuccess(false);
     try {
-      const formData = new FormData();
-      formData.append("backup", selectedFile);
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(selectedFile);
+      });
       const res = await fetch(`${API_URL}/restore`, {
         method: "POST",
-        body: formData,
+        body: JSON.stringify({ data: base64 }),
         headers: {
-          Authorization: `Bearer ${user?.token || localStorage.getItem("custodian_token")}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("custodian_token")}`
         }
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Restore failed");
       setRestoreSuccess(true);
-      setRestoreError("Database restored successfully. Server restart required.");
       setSelectedFile(null);
     } catch (err) {
       setRestoreError(err.message);

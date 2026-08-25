@@ -3,7 +3,6 @@ import cors from "cors";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import multer from "multer";
 
 import authRoutes from "./src/routes/auth.js";
 import productRoutes from "./src/routes/products.js";
@@ -25,44 +24,27 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/");
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
-  }
-});
-
-const upload = multer({ storage: storage });
-
 app.use(cors());
-app.use(express.json({ limit: "10mb" }));
-
-const UPLOADS_DIR = path.join(__dirname, "uploads");
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-app.use("/uploads", express.static(UPLOADS_DIR));
-
-app.get("/api/health", (req, res) => res.json({ status: "ok" }));
-
-const BACKUPS_DIR = path.join(__dirname, "backups");
-if (!fs.existsSync(BACKUPS_DIR)) fs.mkdirSync(BACKUPS_DIR, { recursive: true });
 
 // ===================== BACKUP & RESTORE =====================
+// Registered before the global JSON parser so restore can accept larger bodies.
+
 app.get("/api/backup", requireAuth, requireAdmin, (req, res) => {
-  const backupPath = path.join(BACKUPS_DIR, "custodian_backup.db");
-  // Copy current database to backup file
   try {
+    const BACKUPS_DIR = path.join(__dirname, "backups");
+    if (!fs.existsSync(BACKUPS_DIR)) fs.mkdirSync(BACKUPS_DIR, { recursive: true });
+    const backupPath = path.join(BACKUPS_DIR, "custodian_backup.db");
     const dbPath = path.join(__dirname, "data", "custodian.db");
-    // Ensure we have a fresh copy
+
+    // Flush WAL into the main db file before copying
+    try { db.pragma("wal_checkpoint(TRUNCATE)"); } catch {}
+
     if (fs.existsSync(backupPath)) fs.unlinkSync(backupPath);
     fs.copyFileSync(dbPath, backupPath);
-    res.download(backupPath, "custodian_backup.db", (err) => {
-      if (err) {
+    res.download(backupPath, `custodian_backup-${new Date().toISOString().slice(0, 10)}.db`, (err) => {
+      if (err && !res.headersSent) {
         console.error("Download error:", err);
-        // Clean up download file if error
-        if (fs.existsSync(backupPath)) fs.unlinkSync(backupPath);
+        res.status(500).json({ error: "Backup download failed." });
       }
     });
   } catch (err) {
@@ -71,31 +53,53 @@ app.get("/api/backup", requireAuth, requireAdmin, (req, res) => {
   }
 });
 
-app.post("/api/restore", requireAuth, requireAdmin, upload.single('backup'), (req, res) => {
+app.post("/api/restore", requireAuth, requireAdmin, express.json({ limit: "100mb" }), (req, res) => {
+  const tmpPath = path.join(__dirname, "data", "custodian.db.restore-tmp");
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No backup file uploaded" });
+    const { data } = req.body || {};
+    if (!data || !String(data).trim()) {
+      return res.status(400).json({ error: "No backup file content received." });
+    }
+
+    const buf = Buffer.from(String(data), "base64");
+
+    // Validate SQLite file header before touching the live database
+    const SQLITE_HEADER = Buffer.from("SQLite format 3\0");
+    if (buf.length < 100 || !buf.subarray(0, 16).equals(SQLITE_HEADER)) {
+      return res.status(400).json({ error: "Invalid backup file — not a valid SQLite database." });
     }
 
     const dbPath = path.join(__dirname, "data", "custodian.db");
-    const backupPath = path.join(BACKUPS_DIR, req.file.filename);
 
-    // Safety: keep current database state log
-    logActivity(req, "Initiating database restore - previous state preserved");
+    // Flush pending WAL writes of the CURRENT database first
+    try { db.pragma("wal_checkpoint(TRUNCATE)"); } catch {}
 
-    // Replace current database with backup
-    if (fs.existsSync(dbPath)) {
-      fs.unlinkSync(dbPath);
+    fs.writeFileSync(tmpPath, buf);
+
+    // Swap files; remove stale WAL/SHM so they can't corrupt the new file
+    for (const f of [dbPath, dbPath + "-wal", dbPath + "-shm"]) {
+      if (fs.existsSync(f)) fs.unlinkSync(f);
     }
-    fs.copyFileSync(backupPath, dbPath);
+    fs.renameSync(tmpPath, dbPath);
 
-    logActivity(req, "Database restored from: " + req.file.filename);
-    res.json({ success: true, message: "Database restored from " + req.file.filename + ". Server restart required." });
+    logActivity(req, "Database restored from uploaded backup file");
+    res.json({ success: true, message: "Database restored successfully. Server restart required." });
   } catch (err) {
     console.error("Restore error:", err);
+    if (fs.existsSync(tmpPath)) {
+      try { fs.unlinkSync(tmpPath); } catch {}
+    }
     res.status(500).json({ error: "Restore failed: " + err.message });
   }
 });
+
+app.use(express.json({ limit: "10mb" }));
+
+const UPLOADS_DIR = path.join(__dirname, "uploads");
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+app.use("/uploads", express.static(UPLOADS_DIR));
+
+app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
 app.get("/api/settings", (req, res) => {
   const s = db.prepare("SELECT * FROM settings WHERE id = 1").get();
@@ -153,6 +157,13 @@ if (fs.existsSync(CLIENT_DIST)) {
 
 // 404 for unmatched API routes
 app.use("/api", (req, res) => res.status(404).json({ error: "Not found" }));
+
+// Global error handler — always respond with JSON, never HTML
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  if (res.headersSent) return next(err);
+  res.status(err.status || err.statusCode || 500).json({ error: err.message || "Server error" });
+});
 
 app.listen(PORT, () => {
   console.log(`Custodian API running on http://localhost:${PORT}`);
