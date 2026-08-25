@@ -49,4 +49,26 @@ export const api = {
   post: (url, body) => request("POST", url, body),
   put: (url, body) => request("PUT", url, body),
   del: (url) => request("DELETE", url),
+  // Backup & Restore functions
+  // getBackup: () => request("GET", "/api/backup"), // Returns file download - handled separately
+  restoreDatabase: (file) => {
+    const formData = new FormData();
+    formData.append("backup", file);
+    return fetch(`${API_URL}/api/restore`, {
+      method: "POST",
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${authStore.getToken()}`
+      }
+    }).then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Restore failed");
+      return data;
+    });
+  },
+  // Initiate database backup - triggers server-side backup and returns file
+  initiateBackup: () => {
+    // This triggers the backup on server and forces file download
+    window.location.href = `${API_URL}/api/backup`;
+  }
 };
