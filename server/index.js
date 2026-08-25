@@ -71,6 +71,18 @@ app.post("/api/restore", requireAuth, requireAdmin, express.json({ limit: "100mb
 
     const dbPath = path.join(__dirname, "data", "custodian.db");
 
+    // SAFETY NET: snapshot the CURRENT database before overwriting it
+    const BACKUPS_DIR = path.join(__dirname, "backups");
+    if (!fs.existsSync(BACKUPS_DIR)) fs.mkdirSync(BACKUPS_DIR, { recursive: true });
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    const safetyPath = path.join(BACKUPS_DIR, `pre_restore_${stamp}.db`);
+    try {
+      try { db.pragma("wal_checkpoint(TRUNCATE)"); } catch {}
+      fs.copyFileSync(dbPath, safetyPath);
+    } catch (e) {
+      console.error("Safety backup failed:", e.message);
+    }
+
     // Flush pending WAL writes of the CURRENT database first
     try { db.pragma("wal_checkpoint(TRUNCATE)"); } catch {}
 
