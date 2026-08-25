@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { api, API_URL } from "../api/client";
 import { exportCSV, exportPDF } from "../utils/export";
@@ -16,6 +16,8 @@ export default function Products({ type = "Stock" }) {
   const [query, setQuery] = useState("");
   const [importMsg, setImportMsg] = useState("");
   const [importResult, setImportResult] = useState(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
 
   useEffect(() => {
     load();
@@ -133,13 +135,37 @@ export default function Products({ type = "Stock" }) {
     ? products
     : products.map((p) => ({ ...p, __status: statusOf(p) }));
 
-  const visible = query.trim()
-    ? products.filter((p) =>
-        [p.name, p.brand, p.barcode, p.serial_number, p.assigned_to, p.category_name]
-          .filter(Boolean)
-          .some((v) => String(v).toLowerCase().includes(query.toLowerCase()))
-      )
-    : products;
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return products;
+    return products.filter((p) =>
+      [p.name, p.brand, p.barcode, p.serial_number, p.assigned_to, p.category_name]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q))
+    );
+  }, [products, query]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const visible = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  function getPageNumbers(current, total) {
+    const maxButtons = 7;
+    if (total <= maxButtons) return Array.from({ length: total }, (_, i) => i + 1);
+    let start = Math.max(1, current - 3);
+    const end = Math.min(total, start + maxButtons - 1);
+    start = Math.max(1, end - maxButtons + 1);
+    const nums = [];
+    if (start > 1) nums.push(1, "…");
+    for (let i = start; i <= end; i++) nums.push(i);
+    if (end < total) nums.push("…", total);
+    return nums;
+  }
+  const pageNumbers = getPageNumbers(safePage, totalPages);
 
   function handleExport(format) {
     const title = isAsset ? "Asset Management List" : "Stock Inventory List";
@@ -329,15 +355,81 @@ export default function Products({ type = "Stock" }) {
                   </tr>
                 );
               })}
-              {products.length === 0 && (
+              {filtered.length === 0 && (
                 <tr>
                   <td colSpan={isAsset ? 10 : 11} className="empty">
-                    No {isAsset ? "assets" : "supplies"} yet. Click "{isAsset ? "New Asset" : "New Supply"}".
+                    {query.trim()
+                      ? `No ${isAsset ? "assets" : "supplies"} match your search.`
+                      : `No ${isAsset ? "assets" : "supplies"} yet. Click "${isAsset ? "New Asset" : "New Supply"}".`}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination */}
+        <div
+          className="flex between"
+          style={{ marginTop: 12, alignItems: "center", flexWrap: "wrap", gap: 8 }}
+        >
+          <span className="text-muted" style={{ fontSize: "0.85rem" }}>
+            {filtered.length === 0
+              ? "No items"
+              : `Showing ${(safePage - 1) * pageSize + 1}–${Math.min(safePage * pageSize, filtered.length)} of ${filtered.length} item(s)`}
+          </span>
+          <div className="flex" style={{ gap: 4 }}>
+            <button
+              type="button"
+              className="btn btn-light btn-sm"
+              disabled={safePage === 1}
+              onClick={() => setPage(1)}
+              title="First page"
+            >
+              «
+            </button>
+            <button
+              type="button"
+              className="btn btn-light btn-sm"
+              disabled={safePage === 1}
+              onClick={() => setPage(safePage - 1)}
+            >
+              ‹ Prev
+            </button>
+            {pageNumbers.map((n, i) =>
+              n === "…" ? (
+                <span key={`ellipsis-${i}`} className="text-muted" style={{ padding: "0 4px", lineHeight: "28px" }}>
+                  …
+                </span>
+              ) : (
+                <button
+                  key={n}
+                  type="button"
+                  className={`btn btn-sm ${n === safePage ? "btn-primary" : "btn-light"}`}
+                  onClick={() => setPage(n)}
+                >
+                  {n}
+                </button>
+              )
+            )}
+            <button
+              type="button"
+              className="btn btn-light btn-sm"
+              disabled={safePage >= totalPages}
+              onClick={() => setPage(safePage + 1)}
+            >
+              Next ›
+            </button>
+            <button
+              type="button"
+              className="btn btn-light btn-sm"
+              disabled={safePage >= totalPages}
+              onClick={() => setPage(totalPages)}
+              title="Last page"
+            >
+              »
+            </button>
+          </div>
         </div>
       </div>
     </div>
