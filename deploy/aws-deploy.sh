@@ -4,9 +4,9 @@
 # or manually via SSH: bash deploy/aws-deploy.sh
 set -euo pipefail
 
-APP_PATH="${APP_PATH:-/home/ec2-user/inventory_custodian}"
+APP_PATH="${APP_PATH:-/home/ec2-user/inventorymanagementsystem}"
 BRANCH="${BRANCH:-main}"
-APP_NAME="${APP_NAME:-inventory-custodian}"
+APP_NAME="${APP_NAME:-inventory}"
 
 echo "==> Target: $APP_PATH (branch: $BRANCH)"
 

@@ -29,9 +29,9 @@ jobs:
           script: |
             set -euo pipefail
 
-            APP_PATH="${{ vars.DEPLOY_PATH || '/home/ec2-user/inventory_custodian' }}"
+            APP_PATH="${{ vars.DEPLOY_PATH || '/home/ec2-user/inventorymanagementsystem' }}"
             BRANCH="${{ vars.DEPLOY_BRANCH || 'main' }}"
-            APP_NAME="inventory-custodian"
+            APP_NAME="${{ vars.APP_NAME || 'inventory' }}"
 
             echo "==> Target: $APP_PATH (branch: $BRANCH)"
 
