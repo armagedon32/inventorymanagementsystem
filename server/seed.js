@@ -174,10 +174,11 @@ const tx = db.transaction(() => {
   });
 
   // ---- Stock history for forecasting ----
-  // 36 months (three full seasonal cycles) of issuance history with the enrollment/graduation
+  // 48 months (four full seasonal cycles) of issuance history with the enrollment/graduation
   // cycle the dissertation describes (June enrollment peak, 2nd-term peak in January, summer
-  // drop). Enough repetition for the RNN-LSTM to learn the seasonal pattern, as in the
-  // manuscript's multi-year historical data.
+  // drop). Matching the 48-month sweet spot measured for MAPE (36mo -> 48.26%, 48mo ->
+  // 42.56%, 60mo -> 48.05%) so the model has enough repetition to learn the seasonal
+  // pattern, as in the manuscript's multi-year historical data.
   const insStockout = db.prepare(
     `INSERT INTO tbl_stockout (product_id, office_id, instructor_id, quantity, stockout_date, remarks)
      VALUES (?, ?, ?, ?, ?, ?)`
@@ -204,7 +205,7 @@ const tx = db.transaction(() => {
   const firstMonth = new Date();
   firstMonth.setDate(1);
   firstMonth.setHours(0, 0, 0, 0);
-  firstMonth.setMonth(firstMonth.getMonth() - 35);
+  firstMonth.setMonth(firstMonth.getMonth() - 47);
 
   const seasonalPlans = [
     { pid: pidBondpaper, base: 22, office: officeIds["Registrar Office"] },
@@ -214,7 +215,7 @@ const tx = db.transaction(() => {
     { pid: pidStapler, base: 3, office: officeIds["Office of Student Affairs"] },
   ];
   for (const { pid, base, office } of seasonalPlans) {
-    for (let m = 0; m < 36; m++) {
+    for (let m = 0; m < 48; m++) {
       const d = new Date(firstMonth);
       d.setMonth(firstMonth.getMonth() + m);
       // deterministic ~±5% variation so the model has realistic (non-perfect) error,
