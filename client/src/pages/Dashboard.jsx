@@ -26,6 +26,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
+  const [showMonthlyData, setShowMonthlyData] = useState(false);
 
   useEffect(() => {
     api
@@ -141,6 +142,33 @@ export default function Dashboard() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+            <button
+              type="button"
+              className="btn btn-light btn-sm mt-2"
+              onClick={() => setShowMonthlyData((v) => !v)}
+            >
+              {showMonthlyData ? "Hide" : "View"} actual monthly data ({data.monthlyIssuance.length} months)
+            </button>
+            {showMonthlyData && (
+              <div className="table-wrap mt-2" style={{ maxHeight: 320, overflowY: "auto" }}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Year-Month</th>
+                      <th>Qty Issued</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.monthlyIssuance.map((m) => (
+                      <tr key={m.month}>
+                        <td>{m.month}</td>
+                        <td>{m.total}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>
