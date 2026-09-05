@@ -58,7 +58,7 @@ router.get("/summary", (req, res) => {
       `SELECT strftime('%Y-%m', stockout_date) AS month, SUM(quantity) AS total
        FROM tbl_stockout
        WHERE is_archived = 0
-         AND date(stockout_date) >= date('now','localtime','start of month','-11 months')
+         AND date(stockout_date) >= date('now','localtime','start of month','-47 months')
        GROUP BY month ORDER BY month`
     )
     .all();

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -226,7 +227,7 @@ export default function Forecasting() {
       <div className="row">
         <div className="col">
           <div className="chart-box">
-            <h5>Monthly Demand Timeline (36-month issuance history)</h5>
+            <h5>Monthly Demand Timeline ({data.timeline.length}-month issuance history)</h5>
             <div style={{ height: 280 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data.timeline}>
@@ -358,9 +359,14 @@ export default function Forecasting() {
                     <td>{p.category_name}</td>
                     <td>{p.current_stock}</td>
                     <td>
-                      {p.history.length > 0
-                        ? p.history.map((h) => `${h.month.slice(5)}:${h.demand}`).join(", ")
-                        : <span className="text-muted">—</span>}
+                      {p.history.length > 0 ? (
+                        <>
+                          {p.history.map((h) => `${h.month.slice(5)}:${h.demand}`).join(", ")}{" "}
+                          <Link to={`/stock/${p.pid}/history`} className="link-muted">↗ full history</Link>
+                        </>
+                      ) : (
+                        <span className="text-muted">—</span>
+                      )}
                     </td>
                     <td><strong>{p.forecast_monthly}</strong></td>
                     <td>

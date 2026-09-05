@@ -129,7 +129,7 @@ export default function Dashboard() {
       <div className="row">
         <div className="col">
           <div className="chart-box">
-            <h5>Monthly Issuance Trend (12 months)</h5>
+            <h5>Monthly Issuance Trend (48 months — 2022 to present)</h5>
             <div style={{ height: 260 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data.monthlyIssuance}>
