@@ -124,10 +124,11 @@ export default function Reports() {
     });
   }
 
-  const rowsShown =
-    type === "transactions" && year !== "all"
+  const rowsShown = data
+    ? type === "transactions" && year !== "all"
       ? data.rows.filter((r) => (r.date || "").slice(0, 4) === year)
-      : data.rows;
+      : data.rows
+    : [];
 
   return (
     <div className="card">
