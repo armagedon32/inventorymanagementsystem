@@ -1,0 +1,38 @@
+name: Diagnose AWS EC2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    name: Locate app on EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Run diagnostics over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          port: 22
+          script: |
+            echo "== whoami / HOME =="
+            whoami
+            echo "HOME=$HOME"
+            echo "== pm2 =="
+            if command -v pm2 >/dev/null 2>&1; then pm2 list; else echo "no pm2"; fi
+            echo "== nginx processes =="
+            ps aux | grep -i nginx | grep -v grep | head -5
+            echo "== node processes =="
+            ps aux | grep -E "node|npm" | grep -v grep | head -10
+            echo "== possible app dirs =="
+            for d in /home/ec2-user /home/admin /home/ubuntu /var/www /var/www/html /opt /srv; do
+              if [ -d "$d" ]; then echo "-- $d --"; ls -la "$d" 2>/dev/null | head -15; fi
+            done
+            echo "== find package.json app roots =="
+            find /home /var/www /opt /srv -maxdepth 4 -name package.json -not -path "*/node_modules/*" 2>/dev/null | head -20
+            echo "== find custodian.db =="
+            find /home /var/www /opt /srv -maxdepth 6 -name "custodian.db" -not -path "*/node_modules/*" 2>/dev/null | head -10
+            echo "== find app .git dirs =="
+            find /home /var/www /opt /srv -maxdepth 4 -name ".git" -type d 2>/dev/null | head -10
