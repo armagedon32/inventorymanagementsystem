@@ -240,6 +240,12 @@ function buildPerProductForecast(seriesMap) {
     const nextMonth = new Date();
     nextMonth.setMonth(nextMonth.getMonth() + 1);
 
+    const yearly = {};
+    for (const q of points) {
+      const yr = (q.date || "").slice(0, 4);
+      if (yr) yearly[yr] = (yearly[yr] || 0) + q.value;
+    }
+
     return {
       pid: p.pid,
       name: p.name,
@@ -255,6 +261,10 @@ function buildPerProductForecast(seriesMap) {
       metrics,
       model_meta: meta,
       history: points.slice(-6).map((d) => ({ month: d.date, demand: d.value })),
+      yearly,
+      coverage_months: points.length,
+      coverage_first: points[0]?.date || null,
+      coverage_last: points[points.length - 1]?.date || null,
       forecast_month: nextMonth.toISOString().slice(0, 7),
     };
   });

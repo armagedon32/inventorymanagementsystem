@@ -327,6 +327,60 @@ export default function Forecasting() {
 
       <div className="card">
         <div className="card-header">
+          <h5>Historical Data Coverage by Year (2022–2026)</h5>
+          <span className="text-muted" style={{ fontSize: "0.8rem" }}>
+            Figures = total monthly issuance quantity recorded per calendar year. 2022 covers Sep–Dec, 2026 covers Jan–Aug.
+          </span>
+        </div>
+        <div className="card-body">
+          <div className="table-wrap" style={{ maxHeight: 420, overflowY: "auto" }}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Category</th>
+                  <th>2022</th>
+                  <th>2023</th>
+                  <th>2024</th>
+                  <th>2025</th>
+                  <th>2026</th>
+                  <th>Months</th>
+                  <th>Range</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.perProduct
+                  .sort((a, b) => a.pid - b.pid)
+                  .map((p) => (
+                    <tr key={p.pid}>
+                      <td><strong>{p.name}</strong></td>
+                      <td>{p.category_name}</td>
+                      <td>{p.yearly["2022"] || "—"}</td>
+                      <td>{p.yearly["2023"] || "—"}</td>
+                      <td>{p.yearly["2024"] || "—"}</td>
+                      <td>{p.yearly["2025"] || "—"}</td>
+                      <td>{p.yearly["2026"] || "—"}</td>
+                      <td>{p.coverage_months}</td>
+                      <td>
+                        <span className="text-muted" style={{ fontSize: "0.75rem" }}>
+                          {p.coverage_first?.slice(0, 7)} → {p.coverage_last?.slice(0, 7)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                {data.perProduct.length === 0 && (
+                  <tr>
+                    <td colSpan={9} className="empty">No stock products found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header">
           <h5>Per-Item Recommendations</h5>
           <select className="form-select" style={{ width: 180 }} value={filter} onChange={(e) => setFilter(e.target.value)}>
             <option value="all">All items</option>
