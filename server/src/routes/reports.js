@@ -166,7 +166,7 @@ router.get("/transactions", (req, res) => {
 
   const monthLabels = [];
   const now = new Date();
-  for (let i = 11; i >= 0; i--) {
+  for (let i = 47; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     monthLabels.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
   }

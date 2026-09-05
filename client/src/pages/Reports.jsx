@@ -29,6 +29,7 @@ const peso = (n) =>
 
 export default function Reports() {
   const [type, setType] = useState("inventory");
+  const [year, setYear] = useState("all");
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -123,11 +124,31 @@ export default function Reports() {
     });
   }
 
+  const rowsShown =
+    type === "transactions" && year !== "all"
+      ? data.rows.filter((r) => (r.date || "").slice(0, 4) === year)
+      : data.rows;
+
   return (
     <div className="card">
       <div className="card-header">
         <h5>Reports</h5>
         <div className="flex">
+          {type === "transactions" && (
+            <select
+              className="form-select"
+              style={{ width: 140, marginRight: 8 }}
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+            >
+              <option value="all">All years</option>
+              <option value="2022">2022</option>
+              <option value="2023">2023</option>
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+            </select>
+          )}
           <button className="btn btn-sm" onClick={handleExport} disabled={!data}>
             ⤓ Export CSV
           </button>
@@ -171,7 +192,7 @@ export default function Reports() {
             </div>
 
             <div className="chart-box">
-              <h5>{REPORTS[type]} - Details ({data.rows.length} records)</h5>
+              <h5>{REPORTS[type]} - Details ({rowsShown.length} records)</h5>
               <div className="table-wrap">
                 <table>
                   <thead>
@@ -182,7 +203,7 @@ export default function Reports() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.rows.map((r, i) => (
+                    {rowsShown.map((r, i) => (
                       <tr key={i}>
                         {data.headers.map((h) => {
                           const v = r[h.key];
@@ -194,7 +215,7 @@ export default function Reports() {
                         })}
                       </tr>
                     ))}
-                    {data.rows.length === 0 && (
+                    {rowsShown.length === 0 && (
                       <tr>
                         <td colSpan={data.headers.length} className="empty">No records for this report.</td>
                       </tr>
