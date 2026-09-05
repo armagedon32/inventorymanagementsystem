@@ -1,0 +1,81 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: aws-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to AWS EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          port: 22
+          command_timeout: 15m
+          script: |
+            set -euo pipefail
+
+            APP_PATH="${{ vars.DEPLOY_PATH || '/home/ec2-user/inventory_custodian' }}"
+            BRANCH="${{ vars.DEPLOY_BRANCH || 'main' }}"
+            APP_NAME="inventory-custodian"
+
+            echo "==> Target: $APP_PATH (branch: $BRANCH)"
+
+            if git -C "$APP_PATH" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+              cd "$APP_PATH"
+              echo "==> git fetch + reset --hard origin/$BRANCH"
+              git fetch --all --prune
+              git reset --hard "origin/$BRANCH"
+            else
+              echo "ERROR: '$APP_PATH' is not a git repository." >&2
+              echo "Set the DEPLOY_PATH repository variable to the folder where the app is cloned on the server." >&2
+              exit 1
+            fi
+
+            echo "==> npm install"
+            npm install --no-audit --no-fund
+            echo "==> npm run build"
+            npm run build
+
+            echo "==> Restarting service"
+            RESTARTED=0
+
+            if command -v pm2 >/dev/null 2>&1; then
+              if pm2 jlist 2>/dev/null | grep -q "\"name\":\"$APP_NAME\""; then
+                pm2 restart "$APP_NAME" --update-env
+              else
+                pm2 start server/index.js --name "$APP_NAME"
+              fi
+              pm2 save >/dev/null 2>&1 || true
+              RESTARTED=1
+            fi
+
+            if [ "$RESTARTED" = "0" ] && systemctl list-unit-files 2>/dev/null | grep -q "$APP_NAME"; then
+              sudo systemctl restart "$APP_NAME" || systemctl --user restart "$APP_NAME" || true
+              RESTARTED=1
+            fi
+
+            if [ "$RESTARTED" = "0" ]; then
+              pkill -f "server/index.js" || true
+              sleep 1
+              nohup node server/index.js >> server/app.log 2>&1 &
+              RESTARTED=1
+            fi
+
+            sleep 3
+            echo "==> Health check"
+            curl -sf http://localhost:5000/api/health && echo "OK" || echo "WARN: health check failed"
