@@ -133,13 +133,19 @@ export default function Forecasting() {
               </div>
             </div>
             <div className="col">
-              <div className="card-box orange">
-                <h3>{data.model.insufficient_products}</h3>
-                <p style={{ marginBottom: 0 }}>Insufficient Training Data</p>
+              <div className={`card-box ${data.model.insufficient_products > 0 ? "orange" : "green"}`}>
+                <h3>
+                  {data.model.insufficient_products > 0
+                    ? data.model.insufficient_products
+                    : `${data.model.trained_products}/${data.model.total_products}`}
+                </h3>
+                <p style={{ marginBottom: 0 }}>
+                  {data.model.insufficient_products > 0 ? "Below 12-Month Minimum" : "Training Data Coverage"}
+                </p>
                 <small className="text-muted">
                   {data.model.insufficient_products > 0
-                    ? `below ${data.sequence_length}-month minimum`
-                    : `none — all items ≥ ${data.sequence_length} months (avg. ${avgMonths} months)`}
+                    ? `items missing the ${data.sequence_length}-month training minimum`
+                    : `all items ≥ ${data.sequence_length} months of history (avg. ${avgMonths})`}
                 </small>
               </div>
             </div>
