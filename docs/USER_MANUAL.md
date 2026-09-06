@@ -128,10 +128,13 @@ Uses **48 months of real issuance history (September 2022 – present)** across 
 ### 6.3 Reading a forecast
 - Timeline chart shows past actuals and the next 3 months' forecast.
 - Suggested reorder quantity = forecast demand in the horizon, expressed in the product's unit.
-- Products with fewer than 12 months of data are flagged **insufficient data**.
+- The green **Training Data Coverage** card (e.g. **72/72**) confirms every item meets the 12-month training minimum; if any product falls short, the card turns orange and shows the count as **Below 12-Month Minimum**.
+- Hover any **LSTM** badge to see the per-item model internals (months of history, training/validation windows, epochs, final loss, training time).
 
 ### 6.4 Retraining
 Click **Retrain model** after importing/recording new transaction data. A successful run shows 72/72 products trained and prints the MAPE.
+
+The **Model Training Evidence — Run History** table records every run (manual retrain or automatic rebuild after data changes): timestamp, triggering user, training duration (seconds), trained/total products, MAPE / MAE / RMSE on held-out windows, and the data window used. Run #1 took ~26 seconds to train all items across 48 months of history (Sep 2022 – present), MAPE 19.41%.
 
 ---
 
@@ -180,7 +183,7 @@ Change your own profile, password, and security questions.
 | Blank page or "Something went wrong" | Clear browser cache, **hard refresh** (Ctrl+F5). If it persists, note the exact error message and report it. The app includes an error boundary that shows the message. |
 | "Unauthorized" / login loop | Session expired (12 h). Log in again; the captcha is required per session. |
 | Cannot approve a requisition | Stock became insufficient for the request; top up first via Stock In. |
-| Forecast shows "insufficient data" | Fewer than 12 months of records for that product; keep recording transactions. |
+| Forecast card shows "Below 12-Month Minimum" | A product has fewer than 12 months of records; keep recording transactions until it reaches the minimum. |
 | Restore says server restart required | The admin must restart the pm2 process (see Implementation Plan, section 7). |
 
 ---
