@@ -190,6 +190,65 @@ export default function Forecasting() {
         </div>
       </div>
 
+      {data.runs && data.runs.length > 0 && (
+        <div className="card">
+          <div className="card-header">
+            <h5>Model Training Evidence — Run History</h5>
+            <span className="text-muted" style={{ fontSize: "0.8rem" }}>
+              Every retrain or automatic rebuild trains all items; the metrics (MAE/RMSE/MAPE) are computed on
+              held-out windows, not the training data itself.
+            </span>
+          </div>
+          <div className="card-body">
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Trained At</th>
+                    <th>Triggered By</th>
+                    <th>Duration</th>
+                    <th>Trained</th>
+                    <th>MAE</th>
+                    <th>RMSE</th>
+                    <th>MAPE</th>
+                    <th>Data Window</th>
+                    <th>Data Rows</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.runs.map((r, i) => (
+                    <tr key={r.id}>
+                      <td>
+                        {r.trained_at}
+                        {i === 0 && (
+                          <>
+                            {" "}
+                            <span className="badge badge-ok">Latest</span>
+                          </>
+                        )}
+                      </td>
+                      <td>{r.triggered_name || "System (auto)"}</td>
+                      <td>{(r.train_time_ms / 1000).toFixed(1)}s</td>
+                      <td>
+                        {r.trained_products}/{r.total_products}
+                      </td>
+                      <td>{r.mae ?? "—"}</td>
+                      <td>{r.rmse ?? "—"}</td>
+                      <td>{r.mape != null ? `${r.mape}%` : "—"}</td>
+                      <td>
+                        {(r.data_first || "").slice(0, 7)} → {(r.data_last || "").slice(0, 7)}{" "}
+                        <span className="text-muted">({r.data_months} mo)</span>
+                      </td>
+                      <td>{r.data_rows}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="card">
         <div className="card-header">
           <h5>Demand Forecasting &amp; Reorder Recommendation</h5>
@@ -441,12 +500,18 @@ export default function Forecasting() {
                     </td>
                     <td>
                       {p.model_status === "Trained" ? (
-                        <span title={p.metrics ? `MAE ${p.metrics.mae} · RMSE ${p.metrics.rmse} · MAPE ${p.metrics.mape}%` : "model trained"}>
+                        <span
+                          title={
+                            p.metrics && p.model_meta
+                              ? `MAE ${p.metrics.mae} · RMSE ${p.metrics.rmse} · MAPE ${p.metrics.mape}% | ${p.model_meta.history_months} months history · ${p.model_meta.train_samples} training windows · ${p.model_meta.val_samples} validation windows · ${p.model_meta.epochs} epochs · final loss ${p.model_meta.final_loss} · trained in ${(p.model_meta.train_time_ms / 1000).toFixed(1)}s`
+                              : "model trained"
+                          }
+                        >
                           <span className="badge badge-ok">LSTM</span>{" "}
                           <small className="text-muted">{p.metrics ? `${p.metrics.mape}%` : ""}</small>
                         </span>
                       ) : (
-                        <span className="badge badge-warn" title="Continue recording transactions to meet the 12-month minimum">
+                        <span className="badge badge-warn" title={p.model_meta?.reason || "Continue recording transactions to meet the 12-month minimum"}>
                           Insufficient Data
                         </span>
                       )}

@@ -328,6 +328,23 @@ CREATE TABLE IF NOT EXISTS tbl_notifications (
   is_read      INTEGER DEFAULT 0,
   date_created TEXT DEFAULT (datetime('now','localtime'))
 );
+
+CREATE TABLE IF NOT EXISTS tbl_forecast_runs (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  trained_at       TEXT DEFAULT (datetime('now','localtime')),
+  triggered_by     INTEGER,
+  train_time_ms    INTEGER,
+  trained_products INTEGER,
+  total_products   INTEGER,
+  mae              REAL,
+  rmse             REAL,
+  mape             REAL,
+  data_first       TEXT,
+  data_last        TEXT,
+  data_months      INTEGER,
+  data_rows        INTEGER,
+  status           TEXT DEFAULT 'Done'
+);
 `);
 
 // Migrations for existing databases

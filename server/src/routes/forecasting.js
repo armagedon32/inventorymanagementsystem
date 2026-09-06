@@ -46,6 +46,48 @@ function dataVersion() {
   return `so${so.c}-${so.m}|si${si.c}-${si.m}`;
 }
 
+function recentRuns(limit = 8) {
+  return db
+    .prepare(
+      `SELECT r.*, u.fullname AS triggered_name
+       FROM tbl_forecast_runs r
+       LEFT JOIN tbl_user u ON u.userid = r.triggered_by
+       ORDER BY r.id DESC
+       LIMIT ?`
+    )
+    .all(limit);
+}
+
+function recordRun(summary, timeline, triggeredBy) {
+  try {
+    const first = timeline[0]?.month || null;
+    const last = timeline[timeline.length - 1]?.month || null;
+    const months = timeline.length;
+    const rows = db.prepare("SELECT COUNT(*) c FROM tbl_stockout WHERE is_archived = 0").get().c;
+    db.prepare(
+      `INSERT INTO tbl_forecast_runs
+       (train_time_ms, trained_products, total_products, mae, rmse, mape, data_first, data_last, data_months, data_rows, triggered_by)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?)`
+    ).run(
+      summary.build_ms,
+      summary.model.trained_products,
+      summary.model.total_products,
+      summary.metrics?.mae ?? null,
+      summary.metrics?.rmse ?? null,
+      summary.metrics?.mape ?? null,
+      first,
+      last,
+      months,
+      rows,
+      triggeredBy ?? null
+    );
+    // Keep only the most recent 50 run records
+    db.prepare("DELETE FROM tbl_forecast_runs WHERE id NOT IN (SELECT id FROM tbl_forecast_runs ORDER BY id DESC LIMIT 50)").run();
+  } catch (err) {
+    console.error("recordRun error:", err.message);
+  }
+}
+
 /** pid -> [{ date, value }] sorted chronologically */
 function demandSeries() {
   const rows = db
@@ -292,7 +334,7 @@ function buildTimeline() {
     .map(([month, demand]) => ({ month, demand }));
 }
 
-function build() {
+function build(ctx = {}) {
   const seriesMap = demandSeries();
   const t0 = Date.now();
   const perProduct = buildPerProductForecast(seriesMap);
@@ -329,7 +371,7 @@ function build() {
     items: v.n,
   }));
 
-  return {
+  const summary = {
     algorithm: "RNN-LSTM",
     lead_time_months: LEAD_TIME_MONTHS,
     horizon_months: HORIZON_MONTHS,
@@ -352,6 +394,9 @@ function build() {
     perProduct,
     timeline,
   };
+  recordRun(summary, timeline, ctx.userId);
+  summary.runs = recentRuns();
+  return summary;
 }
 
 export default function forecasting(req, res) {
@@ -364,7 +409,7 @@ export default function forecasting(req, res) {
 }
 
 export function retrainForecasting(req, res) {
-  cache = build();
+  cache = build({ userId: req.user?.userid });
   cacheKey = dataVersion();
   logActivity(req, "Retrained Forecasting Model", "Manual retrain requested from the ML Lab");
   res.json({ ...cache, retrained: true });
