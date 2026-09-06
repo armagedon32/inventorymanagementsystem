@@ -8,8 +8,9 @@ For the evaluator's hands-on assessment (per final defense panel requirements).
 
 | Instance | URL | Purpose |
 | --- | --- | --- |
-| Primary (live) | `http://3.26.131.223/` | Production system used for evaluation |
-| Mirror | `https://server-production-df0e.up.railway.app/` | Alternate access |
+| Primary (live) | `https://knsinventorysystem.site/` | Production system used for evaluation (HTTPS via Let's Encrypt) |
+| Alternate (www) | `https://www.knsinventorysystem.site/` | Same system, www alias |
+| Mirror | `https://server-production-df0e.up.railway.app/` | Alternate access (Railway) |
 
 Both serve the same application build. Use the **Primary** link during the defense demo.
 
@@ -28,7 +29,9 @@ Both serve the same application build. Use the **Primary** link during the defen
 
 | Aspect | Detail |
 | --- | --- |
-| Deployment architecture | Single Node.js/Express application serving the built React frontend and REST API on port 5000 |
+| Public domain | `knsinventorysystem.site` (and `www.*`), A records → `3.26.131.223` |
+| TLS / HTTPS | **Let's Encrypt** certificate via certbot (nginx), auto-renews; HTTP redirects to HTTPS |
+| Deployment architecture | Single Node.js/Express application serving the built React frontend and REST API on port 5000, behind nginx |
 | Hosting provider (primary) | **AWS EC2**, region **ap-southeast-2 (Sydney), Australia** |
 | Process manager | pm2 (`inventory`), auto-restart on failure |
 | Database | SQLite (WAL mode), stored on the EC2 instance volume (`server/data/custodian.db`) |

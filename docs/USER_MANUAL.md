@@ -22,8 +22,11 @@ The system computerizes the Property and Supplies Office's four core operations:
 
 ### 1.2 Accessing the system
 
-- Primary (AWS): `http://3.26.131.223/`
+- Primary (AWS, HTTPS): `https://knsinventorysystem.site/`
+- Alternate: `https://www.knsinventorysystem.site/`
 - Mirror (Railway): `https://server-production-df0e.up.railway.app/`
+
+All connections to the primary site are encrypted with HTTPS (Let's Encrypt certificate, automatically renewed).
 
 ### 1.3 Roles
 

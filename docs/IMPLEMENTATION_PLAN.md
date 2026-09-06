@@ -61,9 +61,9 @@ Dashboard with 48-month issuance trend and actual-monthly table; Reports with **
 ## 6. Deployment pipeline
 
 1. Commit to `main` → GitHub Actions builds the client (`npm run build`) and runs server tests.
-2. Actions deploys the artifact to **AWS EC2** (`3.26.131.223`) and pushes the server build to **Railway**.
+2. Actions deploys the artifact to **AWS EC2** (`3.26.131.223`, public domain `https://knsinventorysystem.site`, HTTPS via Let's Encrypt) and pushes the server build to **Railway**.
 3. Health check endpoint `GET /api/health` returns `{"status":"ok"}` when live.
-4. Service manager: **pm2** (app `inventory` on port 5000) with restart-on-failure.
+4. Service manager: **pm2** (app `inventory` on port 5000) with restart-on-failure, behind nginx (TLS termination + HTTP→HTTPS redirect).
 
 ## 7. Operation and maintenance
 

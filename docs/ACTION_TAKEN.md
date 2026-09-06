@@ -5,7 +5,7 @@
 
 > Items marked **[SYSTEM]** are answered by the actual running system (verified live). Items marked **[MANUSCRIPT]** are thesis-revision actions handled in the chapters/SOP indicated.
 
-**Access during evaluation:** Primary link `http://3.26.131.223/` · Mirror `https://server-production-df0e.up.railway.app/`
+**Access during evaluation:** Primary link `https://knsinventorysystem.site/` (HTTPS) · Alternate `https://www.knsinventorysystem.site/` · Mirror `https://server-production-df0e.up.railway.app/`
 **Credentials:** Admin `superadmin / admin123` · Faculty `faculty / intern123` · Staff `staff / assistant123`
 **Docs:** `docs/USER_MANUAL.md`, `docs/IMPLEMENTATION_PLAN.md`, `docs/SYSTEM_ACCESS_AND_EVALUATION.md`
 
