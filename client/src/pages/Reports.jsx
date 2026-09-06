@@ -45,33 +45,33 @@ export default function Reports() {
   }, [type]);
 
   function statCards() {
-    const s = data.stats;
+    const s = data?.stats || {};
     switch (type) {
       case "inventory":
         return [
-          { label: "Total Items", value: s.totalItems, cls: "blue" },
-          { label: "Total Stock Qty", value: s.totalStock, cls: "green" },
-          { label: "Low / Out of Stock", value: `${s.low} / ${s.outOfStock}`, cls: "orange" },
+          { label: "Total Items", value: s.totalItems ?? "—", cls: "blue" },
+          { label: "Total Stock Qty", value: s.totalStock ?? "—", cls: "green" },
+          { label: "Low / Out of Stock", value: `${s.low ?? "—"} / ${s.outOfStock ?? "—"}`, cls: "orange" },
         ];
       case "assets":
         return [
-          { label: "Total Assets", value: s.totalAssets, cls: "purple" },
-          { label: "Assigned", value: s.assigned, cls: "blue" },
-          { label: "Unassigned", value: s.unassigned, cls: "orange" },
+          { label: "Total Assets", value: s.totalAssets ?? "—", cls: "purple" },
+          { label: "Assigned", value: s.assigned ?? "—", cls: "blue" },
+          { label: "Unassigned", value: s.unassigned ?? "—", cls: "orange" },
         ];
       case "requisitions":
         return [
-          { label: "Total Requisitions", value: s.total, cls: "blue" },
-          { label: "Pending", value: s.pending, cls: "orange" },
-          { label: "Approved", value: s.approved, cls: "green" },
-          { label: "Rejected", value: s.rejected, cls: "red" },
+          { label: "Total Requisitions", value: s.total ?? "—", cls: "blue" },
+          { label: "Pending", value: s.pending ?? "—", cls: "orange" },
+          { label: "Approved", value: s.approved ?? "—", cls: "green" },
+          { label: "Rejected", value: s.rejected ?? "—", cls: "red" },
         ];
       case "transactions":
         return [
-          { label: "Total Transactions", value: s.totalTransactions, cls: "blue" },
-          { label: "Stock In", value: s.totalIn, cls: "green" },
-          { label: "Stock Out", value: s.totalOut, cls: "orange" },
-          { label: "Net (In - Out)", value: s.net, cls: s.net >= 0 ? "blue" : "red" },
+          { label: "Total Transactions", value: s.totalTransactions ?? "—", cls: "blue" },
+          { label: "Stock In", value: s.totalIn ?? "—", cls: "green" },
+          { label: "Stock Out", value: s.totalOut ?? "—", cls: "orange" },
+          { label: "Net (In - Out)", value: s.net ?? "—", cls: "blue" },
         ];
       default:
         return [];
@@ -79,10 +79,11 @@ export default function Reports() {
   }
 
   function renderChart() {
+    const chart = data.chart || [];
     if (type === "inventory" || type === "transactions") {
       if (type === "inventory") {
         return (
-          <BarChart data={data.chart}>
+          <BarChart data={chart}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
             <YAxis allowDecimals={false} />
@@ -92,7 +93,7 @@ export default function Reports() {
         );
       }
       return (
-        <BarChart data={data.chart}>
+        <BarChart data={chart}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="month" />
           <YAxis allowDecimals={false} />
@@ -105,8 +106,8 @@ export default function Reports() {
     }
     return (
       <PieChart>
-        <Pie data={data.chart} dataKey="value" nameKey="name" innerRadius="50%" outerRadius="75%" label>
-          {data.chart.map((_, i) => (
+        <Pie data={chart} dataKey="value" nameKey="name" innerRadius="50%" outerRadius="75%" label>
+          {chart.map((_, i) => (
             <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
           ))}
         </Pie>
@@ -126,8 +127,8 @@ export default function Reports() {
 
   const rowsShown = data
     ? type === "transactions" && year !== "all"
-      ? data.rows.filter((r) => (r.date || "").slice(0, 4) === year)
-      : data.rows
+      ? (data.rows || []).filter((r) => (r.date || "").slice(0, 4) === year)
+      : data.rows || []
     : [];
 
   return (
@@ -198,7 +199,7 @@ export default function Reports() {
                 <table>
                   <thead>
                     <tr>
-                      {data.headers.map((h) => (
+                      {(data.headers || []).map((h) => (
                         <th key={h.key}>{h.label}</th>
                       ))}
                     </tr>
@@ -206,7 +207,7 @@ export default function Reports() {
                   <tbody>
                     {rowsShown.map((r, i) => (
                       <tr key={i}>
-                        {data.headers.map((h) => {
+                        {(data.headers || []).map((h) => {
                           const v = r[h.key];
                           const shown =
                             ["unit_cost", "value"].includes(h.key) && v != null

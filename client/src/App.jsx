@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import { useAuth, ProtectedRoute } from "./context/AuthContext";
 import Layout from "./components/Layout";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
@@ -43,7 +44,8 @@ export default function App() {
   const { user } = useAuth();
 
   return (
-    <Routes>
+    <ErrorBoundary>
+      <Routes>
       <Route
         path="/login"
         element={user ? <Navigate to="/" replace /> : <Login />}
@@ -92,6 +94,7 @@ export default function App() {
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </ErrorBoundary>
   );
 }
