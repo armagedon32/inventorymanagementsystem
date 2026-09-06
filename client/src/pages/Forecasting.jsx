@@ -91,6 +91,9 @@ export default function Forecasting() {
 
   const m = data.metrics;
   const acc = data.metrics_within_acceptance;
+  const avgMonths = data.perProduct.length
+    ? Math.round((data.perProduct.reduce((s, p) => s + p.coverage_months, 0) / data.perProduct.length) * 10) / 10
+    : 0;
 
   return (
     <div>
@@ -133,7 +136,11 @@ export default function Forecasting() {
               <div className="card-box orange">
                 <h3>{data.model.insufficient_products}</h3>
                 <p style={{ marginBottom: 0 }}>Insufficient Training Data</p>
-                <small className="text-muted">below {data.sequence_length}-month minimum</small>
+                <small className="text-muted">
+                  {data.model.insufficient_products > 0
+                    ? `below ${data.sequence_length}-month minimum`
+                    : `none — all items ≥ ${data.sequence_length} months (avg. ${avgMonths} months)`}
+                </small>
               </div>
             </div>
             <div className="col">
@@ -329,7 +336,9 @@ export default function Forecasting() {
         <div className="card-header">
           <h5>Historical Data Coverage by Year (2022–2026)</h5>
           <span className="text-muted" style={{ fontSize: "0.8rem" }}>
-            Figures = total monthly issuance quantity recorded per calendar year. 2022 covers Sep–Dec, 2026 covers Jan–Aug.
+            Figures = total monthly issuance quantity recorded per calendar year. 2022 covers Sep–Dec, 2026 covers
+            Jan–Aug. All {data.perProduct.length} items are trained ({data.model.trained_products}/{data.perProduct.length}),
+            average coverage {avgMonths} months of history.
           </span>
         </div>
         <div className="card-body">
