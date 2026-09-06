@@ -1,6 +1,7 @@
 import { Router } from "express";
 import db from "../db.js";
 import { logActivity } from "../activity.js";
+import { notify, notifyAdmins } from "../notify.js";
 import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
 const router = Router();
@@ -99,6 +100,13 @@ router.post("/", (req, res) => {
   })();
 
   res.status(201).json({ id: Number(info), req_no: reqNo });
+
+  const requesterName = db.prepare("SELECT fullname FROM tbl_user WHERE userid = ?").get(req.user.userid)?.fullname || req.user.username || "User";
+  notifyAdmins(
+    "New Requisition",
+    `${reqNo} — ${requesterName} requested ${items.length} item(s) and is waiting for approval.`,
+    `/requisitions/${Number(info)}`
+  );
 });
 
 // ============ APPROVE ============
@@ -134,8 +142,17 @@ router.post("/:id/approve", requireAdmin, (req, res) => {
       dec.run(it.quantity, it.product_id);
       insOut.run(it.product_id, it.quantity, `Auto-issued from approved requisition ${r.req_no}`);
     }
-        logActivity(req, `Approved Requisition: ${r.req_no}`, undefined, r.id);
+logActivity(req, `Approved Requisition: ${r.req_no}`, undefined, r.id);
   })();
+
+  if (r.requested_by) {
+    notify(
+      r.requested_by,
+      "Requisition Approved",
+      `${r.req_no} has been approved and the items have been automatically issued to stock.`,
+      `/requisitions/${r.id}`
+    );
+  }
 
   res.json({ success: true });
 });
@@ -154,8 +171,16 @@ router.post("/:id/reject", requireAdmin, (req, res) => {
     db.prepare(
       "UPDATE tbl_requisition SET status = 'Rejected', reject_reason = ?, date_processed = datetime('now','localtime'), processed_by = ? WHERE id = ?"
     ).run(String(reason).trim(), req.user.userid, r.id);
-        logActivity(req, `Rejected Requisition: ${r.req_no} - ${reason}`, undefined, r.id);
+logActivity(req, `Rejected Requisition: ${r.req_no} - ${reason}`, undefined, r.id);
   })();
+  if (r.requested_by) {
+    notify(
+      r.requested_by,
+      "Requisition Rejected",
+      `${r.req_no} was rejected. Reason: ${String(reason).trim()}`,
+      `/requisitions/${r.id}`
+    );
+  }
   res.json({ success: true });
 });
 

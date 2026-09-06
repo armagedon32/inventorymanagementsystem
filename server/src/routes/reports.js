@@ -137,6 +137,7 @@ router.get("/requisitions", (req, res) => {
 });
 
 router.get("/transactions", (req, res) => {
+  const period = req.query.period === "day" ? "day" : req.query.period === "week" ? "week" : "month";
   const rows = db
     .prepare(
       `SELECT 'Stock In' AS type, t.quantity, t.remarks, t.stock_date AS date,
@@ -164,18 +165,48 @@ router.get("/transactions", (req, res) => {
     net: totalIn - totalOut,
   };
 
-  const monthLabels = [];
   const now = new Date();
-  for (let i = 47; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    monthLabels.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  const pad = (n) => String(n).padStart(2, "0");
+  const pad2 = (n) => String(Math.max(n, 0)).padStart(2, "0");
+  const keyOf = (d) => {
+    const y = d.getFullYear();
+    if (period === "day") return `${y}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    if (period === "week") {
+      const doy = Math.floor((d - new Date(y, 0, 0)) / 864e5);
+      const offset = (7 - new Date(y, 0, 1).getDay()) % 7;
+      return `${y}-W${pad2(Math.floor((doy - offset) / 7))}`;
+    }
+    return `${y}-${pad(d.getMonth() + 1)}`;
+  };
+  const windowSize = period === "day" ? 30 : period === "week" ? 12 : 48;
+  const labels = [];
+  if (period === "month") {
+    for (let i = windowSize; i >= 1; i--) {
+      labels.push(keyOf(new Date(now.getFullYear(), now.getMonth() - i, 1)));
+    }
+  } else {
+    for (let i = windowSize - 1; i >= 0; i--) {
+      labels.push(keyOf(new Date(now.getFullYear(), now.getMonth(), now.getDate() - i * (period === "week" ? 7 : 1))));
+    }
   }
-  const sumIn = (month) =>
-    db.prepare("SELECT IFNULL(SUM(quantity),0) s FROM tbl_stockin WHERE is_archived=0 AND strftime('%Y-%m', stock_date)=?").get(month).s;
-  const sumOut = (month) =>
-    db.prepare("SELECT IFNULL(SUM(quantity),0) s FROM tbl_stockout WHERE is_archived=0 AND strftime('%Y-%m', stockout_date)=?").get(month).s;
-  const chart = monthLabels.map((month) => ({ month, in: sumIn(month), out: sumOut(month) }));
-  res.json({ rows, stats, chart, headers: TX_HEADERS });
+
+  const hits = (table, col) => {
+    const expr =
+      period === "day"
+        ? `strftime('%Y-%m-%d', ${col})`
+        : period === "week"
+          ? `(strftime('%Y', ${col}) || '-W' || printf('%02d', CAST(strftime('%W', ${col}) AS INTEGER)))`
+          : `strftime('%Y-%m', ${col})`;
+    const map = {};
+    for (const r of db.prepare(`SELECT ${expr} AS k, IFNULL(SUM(quantity),0) AS s FROM ${table} WHERE is_archived=0 GROUP BY k`).all()) {
+      map[r.k] = r.s;
+    }
+    return map;
+  };
+  const inMap = hits("tbl_stockin", "stock_date");
+  const outMap = hits("tbl_stockout", "stockout_date");
+  const chart = labels.map((k) => ({ month: k, in: inMap[k] || 0, out: outMap[k] || 0 }));
+  res.json({ rows, stats, chart, headers: TX_HEADERS, period });
 });
 
 export default router;

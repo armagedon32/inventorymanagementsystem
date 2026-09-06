@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import NotificationsBell from "./NotificationsBell";
 
 const isAdmin = (user) => user?.role === "Admin";
 
@@ -105,7 +106,8 @@ export default function Layout() {
       <div className="main">
         <div className="navbar">
           <div className="page-title">{pageTitle}</div>
-          <div style={{ fontSize: "0.85rem", color: "#333" }}>
+          <div style={{ display: "flex", alignItems: "center", fontSize: "0.85rem", color: "#333" }}>
+            <NotificationsBell />
             {user?.role} · {user?.useremail}
           </div>
         </div>

@@ -318,6 +318,16 @@ CREATE TABLE IF NOT EXISTS tbl_facility_equipment (
   description         TEXT,
   is_archived         INTEGER DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS tbl_notifications (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id      INTEGER NOT NULL,
+  title        TEXT NOT NULL,
+  message      TEXT,
+  link         TEXT,
+  is_read      INTEGER DEFAULT 0,
+  date_created TEXT DEFAULT (datetime('now','localtime'))
+);
 `);
 
 // Migrations for existing databases

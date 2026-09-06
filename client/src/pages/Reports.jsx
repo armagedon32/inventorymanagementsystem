@@ -30,6 +30,7 @@ const peso = (n) =>
 export default function Reports() {
   const [type, setType] = useState("inventory");
   const [year, setYear] = useState("all");
+  const [period, setPeriod] = useState("month");
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,12 +38,13 @@ export default function Reports() {
   useEffect(() => {
     setLoading(true);
     setError("");
+    const url = type === "transactions" ? `/reports/${type}?period=${period}` : `/reports/${type}`;
     api
-      .get(`/reports/${type}`)
+      .get(url)
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [type]);
+  }, [type, period]);
 
   function statCards() {
     const s = data?.stats || {};
@@ -95,7 +97,7 @@ export default function Reports() {
       return (
         <BarChart data={chart}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="month" />
+          <XAxis dataKey="month" interval={period === "day" ? 5 : period === "week" ? 1 : 0} />
           <YAxis allowDecimals={false} />
           <Tooltip />
           <Legend />
@@ -137,19 +139,31 @@ export default function Reports() {
         <h5>Reports</h5>
         <div className="flex">
           {type === "transactions" && (
-            <select
-              className="form-select"
-              style={{ width: 140, marginRight: 8 }}
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-            >
-              <option value="all">All years</option>
-              <option value="2022">2022</option>
-              <option value="2023">2023</option>
-              <option value="2024">2024</option>
-              <option value="2025">2025</option>
-              <option value="2026">2026</option>
-            </select>
+            <>
+              <select
+                className="form-select"
+                style={{ width: 130, marginRight: 8 }}
+                value={period}
+                onChange={(e) => setPeriod(e.target.value)}
+              >
+                <option value="month">Monthly</option>
+                <option value="week">Weekly</option>
+                <option value="day">Daily</option>
+              </select>
+              <select
+                className="form-select"
+                style={{ width: 140, marginRight: 8 }}
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+              >
+                <option value="all">All years</option>
+                <option value="2022">2022</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+              </select>
+            </>
           )}
           <button className="btn btn-sm" onClick={handleExport} disabled={!data}>
             ⤓ Export CSV
