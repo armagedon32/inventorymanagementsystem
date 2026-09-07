@@ -49,7 +49,69 @@ const TX_HEADERS = [
   { label: "Remarks", key: "remarks" },
 ];
 
+const PERIOD_WINDOW = { day: 30, week: 12, month: 48 };
+
+function periodLabel(period) {
+  return period === "day" ? "Daily" : period === "week" ? "Weekly" : "Monthly";
+}
+
+function bucketExpr(period, col) {
+  if (period === "day") return `strftime('%Y-%m-%d', ${col})`;
+  if (period === "week") return `(strftime('%Y', ${col}) || '-W' || printf('%02d', CAST(strftime('%W', ${col}) AS INTEGER)))`;
+  return `strftime('%Y-%m', ${col})`;
+}
+
+function periodBuckets(period) {
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  const pad2 = (n) => String(Math.max(n, 0)).padStart(2, "0");
+  const keyOf = (d) => {
+    const y = d.getFullYear();
+    if (period === "day") return `${y}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    if (period === "week") {
+      const doy = Math.floor((d - new Date(y, 0, 0)) / 864e5);
+      const offset = (7 - new Date(y, 0, 1).getDay()) % 7;
+      return `${y}-W${pad2(Math.floor((doy - offset) / 7))}`;
+    }
+    return `${y}-${pad(d.getMonth() + 1)}`;
+  };
+  const n = PERIOD_WINDOW[period];
+  const out = [];
+  if (period === "month") {
+    for (let i = n; i >= 1; i--) out.push(keyOf(new Date(now.getFullYear(), now.getMonth() - i, 1)));
+  } else {
+    for (let i = n - 1; i >= 0; i--) out.push(keyOf(new Date(now.getFullYear(), now.getMonth(), now.getDate() - i * (period === "week" ? 7 : 1))));
+  }
+  return out;
+}
+
+function movementData(period, labels) {
+  const sum = (table, expr) => {
+    const m = {};
+    for (const r of db.prepare(`SELECT ${expr} AS k, IFNULL(SUM(quantity),0) AS s FROM ${table} WHERE is_archived=0 GROUP BY k`).all()) m[r.k] = r.s;
+    return m;
+  };
+  const byProd = (table, expr) => {
+    const m = {};
+    for (const r of db.prepare(`SELECT product_id AS pid, ${expr} AS k, IFNULL(SUM(quantity),0) AS s FROM ${table} WHERE is_archived=0 GROUP BY pid, k`).all()) m[`${r.pid}|${r.k}`] = r.s;
+    return m;
+  };
+  const inTot = sum("tbl_stockin", bucketExpr(period, "stock_date"));
+  const outTot = sum("tbl_stockout", bucketExpr(period, "stockout_date"));
+  const inProd = byProd("tbl_stockin", bucketExpr(period, "stock_date"));
+  const outProd = byProd("tbl_stockout", bucketExpr(period, "stockout_date"));
+  const totalIn = labels.reduce((s, k) => s + (inTot[k] || 0), 0);
+  const totalOut = labels.reduce((s, k) => s + (outTot[k] || 0), 0);
+  const chart = labels.map((k) => ({ name: k, in: inTot[k] || 0, out: outTot[k] || 0 }));
+  return { totalIn, totalOut, chart, perProduct: (pid) => {
+    let tin = 0, tout = 0;
+    for (const k of labels) { tin += inProd[`${pid}|${k}`] || 0; tout += outProd[`${pid}|${k}`] || 0; }
+    return { tin, tout };
+  } };
+}
+
 router.get("/inventory", (req, res) => {
+  const period = ["day", "week", "month"].includes(req.query.period) ? req.query.period : "all";
   const rows = db
     .prepare(
       `SELECT p.*, c.category AS category_name,
@@ -70,6 +132,33 @@ router.get("/inventory", (req, res) => {
     low: rows.filter((r) => r.stock > 0 && r.stock <= r.reorder_level).length,
     outOfStock: rows.filter((r) => r.stock === 0).length,
   };
+
+  if (period !== "all") {
+    const labels = periodBuckets(period);
+    const mv = movementData(period, labels);
+    for (const r of rows) {
+      const m = mv.perProduct(r.pid);
+      r.in_period = m.tin;
+      r.out_period = m.tout;
+    }
+    stats.totalIn = mv.totalIn;
+    stats.totalOut = mv.totalOut;
+    stats.net = mv.totalIn - mv.totalOut;
+    stats.periodLabel = periodLabel(period);
+    res.json({
+      rows,
+      stats,
+      chart: mv.chart,
+      headers: [
+        ...INVENTORY_HEADERS,
+        { label: "In (period)", key: "in_period" },
+        { label: "Out (period)", key: "out_period" },
+      ],
+      period,
+    });
+    return;
+  }
+
   const chart = db
     .prepare(
       `SELECT COALESCE(c.category, 'Uncategorized') AS name, COUNT(*) AS value
@@ -78,7 +167,7 @@ router.get("/inventory", (req, res) => {
        GROUP BY name ORDER BY value DESC`
     )
     .all();
-  res.json({ rows, stats, chart, headers: INVENTORY_HEADERS });
+  res.json({ rows, stats, chart, headers: INVENTORY_HEADERS, period });
 });
 
 router.get("/assets", (req, res) => {

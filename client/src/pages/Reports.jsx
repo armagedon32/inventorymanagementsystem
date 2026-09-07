@@ -35,10 +35,13 @@ export default function Reports() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const periodable = type === "inventory" || type === "transactions";
+  const periodLabel = (p) => (p === "day" ? "Daily" : p === "week" ? "Weekly" : p === "month" ? "Monthly" : "All");
+
   useEffect(() => {
     setLoading(true);
     setError("");
-    const url = type === "transactions" ? `/reports/${type}?period=${period}` : `/reports/${type}`;
+    const url = periodable ? `/reports/${type}?period=${period}` : `/reports/${type}`;
     api
       .get(url)
       .then(setData)
@@ -54,6 +57,12 @@ export default function Reports() {
           { label: "Total Items", value: s.totalItems ?? "—", cls: "blue" },
           { label: "Total Stock Qty", value: s.totalStock ?? "—", cls: "green" },
           { label: "Low / Out of Stock", value: `${s.low ?? "—"} / ${s.outOfStock ?? "—"}`, cls: "orange" },
+          ...(data?.period && data.period !== "all"
+            ? [
+                { label: "Stock In (period)", value: s.totalIn ?? "—", cls: "green" },
+                { label: "Stock Out (period)", value: s.totalOut ?? "—", cls: "orange" },
+              ]
+            : []),
         ];
       case "assets":
         return [
@@ -82,18 +91,31 @@ export default function Reports() {
 
   function renderChart() {
     const chart = data.chart || [];
-    if (type === "inventory" || type === "transactions") {
-      if (type === "inventory") {
+    if (type === "inventory") {
+      if (data.period && data.period !== "all") {
         return (
           <BarChart data={chart}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
+            <XAxis dataKey="name" interval={data.period === "day" ? 5 : data.period === "week" ? 1 : 0} />
             <YAxis allowDecimals={false} />
             <Tooltip />
-            <Bar dataKey="value" name="Items" fill="#2563eb" radius={[6, 6, 0, 0]} />
+            <Legend />
+            <Bar dataKey="in" name="Stock In" fill="#10b981" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="out" name="Stock Out" fill="#f59e0b" radius={[6, 6, 0, 0]} />
           </BarChart>
         );
       }
+      return (
+        <BarChart data={chart}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis allowDecimals={false} />
+          <Tooltip />
+          <Bar dataKey="value" name="Items" fill="#2563eb" radius={[6, 6, 0, 0]} />
+        </BarChart>
+      );
+    }
+    if (type === "transactions") {
       return (
         <BarChart data={chart}>
           <CartesianGrid strokeDasharray="3 3" />
@@ -138,31 +160,34 @@ export default function Reports() {
       <div className="card-header">
         <h5>Reports</h5>
         <div className="flex">
-          {type === "transactions" && (
+          {periodable && (
             <>
               <select
                 className="form-select"
-                style={{ width: 130, marginRight: 8 }}
+                style={{ width: type === "inventory" ? 160 : 130, marginRight: 8 }}
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
               >
+                {type === "inventory" && <option value="all">Point-in-time</option>}
                 <option value="month">Monthly</option>
                 <option value="week">Weekly</option>
                 <option value="day">Daily</option>
               </select>
-              <select
-                className="form-select"
-                style={{ width: 140, marginRight: 8 }}
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-              >
-                <option value="all">All years</option>
-                <option value="2022">2022</option>
-                <option value="2023">2023</option>
-                <option value="2024">2024</option>
-                <option value="2025">2025</option>
-                <option value="2026">2026</option>
-              </select>
+              {type === "transactions" && (
+                <select
+                  className="form-select"
+                  style={{ width: 140, marginRight: 8 }}
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                >
+                  <option value="all">All years</option>
+                  <option value="2022">2022</option>
+                  <option value="2023">2023</option>
+                  <option value="2024">2024</option>
+                  <option value="2025">2025</option>
+                  <option value="2026">2026</option>
+                </select>
+              )}
             </>
           )}
           <button className="btn btn-sm" onClick={handleExport} disabled={!data}>
@@ -199,7 +224,7 @@ export default function Reports() {
             </div>
 
             <div className="chart-box mb-3">
-              <h5>{REPORTS[type]} - Summary Chart</h5>
+              <h5>{REPORTS[type]}{periodable && data?.period && data.period !== "all" ? ` - ${periodLabel(data.period)}` : ""} - Summary Chart</h5>
               <div style={{ height: 280 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   {renderChart()}
@@ -208,7 +233,7 @@ export default function Reports() {
             </div>
 
             <div className="chart-box">
-              <h5>{REPORTS[type]} - Details ({rowsShown.length} records)</h5>
+              <h5>{REPORTS[type]}{periodable && data?.period && data.period !== "all" ? ` - ${periodLabel(data.period)}` : ""} - Details ({rowsShown.length} records)</h5>
               <div className="table-wrap">
                 <table>
                   <thead>
