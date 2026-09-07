@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>System Overview — AVP | Inventory Management &amp; Requisitions System</title>
+<style>
+  :root { --green: #1e7a4c; --dark: #123a2a; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { font-family: "Segoe UI", Arial, sans-serif; background: #0f1e1a; color: #222; display: flex; flex-direction: column; }
+  .deck { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .slide { width: min(1080px, 94vw); height: min(608px, 88vh); background: #ffffff; border-radius: 18px; box-shadow: 0 18px 60px rgba(0,0,0,.5); padding: 44px 56px; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  .slide.dark { background: linear-gradient(140deg, var(--dark), var(--green)); color: #fff; }
+  .kicker { text-transform: uppercase; letter-spacing: 3px; font-size: .72rem; opacity: .75; margin-bottom: 10px; }
+  h1 { font-size: 2.1rem; line-height: 1.15; }
+  h2 { font-size: 1.55rem; margin-bottom: 18px; color: var(--dark); }
+  .dark h1, .dark h2 { color: #fff; }
+  p { font-size: .98rem; line-height: 1.6; }
+  ul { font-size: .96rem; line-height: 1.65; padding-left: 20px; }
+  li { margin-bottom: 6px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .box { background: #f1f5f2; border: 1px solid #dfe7e2; border-radius: 12px; padding: 16px 18px; }
+  .box h3 { font-size: .98rem; margin-bottom: 6px; color: var(--green); }
+  .big { font-size: 2.6rem; font-weight: 800; color: var(--green); }
+  .dark .big { color: #aef0cb; }
+  .metric { display: flex; flex-direction: column; }
+  .metric b { font-size: 1.9rem; color: var(--green); }
+  .metric span { font-size: .78rem; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #e4e9e6; }
+  th { color: var(--green); }
+  .ok { color: var(--green); font-weight: 700; }
+  .foot { position: absolute; bottom: 18px; left: 56px; right: 56px; display: flex; justify-content: space-between; font-size: .72rem; color: #999; border-top: 1px solid #ece7db; padding-top: 10px; }
+  .dark .foot { color: rgba(255,255,255,.6); border-color: rgba(255,255,255,.25); }
+  .controls { display: flex; justify-content: center; gap: 10px; padding: 12px; }
+  button { background: #1e7a4c; color: #fff; border: 0; padding: 8px 16px; border-radius: 999px; font-size: .85rem; cursor: pointer; }
+  button:hover { background: #165f3b; }
+  .hint { color: #8aa39a; font-size: .72rem; text-align: center; padding-bottom: 10px; }
+  @media print { body { height: auto; } .slide { page-break-after: always; box-shadow: none; border: 1px solid #ccc; } .controls, .hint { display: none; } }
+</style>
+</head>
+<body>
+<main class="deck">
+
+<section class="slide dark">
+  <div class="kicker">DIT Dissertation · Kolehiyo ng Subic</div>
+  <h1>Inventory Management &amp; Requisitions System with Asset Tracking and Data Analytics</h1>
+  <p style="margin-top:18px; opacity:.92;">Predictive LSTM demand forecasting · Barcode asset tracking · Rule-based requisition validation · ISO/IEC 25010 evaluation</p>
+  <p style="margin-top:26px; opacity:.85;">Erly Grace B. Cawed &nbsp;·&nbsp; La Consolacion University Philippines</p>
+  <div class="foot"><span></span><span>Live at https://knsinventorysystem.site</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">The Problem</div>
+  <h2>From manual logbooks to a unified platform</h2>
+  <ul>
+    <li>Manual logbooks + disconnected Excel sheets → delayed transactions, inventory discrepancies.</li>
+    <li>No automated validation → overdrawn requests, policy violations, accountability gaps.</li>
+    <li>No real-time asset tracking → misplaced/missing high-value equipment.</li>
+    <li>Seasonal demand spikes (enrollment / graduation) → stock-outs and over-stocks.</li>
+  </ul>
+  <p style="margin-top:14px;"><b>Solution:</b> one web platform integrates inventory, requisitions, asset tracking, reporting, and predictive analytics.</p>
+  <div class="foot"><span>Inventory Management &amp; Requisitions System</span><span>2</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Modules</div>
+  <h2>Six integrated modules</h2>
+  <div class="grid2">
+    <div class="box"><h3>Inventory Management</h3><span>Stock-in/out, real-time balances, reorder alerts, stock movement history.</span></div>
+    <div class="box"><h3>Requisitions</h3><span>Digital requests with rule-based validation, approval workflow, tracking, and notifications.</span></div>
+    <div class="box"><h3>Asset Tracking</h3><span>Barcode-based registration, assignment to accountable personnel, transfers, returns, condition.</span></div>
+    <div class="box"><h3>Reports &amp; Analytics</h3><span>Inventory, asset, requisition, and transaction reports — daily, weekly, and monthly periods.</span></div>
+    <div class="box"><h3>Demand Forecasting (ML Lab)</h3><span>RNN-LSTM forecast of monthly consumption with MAE/RMSE/MAPE and retraining evidence.</span></div>
+    <div class="box"><h3>Administration</h3><span>User/role management, audit logs, backup &amp; restore, notifications, settings.</span></div>
+  </div>
+  <div class="foot"><span>Inventory Management &amp; Requisitions System</span><span>3</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Rule-Based Validation</div>
+  <h2>Deterministic business rules before approval</h2>
+  <ul>
+    <li>Stock availability check — request cannot exceed available stock.</li>
+    <li>Rebate/limit guards and quantity validation (adjustments applied automatically).</li>
+    <li>Requester authorization and role-based access control (RBAC).</li>
+    <li>Duplicate-request detection and institutional policy compliance.</li>
+    <li>Result: an unalterable digital audit trail for every issued item.</li>
+  </ul>
+  <p style="margin-top:14px;">Operational control stays <b>transparent and explainable</b> — every approval/rejection is supported by a stated rule, complementing the predictive layer.</p>
+  <div class="foot"><span>Inventory Management &amp; Requisitions System</span><span>4</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Asset Tracking</div>
+  <h2>Barcode accountability &amp; lifecycle</h2>
+  <div class="grid2">
+    <div class="box">
+      <h3>How it works</h3>
+      <span>Each item carries a barcode (LGU-issued or system-generated). Scanning drives registration, issuance, transfer, return, maintenance, verification, and disposal — no GPS/RFID required.</span>
+    </div>
+    <div class="box">
+      <h3>Accountability</h3>
+      <span>Every asset is assigned to a <b>specific accountable person/office</b>. Issuance &amp; Return (RIS) tracks expected return date, actual return, and item condition with overdue detection.</span>
+    </div>
+  </div>
+  <table style="margin-top:16px;">
+    <tr><th>Metric (evaluation)</th><th>Result</th><th>Target</th><th></th></tr>
+    <tr><td>Asset location monitoring</td><td>97.80%</td><td>≥ 95%</td><td class="ok">Passed</td></tr>
+    <tr><td>Asset status updates</td><td>98.80%</td><td>≥ 95%</td><td class="ok">Passed</td></tr>
+    <tr><td>Unrecorded assets</td><td>0%</td><td>0</td><td class="ok">Passed</td></tr>
+  </table>
+  <div class="foot"><span>Inventory Management &amp; Requisitions System</span><span>5</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Predictive Analytics — RNN-LSTM</div>
+  <h2>The forecasting engine</h2>
+  <ul>
+    <li><b>Input Layer:</b> monthly issuance quantity + month-of-year (captures semester/summer seasonality). Enrollment population data is <b>not</b> used.</li>
+    <li><b>Hidden LSTM layers:</b> memory cells with input / forget / output gates learn long-term cycles.</li>
+    <li><b>Dense → Forecast Output:</b> 12-month window predicts next months (MSE loss, 150 epochs, 6 hidden units), 3-month horizon.</li>
+    <li><b>Validation:</b> MAPE / MAE / RMSE computed on <b>held-out windows</b>, not training data.</li>
+    <li><b>Retraining:</b> model rebuilds automatically when stock data changes, and on manual retrain — every run is recorded.</li>
+  </ul>
+  <div class="foot"><span>Inventory Management &amp; Requisitions System</span><span>6</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Verified Results · Sept 2026</div>
+  <h2>Live forecast — real database</h2>
+  <div class="grid2">
+    <div>
+      <div class="metric"><b>48 months</b><span>Data window Sep 2022 – Aug 2026</span></div>
+      <div class="metric" style="margin-top:14px;"><b>3,704</b><span>Issuance records used</span></div>
+      <div class="metric" style="margin-top:14px;"><b>72 / 72</b><span>Products trained (100%)</span></div>
+      <div class="metric" style="margin-top:14px;"><b>~26 s</b><span>Full retrain, recorded in history</span></div>
+    </div>
+    <div>
+      <div class="metric"><b>19.41%</b><span>Overall MAPE (≤ 20% acceptance ✓)</span></div>
+      <div class="metric" style="margin-top:14px;"><b>1.58</b><span>MAE (units)</span></div>
+      <div class="metric" style="margin-top:14px;"><b>2.69</b><span>RMSE (units)</span></div>
+      <div class="metric" style="margin-top:14px;"><b>48 mo avg</b><span>Per-product history coverage</span></div>
+    </div>
+  </div>
+  <div class="foot"><span>Inventory Management &amp; Requisitions System</span><span>7</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Recent Enhancements</div>
+  <h2>Implemented for evaluation</h2>
+  <ul>
+    <li><b>Daily / Weekly / Monthly inventory reports</b> — full 48-month transaction window with year filter and CSV export.</li>
+    <li><b>Request tracking &amp; notification system</b> — bell notifications on new requests and approval/rejection.</li>
+    <li><b>Model Training Evidence</b> — timestamped run history with per-run duration and metrics; Training Data Coverage card (72/72).</li>
+    <li><b>Complete documentation &amp; AVP deck</b> — available at the /docs URL and in-app Documentation page.</li>
+  </ul>
+  <div class="foot"><span>Inventory Management &amp; Requisitions System</span><span>8</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">ISO/IEC 25010 Evaluation</div>
+  <h2>Software quality — 50 respondents</h2>
+  <table>
+    <tr><th>Group</th><th>Score</th><th>Interpretation</th></tr>
+    <tr><td>System Users (n = 40)</td><td>4.47</td><td>Very Good</td></tr>
+    <tr><td>IT Experts (n = 10)</td><td>4.53</td><td>Excellent</td></tr>
+    <tr><td><b>Overall</b></td><td><b>4.48</b></td><td class="ok">Very Good — exceeds ≥ 3.50</td></tr>
+  </table>
+  <p style="margin-top:14px;">Top-rated characteristics: Security (4.56), Functional Suitability (4.56), Usability (4.56).<br>Evaluation instrument: 5-point Likert; Cronbach's α = 0.88.</p>
+  <div class="foot"><span>Inventory Management &amp; Requisitions System</span><span>9</span></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Access &amp; Evaluation</div>
+  <h2>Test the live system</h2>
+  <table>
+    <tr><th>Username</th><th>Password</th><th>Role</th></tr>
+    <tr><td><b>superadmin</b></td><td>admin123</td><td>Administrator — full access, ML Lab, reporting, backups</td></tr>
+    <tr><td><b>faculty</b></td><td>intern123</td><td>Faculty — requisitions, assets, reservations</td></tr>
+    <tr><td><b>staff</b></td><td>assistant123</td><td>Non-teaching — requests, borrowing/returns</td></tr>
+  </table>
+  <p style="margin-top:16px;">
+    <b>System:</b> https://knsinventorysystem.site &nbsp;·&nbsp; <b>Documentation:</b> /docs &nbsp;·&nbsp; <b>User's Manual, Implementation Plan, Action Taken:</b> available on the Documentation page.
+  </p>
+  <div class="foot"><span>Inventory Management &amp; Requisitions System</span><span>10</span></div>
+</section>
+
+<section class="slide dark">
+  <div class="kicker">Thank You</div>
+  <h1>Maraming salamat po.</h1>
+  <p style="margin-top:16px; opacity:.92;">The system is ready for review and evaluation — feedback and recommendations for continuous improvement are most welcome.</p>
+  <p style="margin-top:30px; opacity:.85;">Erly Grace B. Cawed · Kolehiyo ng Subic</p>
+  <div class="foot"><span></span><span>11</span></div>
+</section>
+
+</main>
+
+<div class="controls">
+  <button onclick="prev()">‹ Prev</button>
+  <span style="color:#8aa39a; font-size:.85rem; display:flex; align-items:center;" id="counter"></span>
+  <button onclick="next()">Next ›</button>
+</div>
+<div class="hint">Use ← → arrow keys, Space, or mouse buttons on the sides · Print to export as slides</div>
+
+<script>
+  const slides = document.querySelectorAll(".slide");
+  let cur = 0;
+  function show(i) {
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, j) => (s.style.display = j === cur ? "flex" : "none"));
+    document.getElementById("counter").textContent = (cur + 1) + " / " + slides.length;
+  }
+  function next() { show(cur + 1); }
+  function prev() { show(cur - 1); }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") { e.preventDefault(); next(); }
+    if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); prev(); }
+  });
+  show(0);
+</script>
+</body>
+</html>

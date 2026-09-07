@@ -28,6 +28,7 @@ import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
 import AuditLogs from "./pages/AuditLogs";
 import Archive from "./pages/Archive";
+import Documentation from "./pages/Documentation";
 
 function StockRedirect() {
   const location = useLocation();
@@ -88,6 +89,7 @@ export default function App() {
         <Route path="/department-reports" element={<AdminRoute><DepartmentReport /></AdminRoute>} />
         <Route path="/asset-tracking" element={<AdminRoute><AssetTracking /></AdminRoute>} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/documentation" element={<Documentation />} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
         <Route path="/audit-logs" element={<AdminRoute><AuditLogs /></AdminRoute>} />
         <Route path="/change-password" element={<Navigate to="/settings" replace />} />

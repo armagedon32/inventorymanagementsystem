@@ -45,6 +45,7 @@ export default function Layout() {
           },
         ]
       : []),
+    { to: "/documentation", label: "Documentation", icon: "❓" },
     { to: "/settings", label: "Account Settings", icon: "⚙" },
   ];
 

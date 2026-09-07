@@ -112,6 +112,19 @@ const UPLOADS_DIR = path.join(__dirname, "uploads");
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 app.use("/uploads", express.static(UPLOADS_DIR));
 
+const DOCS_DIR = path.join(__dirname, "..", "docs");
+app.use(
+  "/docs",
+  express.static(DOCS_DIR, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith(".md")) {
+        res.setHeader("Content-Type", "text/markdown; charset=utf-8");
+        res.setHeader("Content-Disposition", "inline");
+      }
+    },
+  })
+);
+
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
 app.get("/api/settings", (req, res) => {
