@@ -32,6 +32,7 @@ import Documentation from "./pages/Documentation";
 import Ris from "./pages/Ris";
 import NewRis from "./pages/NewRis";
 import RisView from "./pages/RisView";
+import RulesConfig from "./pages/RulesConfig";
 
 function StockRedirect() {
   const location = useLocation();
@@ -84,6 +85,7 @@ export default function App() {
         <Route path="/requisitions" element={<Requisitions />} />
         <Route path="/requisitions/new" element={<NewRequisition />} />
         <Route path="/requisitions/:id" element={<RequisitionView />} />
+        <Route path="/rules" element={<AdminRoute><RulesConfig /></AdminRoute>} />
         <Route path="/reservations" element={<Reservations />} />
         <Route path="/reservations/new" element={<NewReservation />} />
         <Route path="/reservations/:id" element={<ReservationView />} />

@@ -348,6 +348,39 @@ CREATE TABLE IF NOT EXISTS tbl_forecast_runs (
   data_rows        INTEGER,
   status           TEXT DEFAULT 'Done'
 );
+
+CREATE TABLE IF NOT EXISTS tbl_req_rule (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  rule_code    TEXT NOT NULL UNIQUE,
+  rule_name    TEXT NOT NULL,
+  category     TEXT NOT NULL DEFAULT 'General',
+  description  TEXT,
+  policy_basis TEXT,
+  rule_meta    TEXT DEFAULT '{}',
+  is_enabled   INTEGER DEFAULT 1,
+  created_at   TEXT DEFAULT (datetime('now','localtime'))
+);
+
+CREATE TABLE IF NOT EXISTS tbl_req_eval (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  requisition_id  INTEGER NOT NULL,
+  evaluated_by    INTEGER,
+  recommendation  TEXT NOT NULL,
+  reason          TEXT,
+  passed          INTEGER DEFAULT 0,
+  failed          INTEGER DEFAULT 0,
+  eval_date       TEXT DEFAULT (datetime('now','localtime'))
+);
+
+CREATE TABLE IF NOT EXISTS tbl_req_eval_rule (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  eval_id       INTEGER NOT NULL,
+  rule_id       INTEGER,
+  rule_code     TEXT,
+  result        TEXT NOT NULL,
+  detail        TEXT,
+  is_overridden INTEGER DEFAULT 0
+);
 `);
 
 // Migrations for existing databases
@@ -395,5 +428,72 @@ if (!risICols.includes("return_date")) db.exec("ALTER TABLE tbl_ris_items ADD CO
 
 const asgCols = db.prepare("PRAGMA table_info(tbl_asset_assignments)").all().map((c) => c.name);
 if (!asgCols.includes("department")) db.exec("ALTER TABLE tbl_asset_assignments ADD COLUMN department TEXT");
+
+// ===================== REQUISITION RULES SEED =====================
+const ruleCount = db.prepare("SELECT COUNT(*) AS c FROM tbl_req_rule").get().c;
+if (ruleCount === 0) {
+  const seedRules = [
+    {
+      rule_code: "RULE-001",
+      rule_name: "Stock Availability",
+      category: "Availability",
+      description: "Each requested quantity must not exceed the available stock of the item.",
+      policy_basis: "Property & Supplies Office - Inventory Management Policy (PSO-IMP-2026) Sec. 3.1: requests shall not exceed available inventory stock.",
+      rule_meta: "{}",
+    },
+    {
+      rule_code: "RULE-002",
+      rule_name: "Requester Authorization",
+      category: "Authorization",
+      description: "Only registered, active personnel of the institution may file requisitions.",
+      policy_basis: "Property & Supplies Office - Requisition Policy (PSO-RP-2026) Sec. 2.1: only enrolled, active users with a valid account may file requisitions.",
+      rule_meta: "{}",
+    },
+    {
+      rule_code: "RULE-003",
+      rule_name: "Allocation Limit",
+      category: "Allocation",
+      description: "Monthly per-item quantity per department must stay within the configured allocation limit.",
+      policy_basis: "Property & Supplies Office - Allocation Policy (PSO-AP-2026) Sec. 4.2: monthly per-item allocation per department/program is enforced to ensure equitable distribution.",
+      rule_meta: JSON.stringify({ max_qty_per_item_per_month: 120 }),
+    },
+    {
+      rule_code: "RULE-004",
+      rule_name: "Duplicate Request",
+      category: "Duplicate",
+      description: "A pending or approved request for the same item by the same requester within the last 7 days is not allowed.",
+      policy_basis: "Property & Supplies Office - Requisition Policy (PSO-RP-2026) Sec. 2.4: duplicate or repeated requests for the same item are disallowed.",
+      rule_meta: "{}",
+    },
+    {
+      rule_code: "RULE-005",
+      rule_name: "Item / Category Requirement",
+      category: "Item & Category",
+      description: "Only active, cataloged stock items with a defined category may be requisitioned.",
+      policy_basis: "Property & Supplies Office - Inventory Catalog Policy (PSO-ICP-2026) Sec. 2.2: only active cataloged items with an assigned category are eligible for requisition.",
+      rule_meta: "{}",
+    },
+    {
+      rule_code: "RULE-006",
+      rule_name: "Procurement Requirements",
+      category: "Procurement",
+      description: "Procurement and documentation requirements under RA 9184 and its IRR must be satisfied (thresholds, purpose, approval authority).",
+      policy_basis: "RA 9184 (Government Procurement Reform Act) and DBM-issued Implementing Rules and Regulations Sec. 17: procurement shall follow thresholds and documentation requirements; high-value requests require the appropriate approving authority.",
+      rule_meta: JSON.stringify({ high_value_threshold_peso: 50000 }),
+    },
+    {
+      rule_code: "RULE-007",
+      rule_name: "Request Completeness",
+      category: "Institutional Requirement",
+      description: "The request must carry complete requester information and a clear purpose.",
+      policy_basis: "Property & Supplies Office - Requisition Policy (PSO-RP-2026) Sec. 2.2: complete requester and purpose information is required before a request can be processed.",
+      rule_meta: "{}",
+    },
+  ];
+  const ins = db.prepare(
+    "INSERT INTO tbl_req_rule (rule_code, rule_name, category, description, policy_basis, rule_meta) VALUES (?, ?, ?, ?, ?, ?)"
+  );
+  for (const r of seedRules) ins.run(r.rule_code, r.rule_name, r.category, r.description, r.policy_basis, r.rule_meta);
+}
 
 export default db;

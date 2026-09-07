@@ -15,9 +15,11 @@ export default function RequisitionView() {
   const { user } = useAuth();
   const isAdmin = user?.role === "Admin";
   const [req, setReq] = useState(null);
+  const [evals, setEvals] = useState([]);
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [evaluating, setEvaluating] = useState(false);
 
   useEffect(() => {
     load();
@@ -25,6 +27,7 @@ export default function RequisitionView() {
 
   function load() {
     api.get(`/requisitions/${id}`).then(setReq).catch((e) => setError(e.message));
+    api.get(`/requisitions/${id}/evaluations`).then(setEvals).catch(() => setEvals([]));
   }
 
   async function handleApprove() {
@@ -70,6 +73,27 @@ export default function RequisitionView() {
     } catch (e) {
       setError(e.message);
     }
+  }
+
+  async function handleEvaluate() {
+    setMsg("");
+    setError("");
+    setEvaluating(true);
+    try {
+      const res = await api.post(`/requisitions/${req.id}/evaluate`);
+      setEvals(await api.get(`/requisitions/${req.id}/evaluations`));
+      setMsg(`Evaluation complete — recommendation: ${res.recommendation}.`);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setEvaluating(false);
+    }
+  }
+
+  function RecBadge({ value }) {
+    if (value === "APPROVE") return <span className="badge badge-ok">APPROVE</span>;
+    if (value === "REJECT") return <span className="badge badge-danger">REJECT</span>;
+    return <span className="badge badge-warn">REVISE</span>;
   }
 
   if (error && !req) return <div className="alert alert-error">{error}</div>;
@@ -145,6 +169,61 @@ export default function RequisitionView() {
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="chart-box" style={{ marginTop: "1.5rem" }}>
+          <div className="flex between" style={{ marginBottom: "0.75rem" }}>
+            <h5 style={{ margin: 0 }}>Rule Evaluation / Recommendation Details</h5>
+            {isAdmin && (
+              <button className="btn btn-primary btn-sm" onClick={handleEvaluate} disabled={evaluating}>
+                {evaluating ? "Evaluating..." : "⚖ Run Rule Evaluation"}
+              </button>
+            )}
+          </div>
+          {evals.length === 0 && (
+            <div className="empty">No rule evaluation has been run for this requisition yet.</div>
+          )}
+          {evals.map((ev) => (
+            <div key={ev.id} className="card" style={{ marginTop: "0.75rem", background: "var(--card-bg)" }}>
+              <div className="card-header" style={{ flexWrap: "wrap", gap: 8 }}>
+                <h6 style={{ margin: 0 }}>
+                  <RecBadge value={ev.recommendation} /> Recommended {ev.recommendation}
+                </h6>
+                <span className="text-muted" style={{ fontSize: "0.78rem" }}>
+                  {ev.eval_date} · by {ev.evaluated_by_name || "—"} · Passed {ev.passed} / Failed {ev.failed}
+                </span>
+              </div>
+              <div className="card-body">
+                <p style={{ margin: "0 0 0.75rem" }}>{ev.reason}</p>
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Rule</th>
+                        <th>Category</th>
+                        <th>Result</th>
+                        <th>Detail</th>
+                        <th>Policy Basis</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ev.rules.map((rl, i) => (
+                        <tr key={i}>
+                          <td><strong>{rl.rule_name}</strong><div className="text-muted" style={{ fontSize: "0.72rem" }}>{rl.rule_code}</div></td>
+                          <td>{rl.category}</td>
+                          <td>
+                            <span className={`badge ${rl.result === "PASS" ? "badge-ok" : "badge-danger"}`}>{rl.result}</span>
+                          </td>
+                          <td>{rl.detail}</td>
+                          <td><span style={{ fontSize: "0.78rem" }}>{rl.policy_basis || "—"}</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -26,6 +26,7 @@ export default function Layout() {
           { to: "/admin", label: "Admin Settings", icon: "⚙" },
           { to: "/audit-logs", label: "Audit Logs", icon: "≡" },
           { to: "/users", label: "User Management", icon: "◈" },
+          { to: "/rules", label: "Requisition Rules", icon: "✓" },
           {
             section: "Stock Inventory",
             items: [
