@@ -7,6 +7,7 @@ const router = Router();
 router.use(requireAuth);
 
 const CONDITION_OPTIONS = ["Excellent", "Good", "Slightly Damaged", "Broken"];
+const RETURN_CONDITION_OPTIONS = ["Excellent", "Good", "Slightly Damaged", "Broken", "Missing"];
 
 function nextRisNo() {
   const row = db.prepare("SELECT id FROM tbl_ris_header ORDER BY id DESC LIMIT 1").get();
@@ -137,7 +138,8 @@ router.get("/:id", (req, res) => {
   if (!h) return res.status(404).json({ error: "RIS not found" });
   const items = db
     .prepare(
-      `SELECT i.id, i.asset_id, i.quantity, i.borrowed_from, i.condition, o.office_name AS borrowed_from_name,
+      `SELECT i.id, i.asset_id, i.quantity, i.borrowed_from, i.condition,
+        i.return_condition, i.return_remarks, i.return_date, o.office_name AS borrowed_from_name,
         p.name AS asset_name, p.brand, p.barcode AS inventory_no, p.serial_number
        FROM tbl_ris_items i
        LEFT JOIN tbl_product p ON p.pid = i.asset_id
@@ -203,12 +205,48 @@ router.post("/:id/return", (req, res) => {
   const h = db.prepare("SELECT * FROM tbl_ris_header WHERE id = ? AND is_archived = 0").get(req.params.id);
   if (!h) return res.status(404).json({ error: "RIS not found" });
   if (h.is_returned) return res.status(400).json({ error: "This RIS is already returned." });
+
+  const submitted = Array.isArray(req.body?.items) ? req.body.items : null;
+  if (!submitted) {
+    return res.status(400).json({
+      error: "Return conditions are required. Select the Condition Upon Return and remarks for each returned item.",
+    });
+  }
+
+  const rows = db.prepare("SELECT id, asset_id, quantity, return_condition FROM tbl_ris_items WHERE ris_id = ? AND is_archived = 0").all(h.id);
+  const byId = new Map(submitted.map((it) => [String(it.id), it]));
+
+  const missing = [];
+  const conditions = {};
+  for (const it of rows) {
+    const sub = byId.get(String(it.id));
+    if (!sub || !RETURN_CONDITION_OPTIONS.includes(sub.return_condition)) {
+      missing.push(it.id);
+      continue;
+    }
+    conditions[it.id] = {
+      return_condition: sub.return_condition,
+      return_remarks: String(sub.return_remarks || "").trim().slice(0, 500),
+    };
+  }
+  if (missing.length > 0) {
+    return res.status(400).json({
+      error: `Missing or invalid Condition Upon Return for item(s) ${missing.join(", ")}.`,
+    });
+  }
+
   db.transaction(() => {
-    const items = db.prepare("SELECT asset_id, quantity FROM tbl_ris_items WHERE ris_id = ? AND is_archived = 0").all(h.id);
-    const inc = db.prepare("UPDATE tbl_product SET stock = stock + ? WHERE pid = ?");
-    for (const it of items) inc.run(it.quantity, it.asset_id);
-    db.prepare("UPDATE tbl_ris_header SET is_returned = 1, return_date = date('now','localtime') WHERE id = ?").run(h.id);
-        logActivity(req, `Returned RIS: ${h.ris_no}`);
+    const today = new Date().toISOString().slice(0, 10);
+    const upd = db.prepare(
+      "UPDATE tbl_ris_items SET return_condition = ?, return_remarks = ?, return_date = ? WHERE id = ?"
+    );
+    for (const it of rows) {
+      const c = conditions[it.id];
+      upd.run(c.return_condition, c.return_remarks, today, it.id);
+      db.prepare("UPDATE tbl_product SET stock = stock + ? WHERE pid = ?").run(it.quantity, it.asset_id);
+    }
+    db.prepare("UPDATE tbl_ris_header SET is_returned = 1, return_date = ? WHERE id = ?").run(today, h.id);
+    logActivity(req, `Returned RIS: ${h.ris_no}`, `${rows.length} item(s) returned with condition recorded`);
   })();
   res.json({ success: true });
 });

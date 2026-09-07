@@ -41,6 +41,7 @@ export default function Layout() {
               { to: "/assets", label: "Assets", icon: "◉" },
               { to: "/assets/add", label: "Asset Registration", icon: "✚" },
               { to: "/assets/archive", label: "Asset Archive", icon: "◁" },
+              { to: "/ris", label: "RIS — Issuance & Return", icon: "⇄" },
             ],
           },
         ]

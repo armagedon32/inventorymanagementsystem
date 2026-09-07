@@ -29,6 +29,9 @@ import Admin from "./pages/Admin";
 import AuditLogs from "./pages/AuditLogs";
 import Archive from "./pages/Archive";
 import Documentation from "./pages/Documentation";
+import Ris from "./pages/Ris";
+import NewRis from "./pages/NewRis";
+import RisView from "./pages/RisView";
 
 function StockRedirect() {
   const location = useLocation();
@@ -88,6 +91,9 @@ export default function App() {
         <Route path="/forecasting" element={<AdminRoute><Forecasting /></AdminRoute>} />
         <Route path="/department-reports" element={<AdminRoute><DepartmentReport /></AdminRoute>} />
         <Route path="/asset-tracking" element={<AdminRoute><AssetTracking /></AdminRoute>} />
+        <Route path="/ris" element={<AdminRoute><Ris /></AdminRoute>} />
+        <Route path="/ris/new" element={<AdminRoute><NewRis /></AdminRoute>} />
+        <Route path="/ris/:id" element={<AdminRoute><RisView /></AdminRoute>} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/documentation" element={<Documentation />} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />

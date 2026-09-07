@@ -210,13 +210,16 @@ CREATE TABLE IF NOT EXISTS tbl_ris_header (
 );
 
 CREATE TABLE IF NOT EXISTS tbl_ris_items (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  ris_id        INTEGER NOT NULL,
-  asset_id      INTEGER NOT NULL,
-  quantity      INTEGER NOT NULL,
-  borrowed_from INTEGER,
-  condition     TEXT DEFAULT 'Good',
-  is_archived   INTEGER DEFAULT 0
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  ris_id         INTEGER NOT NULL,
+  asset_id       INTEGER NOT NULL,
+  quantity       INTEGER NOT NULL,
+  borrowed_from  INTEGER,
+  condition      TEXT DEFAULT 'Good',
+  return_condition TEXT,
+  return_remarks TEXT,
+  return_date    TEXT,
+  is_archived    INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS tbl_ptr_header (
@@ -386,6 +389,9 @@ if (!risHCols.includes("department")) db.exec("ALTER TABLE tbl_ris_header ADD CO
 
 const risICols = db.prepare("PRAGMA table_info(tbl_ris_items)").all().map((c) => c.name);
 if (!risICols.includes("condition")) db.exec("ALTER TABLE tbl_ris_items ADD COLUMN condition TEXT DEFAULT 'Good'");
+if (!risICols.includes("return_condition")) db.exec("ALTER TABLE tbl_ris_items ADD COLUMN return_condition TEXT");
+if (!risICols.includes("return_remarks")) db.exec("ALTER TABLE tbl_ris_items ADD COLUMN return_remarks TEXT");
+if (!risICols.includes("return_date")) db.exec("ALTER TABLE tbl_ris_items ADD COLUMN return_date TEXT");
 
 const asgCols = db.prepare("PRAGMA table_info(tbl_asset_assignments)").all().map((c) => c.name);
 if (!asgCols.includes("department")) db.exec("ALTER TABLE tbl_asset_assignments ADD COLUMN department TEXT");

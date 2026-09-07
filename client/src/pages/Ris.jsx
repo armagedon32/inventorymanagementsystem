@@ -39,19 +39,6 @@ export default function Ris() {
     }
   }
 
-  async function handleReturn(r) {
-    if (!window.confirm(`Mark RIS ${r.ris_no} as returned? Asset units will be restored.`)) return;
-    setMsg("");
-    setError("");
-    try {
-      await api.post(`/ris/${r.id}/return`);
-      setMsg(`${r.ris_no} returned.`);
-      load();
-    } catch (e) {
-      setError(e.message);
-    }
-  }
-
   async function handleDelete(r) {
     if (!window.confirm(`Delete RIS ${r.ris_no}? Outstanding units will be restored to stock.`)) return;
     setMsg("");
@@ -110,7 +97,7 @@ export default function Ris() {
                     <div className="btn-group">
                       <Link to={`/ris/${r.id}`} className="btn btn-warning btn-sm" title="View">👁</Link>
                       {r.status === "Borrowed" && (
-                        <button className="btn btn-success btn-sm" title="Mark Returned" onClick={() => handleReturn(r)}>↩</button>
+                        <Link to={`/ris/${r.id}`} className="btn btn-success btn-sm" title="Process Return">↩</Link>
                       )}
                       {isAdmin && (
                         <button className="btn btn-dark btn-sm" title="Delete" onClick={() => handleDelete(r)}>🗑</button>

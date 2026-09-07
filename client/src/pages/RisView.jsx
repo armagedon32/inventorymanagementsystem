@@ -4,6 +4,8 @@ import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { printDoc } from "../utils/print";
 
+const RETURN_OPTIONS = ["Excellent", "Good", "Slightly Damaged", "Broken", "Missing"];
+
 const statusBadge = (s) => {
   if (s === "Returned") return <span className="badge badge-ok">{s}</span>;
   if (s === "Overdue") return <span className="badge badge-danger">{s}</span>;
@@ -19,22 +21,42 @@ export default function RisView() {
   const [settings, setSettings] = useState({});
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
+  const [returns, setReturns] = useState([]);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    api.get(`/ris/${id}`).then(setRis).catch((e) => setError(e.message));
+    api.get(`/ris/${id}`).then((r) => {
+      setRis(r);
+      setReturns(r.items.map((it) => ({ id: it.id, return_condition: "", return_remarks: "" })));
+    }).catch((e) => setError(e.message));
     api.get("/settings").then(setSettings).catch(() => {});
   }, [id]);
 
+  function setReturn(itemId, field, value) {
+    setReturns((prev) => prev.map((r) => (r.id === itemId ? { ...r, [field]: value } : r)));
+  }
+
   async function handleReturn() {
-    if (!window.confirm(`Mark ${ris.ris_no} as returned? Asset units will be restored.`)) return;
+    const incomplete = returns.filter((r) => !r.return_condition);
+    if (incomplete.length > 0) {
+      setError("Select the Condition Upon Return for every item before confirming the return.");
+      return;
+    }
+    if (ris.status !== "Borrowed") return;
+    if (!window.confirm(`Confirm return of ${ris.ris_no}? Conditions will be saved and asset units restored to stock.`)) return;
+    setSaving(true);
     setMsg("");
     setError("");
     try {
-      await api.post(`/ris/${ris.id}/return`);
-      setMsg(`${ris.ris_no} returned.`);
-      api.get(`/ris/${id}`).then(setRis);
+      await api.post(`/ris/${ris.id}/return`, { items: returns });
+      setMsg(`${ris.ris_no} returned — conditions recorded.`);
+      const r = await api.get(`/ris/${id}`);
+      setRis(r);
+      setReturns(r.items.map((it) => ({ id: it.id, return_condition: "", return_remarks: "" })));
     } catch (e) {
       setError(e.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -62,6 +84,7 @@ export default function RisView() {
       ["Status", ris.status],
       ...(ris.return_date ? [["Returned At", ris.return_date]] : []),
     ];
+    const returned = ris.status === "Returned";
     printDoc({
       title: "REQUISITION AND ISSUE SLIP",
       docNo: ris.ris_no,
@@ -72,6 +95,8 @@ export default function RisView() {
         { label: "Property / Item", key: "item" },
         { label: "Serial No.", key: "serial" },
         { label: "Condition", key: "condition" },
+        ...(returned ? [{ label: "Cond. Upon Return", key: "return_condition" }] : []),
+        ...(returned ? [{ label: "Return Remarks", key: "return_remarks" }] : []),
         { label: "Borrowed From", key: "from" },
       ],
       items: ris.items.map((it) => ({
@@ -80,6 +105,8 @@ export default function RisView() {
         item: it.asset_name || "—",
         serial: it.serial_number || "—",
         condition: it.condition || "Good",
+        return_condition: it.return_condition || "—",
+        return_remarks: it.return_remarks || "—",
         from: it.borrowed_from_name || "—",
       })),
       signLeft: settings.oic_property || "MARITES MENDIGORIN",
@@ -112,9 +139,6 @@ export default function RisView() {
         <h5>RIS Details - {ris.ris_no}</h5>
         <div className="flex">
           <button className="btn btn-info btn-sm" onClick={handlePrint}>🖨 Print RIS</button>
-          {ris.status === "Borrowed" && (
-            <button className="btn btn-success btn-sm" onClick={handleReturn}>↩ Mark Returned</button>
-          )}
           {isAdmin && <button className="btn btn-dark btn-sm" onClick={handleDelete}>🗑 Delete</button>}
           <Link to="/ris" className="btn btn-light btn-sm">Back</Link>
         </div>
@@ -141,7 +165,9 @@ export default function RisView() {
                 <th>Item</th>
                 <th>Serial No.</th>
                 <th>Quantity</th>
-                <th>Condition</th>
+                <th>Condition (Issued)</th>
+                <th>Condition Upon Return</th>
+                <th>Return Remarks</th>
                 <th>Borrowed From</th>
               </tr>
             </thead>
@@ -154,13 +180,98 @@ export default function RisView() {
                   <td>{it.serial_number || "—"}</td>
                   <td>{it.quantity}</td>
                   <td>{it.condition || "Good"}</td>
+                  <td>
+                    {ris.status === "Returned" ? (
+                      it.return_condition ? (
+                        <span className={`badge ${
+                          it.return_condition === "Excellent" || it.return_condition === "Good" ? "badge-ok" : "badge-warn"
+                        }`}>{it.return_condition}</span>
+                      ) : (
+                        "—"
+                      )
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td>{it.return_remarks || "—"}</td>
                   <td>{it.borrowed_from_name || "—"}</td>
                 </tr>
               ))}
-              {ris.items.length === 0 && <tr><td colSpan={7} className="empty">No items.</td></tr>}
+              {ris.items.length === 0 && <tr><td colSpan={9} className="empty">No items.</td></tr>}
             </tbody>
           </table>
         </div>
+
+        {ris.status === "Borrowed" && (
+          <div className="card" style={{ marginTop: "1rem", background: "var(--card-bg)" }}>
+            <div className="card-header">
+              <h5>Process Return — Condition Upon Return *</h5>
+              <span className="text-muted" style={{ fontSize: "0.78rem" }}>
+                Required before items are restored to stock. Select the condition and enter remarks for damage or loss.
+              </span>
+            </div>
+            <div className="card-body">
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Qty</th>
+                      <th>Condition Upon Return *</th>
+                      <th>Return Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ris.items.map((it, i) => {
+                      const r = returns.find((x) => x.id === it.id) || {};
+                      return (
+                        <tr key={it.id}>
+                          <td>
+                            <strong>{it.asset_name}</strong>
+                            <div className="text-muted" style={{ fontSize: "0.78rem" }}>
+                              {it.inventory_no || "—"} · {it.serial_number || "—"}
+                            </div>
+                          </td>
+                          <td>{it.quantity}</td>
+                          <td>
+                            <select
+                              className="form-control"
+                              value={r.return_condition || ""}
+                              onChange={(e) => setReturn(it.id, "return_condition", e.target.value)}
+                            >
+                              <option value="">— Select —</option>
+                              {RETURN_OPTIONS.map((c) => (
+                                <option key={c} value={c}>{c}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td>
+                            <input
+                              className="form-control"
+                              placeholder="Optional damage / loss details"
+                              value={r.return_remarks || ""}
+                              maxLength={500}
+                              onChange={(e) => setReturn(it.id, "return_remarks", e.target.value)}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex" style={{ marginTop: "1rem", justifyContent: "flex-end", gap: 10 }}>
+                <button
+                  className="btn btn-success"
+                  onClick={handleReturn}
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "✓ Confirm Return &amp; Restore Stock"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
