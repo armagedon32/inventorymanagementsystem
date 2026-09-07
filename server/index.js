@@ -20,6 +20,7 @@ import activityRoutes from "./src/routes/activity.js";
 import departmentReportRoutes from "./src/routes/department-report.js";
 import assetTrackingRoutes from "./src/routes/asset-tracking.js";
 import notificationRoutes from "./src/routes/notifications.js";
+import risRoutes from "./src/routes/ris.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -169,6 +170,7 @@ app.use("/api/activity", activityRoutes);
 app.use("/api/department-report", departmentReportRoutes);
 app.use("/api/asset-tracking", assetTrackingRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/ris", risRoutes);
 
 app.get("/api/forecasting", requireAuth, forecasting);
 app.post("/api/forecasting/retrain", requireAuth, retrainForecasting);
